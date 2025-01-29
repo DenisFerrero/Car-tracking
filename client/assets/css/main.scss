@@ -1,0 +1,40 @@
+@import "bootstrap/scss/bootstrap";
+
+// :root {
+//   --bs-primary: #FEF9E1;
+//   --bs-secondary: #E5D0AC;
+//   --bs-success: #A31D1D;
+//   --bs-danger: #6D2323
+// }
+
+
+// Define custom colors
+$custom-colors: (
+  "primary": #7C444F,
+  "secondary": #9F5255,
+  "info": #E16A54,
+  "dark": #F39E60
+);
+
+// Merge custom colors with Bootstrap's theme colors
+$theme-colors: map-merge(
+  $theme-colors,
+  $custom-colors
+);
+
+// Enable utilities for the new colors
+$utilities: (
+  "colors": (
+    property: color,
+    class: text,
+    values: $theme-colors
+  ),
+  "background-colors": (
+    property: background-color,
+    class: bg,
+    values: $theme-colors
+  )
+);
+
+// Import Bootstrap SCSS
+@import "bootstrap/scss/bootstrap";

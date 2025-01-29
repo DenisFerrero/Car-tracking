@@ -1,0 +1,57 @@
+---
+###############################################################
+#                   Authelia configuration                    #
+###############################################################
+
+# This secret can also be set using the env variables AUTHELIA_JWT_SECRET_FILE
+# generate with 'docker run authelia/authelia:latest authelia crypto rand --length 128 --charset alphanumeric'
+jwt_secret: cDDGHnerni4DzSSkudNtlLhkLmxDG2UvfZ8a4EAn5B887uraI2jvifsy0WSMNMcAVVGbUK7rhbOKjWcauJkvmAp7PhmzPm9NalMNpaamPLZAxPvCPjVwoCbbCN7TfdrM
+default_redirection_url: https://auth.{{ env "DOMAIN" }}    ### Domain to access Authelia
+
+log:
+  level: debug
+
+# Configuration of users
+authentication_backend:
+  file:
+    path: /config/users_database.yml
+
+# How to control the access, allow to gain target domains only if authenticated
+access_control:
+  default_policy: deny # Deny to access any other not defined rules
+  rules:
+    # Rules applied to client and server
+    - domain: client.{{ env "DOMAIN" }}
+      policy: single_factor
+    - domain: server.{{ env "DOMAIN" }}
+      policy: single_factor
+
+# Session configurations, like amount of time, ecc...
+session:
+  name: session
+  domain: {{ env "DOMAIN" }}
+  secret: yY3lHcpq4zx4tsSwUSeMC9BrL5YbkdwxhDGOxPsHEJFj7CWdDsaMLQEIB6WH0iiB
+  expiration: 1h
+  inactivity: 10m
+  remember_me_duration:  1M
+
+# Block account after X trial for X time
+regulation:
+  max_retries: 3
+  find_time: 120
+  ban_time: 300
+
+storage:
+# generate with 'docker run authelia/authelia:latest authelia crypto rand --length 128 --charset alphanumeric'
+  encryption_key: SoUtP3LE1fkWo3xbjsBga4Oar9DdyBhdBhqgpV1u1qetziXedzpIncHefHWAaeX0xo4q9zjmJoFN9h9K4CPkfCFusS6PQg5eXzmadhM2eH4lIHA83A8Ju1HIV4mdjgEe
+  postgres:
+    address: 'tcp://{{ env "DB_HOST" }}:{{ env "DB_PORT" }}'
+    database: '{{ env "POSTGRES_DB" }}'
+    schema: 'public'
+    # Credentials according to docker-compose.env
+    username: '{{ env "POSTGRES_USER" }}'
+    password: '{{ env "POSTGRES_PASSWORD" }}'
+    timeout: '5s'
+
+notifier:
+  disable_startup_check: true # Disable check as only single password authentication is used 

@@ -1,0 +1,35 @@
+---
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+# -- Change EntryPoints here...
+entryPoints:
+  web:
+    address: :80
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: :443
+  nats:
+    address: :4222
+
+# -- Configure your CertificateResolver here...
+certificatesResolvers:
+  resolver:
+    acme:
+      email: ferrero.denis@protonmail.com  # <-- Change this to your email
+      storage: /var/traefik/certs/cloudflare-acme.json
+      caServer: "https://acme-v02.api.letsencrypt.org/directory"
+      httpChallenge: web
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: internal
+  file:
+    directory: /etc/traefik
+    watch: true

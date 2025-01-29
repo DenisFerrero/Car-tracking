@@ -1,0 +1,110 @@
+version: "3.3"
+
+services:
+  # Nats
+  nats:
+    image: nats:2
+    container_name: nats
+    restart: unless-stopped
+    command: "-c /etc/conf/nats.conf"
+    volumes:
+      - ./config/nats:/etc/conf
+    networks:
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nats.rule=Host(`nats.${DOMAIN}`)"
+      - "traefik.http.routers.nats.entrypoints=nats"
+
+  # Database
+  database:
+    image: timescale/timescaledb:latest-pg15
+    container_name: database
+    restart: unless-stopped
+    env_file: docker-compose.yml
+    volumes:
+      - ./volumes/database:/var/lib/postgresql/data
+    networks:
+      - internal
+
+  # Client
+  client:
+    build:
+      context: client
+      dockerfile: Dockerfile
+    container_name: client
+    restart: unless-stopped
+    env_file: docker-compose.yml
+    depends_on:
+      - server
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.client.rule=Host(`client.${DOMAIN}`)"
+      - "traefik.http.routers.client.entrypoints=web, websecure"
+      - "traefik.http.routers.client.tls.certresolver=resolver"      
+      - "traefik.http.routers.client.tls=true"
+      - 'traefik.http.routers.client.middlewares=authelia@docker'
+    networks:
+      - internal
+
+  # Server
+  server:
+    build:
+      context: server
+      dockerfile: Dockerfile
+    container_name: server
+    restart: unless-stopped
+    env_file: docker-compose.yml
+    depends_on:
+      - nats
+      - database
+    networks:
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.server.rule=Host(`server.${DOMAIN}`)"
+      - "traefik.http.routers.server.entrypoints=web, websecure"
+      - "traefik.http.routers.server.tls.certresolver=resolver"      
+      - "traefik.http.routers.server.tls=true"
+      - 'traefik.http.routers.server.middlewares=authelia@docker'
+
+  # Traefik
+  traefik:
+    image: traefik:v3.3.2
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /run/docker.sock:/run/docker.sock:ro
+      - ./volumes/traefik/config/:/etc/traefik/:ro
+      - ./volumes/traefik/certs/:/var/traefik/certs/:rw
+    networks:
+      - internal
+
+  # Authelia
+  authelia:
+    image: authelia/authelia
+    container_name: authelia
+    restart: unless-stopped
+    env_file: docker-compose.yml
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./config:/config
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.authelia.rule=Host(`auth.${DOMAIN}`)'
+      - 'traefik.http.routers.authelia.entrypoints=web, websecure'
+      - 'traefik.http.routers.authelia.tls=true'
+      - 'traefik.http.routers.authelia.tls.certresolver=resolver'
+      - 'traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://auth.${DOMAIN}'
+      - 'traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true'
+      - 'traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email'
+    depends_on:
+      - database
+    networks:
+      - internal
+networks:
+  internal:

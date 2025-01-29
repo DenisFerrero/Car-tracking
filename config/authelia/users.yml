@@ -1,0 +1,14 @@
+---
+###############################################################
+#                         Users Database                      #
+###############################################################
+
+users:
+  default: #username
+    disabled: false
+    displayname: "Default"
+    password: "12345"
+    email: default@default.com
+    groups:
+      - admin
+      - user

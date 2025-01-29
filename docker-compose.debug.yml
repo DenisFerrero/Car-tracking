@@ -1,0 +1,30 @@
+version: "3.3"
+
+services:
+  # Nats
+  nats:
+    image: nats:2
+    container_name: nats
+    restart: unless-stopped
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: "-c /etc/conf/nats.conf"
+    volumes:
+      - ./config/nats:/etc/conf
+    networks:
+      - internal
+  # Database
+  database:
+    image: timescale/timescaledb:latest-pg15
+    container_name: database
+    restart: unless-stopped
+    env_file: docker-compose.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./volumes/database:/var/lib/postgresql/data
+    networks:
+      - internal
+networks:
+  internal:
