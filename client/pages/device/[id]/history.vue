@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex col-12 justify-content-center p-2 bg-primary">
+  <div class="d-flex col-12 justify-content-center p-2 bg-primary" style="min-height: 100vh;">
     <!-- Map -->
     <div class="col-9 pe-3">
       <LMap
@@ -16,7 +16,7 @@
         <LMarker :lat-lng="[currentPosition.x, currentPosition.y]"/>
         <LPolyline v-if="rawCoordinates.length > 1" :lat-lngs="rawCoordinates" color="red" />
       </LMap>
-      <div class="d-flex col-12 mt-2">
+      <div v-if="coordinates.length > 0" class="d-flex col-12 mt-2">
         <client-only>
           <div class="col-4 pe-1">
             <ApexChart type="line" :options="altitudeChartOptions" :series="altitudeSeries" />
@@ -45,7 +45,7 @@
         </div>
       </div>
       <device-description :device="device" class="mt-2"/> 
-      <coordinate-description :coordinate="currentPosition" class="mt-2"/>
+      <coordinate-description v-if="coordinates.length > 0" :coordinate="currentPosition" class="mt-2" />
       <nuxt-link :to="'/device/' + route.params.id + '/realtime/'" class="col-12 d-flex justify-content-center btn btn-block btn-info border-dark text-white mt-4">
         <h4>Go to realtime</h4>
       </nuxt-link>
@@ -193,6 +193,9 @@ if (import.meta.client) {
       intersect: true,
       shared: false
     },
+    chart: {
+      background: style.getPropertyValue('--bs-secondary')
+    },
     colors: [style.getPropertyValue('--bs-dark')],
     series: altitudeSeries,
   };
@@ -245,6 +248,9 @@ if (import.meta.client) {
       intersect: true,
       shared: false
     },
+    chart: {
+      background: style.getPropertyValue('--bs-secondary')
+    },
     colors: [style.getPropertyValue('--bs-dark')],
     series: pressureSeries,
   };
@@ -296,6 +302,9 @@ if (import.meta.client) {
       },
       intersect: true,
       shared: false
+    },
+    chart: {
+      background: style.getPropertyValue('--bs-secondary')
     },
     colors: [style.getPropertyValue('--bs-dark')],
     series: altitudeSeries,
