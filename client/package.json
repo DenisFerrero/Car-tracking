@@ -12,13 +12,16 @@
   "dependencies": {
     "@nuxt/eslint": "^0.7.5",
     "@nuxtjs/leaflet": "^1.2.6",
+    "@vuepic/vue-datepicker": "^11.0.1",
+    "apexcharts": "^4.4.0",
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
     "eslint": "^9.19.0",
     "nuxt": "^3.15.2",
     "socket.io-client": "^4.8.1",
     "vue": "latest",
-    "vue-router": "latest"
+    "vue-router": "latest",
+    "vue3-apexcharts": "^1.8.0"
   },
   "devDependencies": {
     "@types/bootstrap": "^5.2.10",

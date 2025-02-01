@@ -7,11 +7,18 @@
             Devices
           </h5>
           <div class="list-group">
-            <nuxt-link v-for="row in results.rows" :key="row.id" :to="`/device/${row.id}`">
-              <div class="list-group-item list-group-item-action text-white bg-info border-dark">
-                {{ row.name }}
+              <div v-for="row in results.rows" :key="row.id" class="list-group-item list-group-item-action text-white bg-info border-dark d-flex justify-content-between align-items-center">
+                <div>{{ row.name }}</div>
+                <div>
+                  <button class="btn btn-secondary me-2" data-bs-toggle="modal" data-bs-target="#editModal" @click="setDevice(row)">Edit</button>
+                  <nuxt-link :to="`/device/${row.id}/realtime`">
+                    <button class="btn btn-secondary me-2">Realtime</button>
+                  </nuxt-link>
+                  <nuxt-link :to="`/device/${row.id}/history`">
+                    <button class="btn btn-secondary">History</button>
+                  </nuxt-link>
+                </div>
               </div>
-            </nuxt-link>
           </div>
         </div>
       </div>
@@ -19,18 +26,53 @@
     <div v-else class="text-white">
       Cannot find any device, start transmitting!
     </div>
+
+    <div id="editModal" class="modal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit device</h5>
+          </div>
+          <div class="modal-body">
+            <div class="form-floating">
+              <input v-model="editDevice.name" type="text" class="form-control">
+              <label for="floatingInputGroup2">Name</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="saveDevice()">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
+useHead({ title: 'Devices' });
 
 const config = useRuntimeConfig();
 const results = ref({});
 
-const { data } = await useAsyncData('devices', () => $fetch(config.public.server + '/api/devices', { pageSize: 100 }));
+const { data } = await useAsyncData('devices', () => $fetch(config.public.server + '/api/devices', { query: { pageSize: 100 } }));
 
 results.value = data.value;
 const { $socket } = useNuxtApp();
+
+const editDevice = ref({});
+
+function setDevice (device) {
+  console.log(device);
+  editDevice.value = JSON.parse(JSON.stringify(device));
+}
+
+function saveDevice () {
+  $fetch(config.public.server + '/api/devices/' + editDevice.value.id, {
+    method: 'PUT',
+    body: { name: editDevice.value.name }
+  });
+}
 
 onMounted(() => { $socket.on('devices.changed', refreshList); });
 onBeforeUnmount(() => { $socket.off('devices.changed'); })

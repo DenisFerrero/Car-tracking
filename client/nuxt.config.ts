@@ -12,5 +12,13 @@ export default defineNuxtConfig({
     }
   },
 
+  app: {
+    head: {
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico'  }
+      ]
+    }
+  },
+
   modules: ['@nuxt/eslint', '@nuxtjs/leaflet']
 })

@@ -22,6 +22,20 @@ module.exports = {
 		rest: "devices"
 	},
 
+	hooks: {
+		after: {
+			async update (ctx, res) {
+				await ctx.call("api.broadcast", {
+					event:"devices.changed",
+					args: [res],
+					volatile: true,
+				});
+
+				return res;
+			}
+		}
+	},
+
 	actions: {
 		create: { rest: false },
 		remove: { rest: false },
@@ -51,6 +65,12 @@ module.exports = {
 					params.name = ctx.params.imei;
 					const created = this._create(ctx, params);
 					result = created.id;
+
+					await ctx.call("api.broadcast", {
+						event:"devices.changed",
+						args: [result],
+						volatile: true,
+					});
 				}
 
 				await ctx.broadcast("devices.discover." + ctx.params.imei, { id: result });

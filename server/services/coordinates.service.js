@@ -1,6 +1,7 @@
 const database = require("../helpers/database.mixin");
 const sequelize = require("sequelize");
-const { DataTypes } = sequelize;
+const { DataTypes, Op } = sequelize;
+const _ = require("lodash");
 
 const model = {
 	timestamp: { type: DataTypes.DATE, allowNull: false, primaryKey: true },
@@ -27,6 +28,38 @@ module.exports = {
 		remove: { rest: false },
 		insert: { rest: false },
 
+		list: {
+			params: {
+				start: { type: "string", pattern: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.[0-9]{1,3}Z$/ },
+				end: { type: "string", pattern: /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.[0-9]{1,3}Z$/ },
+			},
+			cache: { keys: ["populate", "fields", "excludeFields", "page", "pageSize", "sort", "search", "searchFields", "query", "start", "end"] },
+			handler (ctx) {
+				const params = this.sanitizeParams(ctx, ctx.params);
+				_.set(params, "query.timestamp", { [Op.between]: [params.start, params.end] });
+				delete params.start;
+				delete params.end;
+
+				return this._list(ctx, params);
+			}
+		},
+
+		latest: {
+			rest: "GET /latest",
+			params: {
+				device_id: { type: "number", integer: true, min: 1, convert: true }
+			},
+			async handler (ctx) {
+				const result = await this._list(ctx, {
+					pageSize: 1,
+					sort: "-timestamp",
+					query: { device_id: ctx.params.device_id },
+				});
+
+				return result.rows[0] || null;
+			}
+		},
+
 		store: {
 			params: {
 				x: { type: "number" },
@@ -44,7 +77,7 @@ module.exports = {
 				params.timestamp = new Date().toISOString();
 				const res = await this._create(ctx, params);
 
-				ctx.call("io.broadcast", {
+				ctx.call("api.broadcast", {
 					event:"coordinates.device." + res.device_id,
 					args: [res],
 					volatile: true,
