@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex vw-100 vh-100 align-items-center justify-content-center bg-primary">
-    <div v-if="results?.total > 0" class="col-5">
+    <div v-if="results?.total > 0" class="col-11 col-lg-5">
       <div class="card bg-secondary border-dark">
         <div class="card-body">
           <h5 class="card-title text-center text-white">
@@ -10,12 +10,12 @@
               <div v-for="row in results.rows" :key="row.id" class="list-group-item list-group-item-action text-white bg-info border-dark d-flex justify-content-between align-items-center">
                 <div>{{ row.name }}</div>
                 <div>
-                  <button class="btn btn-secondary me-2" data-bs-toggle="modal" data-bs-target="#editModal" @click="setDevice(row)">Edit</button>
+                  <button class="btn btn-sm btn-secondary me-2" data-bs-toggle="modal" data-bs-target="#editModal" @click="setDevice(row)">Edit</button>
                   <nuxt-link :to="`/device/${row.id}/realtime`">
-                    <button class="btn btn-secondary me-2">Realtime</button>
+                    <button class="btn btn-sm btn-secondary me-2">Realtime</button>
                   </nuxt-link>
                   <nuxt-link :to="`/device/${row.id}/history`">
-                    <button class="btn btn-secondary">History</button>
+                    <button class="btn btn-sm btn-secondary">History</button>
                   </nuxt-link>
                 </div>
               </div>

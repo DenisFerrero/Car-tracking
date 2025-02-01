@@ -1,7 +1,7 @@
 <template>
-  <div class="d-flex vw-100 vh-100 justify-content-center p-2 bg-primary">
+  <div class="d-flex flex-wrap vw-100 justify-content-center p-2 bg-primary" style="min-height: 100vh;">
     <!-- Map -->
-    <div class="col-9 pe-3">
+    <div class="col-11 col-lg-9 pe-lg-3">
       <LMap
         :zoom="15"
         style="height: 96vh"
@@ -18,9 +18,9 @@
       </LMap>
     </div>
     <!-- Other data -->
-    <div class="col-3 pe-2">
-      <div class="col-12 d-flex justify-content-center border-dark text-white">
-        <h2>Go to realtime</h2>
+    <div class="col-12 col-lg-3 pe-2">
+      <div class="col-12 d-flex justify-content-center border-dark text-white mt-2 mt-lg-0">
+        <h2>Realtime</h2>
       </div>
       <device-description :device="device" class="mt-2"/> 
       <coordinate-description :coordinate="currentPosition" class="mt-2"/>

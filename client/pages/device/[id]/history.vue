@@ -1,7 +1,7 @@
 <template>
-  <div class="d-flex col-12 justify-content-center p-2 bg-primary" style="min-height: 100vh;">
+  <div class="d-flex flex-wrap col-12 justify-content-center p-2 bg-primary" style="min-height: 100vh;">
     <!-- Map -->
-    <div class="col-9 pe-3">
+    <div class="col-11 col-lg-9 pe-lg-3">
       <LMap
         :zoom="15"
         style="height: 96vh"
@@ -16,23 +16,24 @@
         <LMarker :lat-lng="[currentPosition.x, currentPosition.y]"/>
         <LPolyline v-if="rawCoordinates.length > 1" :lat-lngs="rawCoordinates" color="red" />
       </LMap>
-      <div v-if="coordinates.length > 0" class="d-flex col-12 mt-2">
+      <!-- Graphs -->
+      <div v-if="coordinates.length > 0" class="d-flex flex-wrap col-12 mt-2">
         <client-only>
-          <div class="col-4 pe-1">
+          <div class="col-12 col-lg-4 pe-1">
             <ApexChart type="line" :options="altitudeChartOptions" :series="altitudeSeries" />
           </div>
-          <div class="col-4 pe-1">
+          <div class="col-12 col-lg-4 pe-1">
             <ApexChart type="line" :options="pressureChartOptions" :series="pressureSeries" />
           </div>
-          <div class="col-4">
+          <div class="col-12 col-lg-4">
             <ApexChart type="line" :options="temperatureChartOptions" :series="temperatureSeries" />
           </div>
         </client-only>
       </div>
     </div>
     <!-- Other data -->
-    <div class="col-3 pe-2">
-      <div class="col-12 d-flex justify-content-center border-dark text-white">
+    <div class="col-12 col-lg-3 pe-2">
+      <div class="col-12 d-flex justify-content-center border-dark text-white mt-2 mt-lg-0">
         <h2>History</h2>
       </div>
       <div class="card bg-info border-dark mt-2">
