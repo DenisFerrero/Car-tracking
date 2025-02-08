@@ -2,6 +2,7 @@ const database = require("../helpers/database.mixin");
 const sequelize = require("sequelize");
 const { DataTypes, Op } = sequelize;
 const _ = require("lodash");
+const mqtt = (require("../helpers/mqtt"))();
 
 const model = {
 	timestamp: { type: DataTypes.DATE, allowNull: false, primaryKey: true },
@@ -88,27 +89,18 @@ module.exports = {
 		}
 	},
 
-	// TODO Remove it
-	// async started () {
-	// 	let last = (await this._find(this.broker, { query: { device_id: 1 }, sort: "-timestamp" }))[0];
+	async started () {
+		this.logger.info("Subscribing to MQTT broker for car coordinates...");
+		await mqtt.subscribeAsync("coordinates");
 
-	// 	const emitCoordinates = () => {
-	// 		last.x += 0.0008;
-	// 		last.y += 0.0008;
-	// 		last.altitude += Math.random() * 6 - 3;
-	// 		last.pressure += Math.random() * 6 - 3;
-	// 		last.temperature += Math.random() * 6 - 3;
-	// 		last.timestamp = new Date();
+		mqtt.on("message", (topic, message) => {
+			if (topic === "coordinates") {
+				this.broker.call("coordinates.store", JSON.parse(message.toString()));
+			}
+		});
+	},
 
-	// 		this.broker.call("api.broadcast", {
-	// 			event:"coordinates.device." + last.device_id,
-	// 			args: [last],
-	// 			volatile: true,
-	// 		});
-
-	// 		setTimeout(emitCoordinates, 2000);
-	// 	};
-
-	// 	emitCoordinates();
-	// }
+	async stopped () {
+		await mqtt.unsubscribeAsync("coordinates");
+	}
 };

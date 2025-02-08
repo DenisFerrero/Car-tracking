@@ -1,18 +1,11 @@
 const fs = require("fs");
 const { ServiceBroker } = require("moleculer");
-const config = require("./helpers/config.js");
+const config = (require("./helpers/config.js"))();
 const migrations = require("./helpers/migration.js");
 
 async function start () {
 	const broker = new ServiceBroker({
 		logger: true,
-		transporter: {
-			type: "NATS",
-			options: {
-				url: config.nats.url,
-				token: config.nats.token,
-			}
-		},
 		metadata: config.broker.metadata,
 		validator: {
 			type: "Fastest",
