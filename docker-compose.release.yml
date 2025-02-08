@@ -1,20 +1,23 @@
 version: "3.3"
 
 services:
-  # Nats
-  nats:
-    image: nats:2
-    container_name: nats
+  # Mosquitto
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
     restart: unless-stopped
-    command: "-c /etc/conf/nats.conf"
+    ports:
+      - "1883:1883"
     volumes:
-      - ./config/nats:/etc/conf
+      - ./volumes/mosquitto:/etc/mosquitto
+      - ./config/mosquitto/passwd:/etc/mosquitto/passwd
+      - ./config/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
     networks:
       - internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nats.rule=Host(`nats.${DOMAIN}`)"
-      - "traefik.http.routers.nats.entrypoints=nats"
+      - "traefik.http.routers.mosquitto.rule=Host(`mosquitto.${DOMAIN}`)"
+      - "traefik.http.routers.mosquitto.entrypoints=mosquitto"
 
   # Database
   database:

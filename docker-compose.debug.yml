@@ -1,17 +1,16 @@
 version: "3.3"
 
 services:
-  # Nats
-  nats:
-    image: nats:2
-    container_name: nats
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
     restart: unless-stopped
     ports:
-      - "4222:4222"
-      - "8222:8222"
-    command: "-c /etc/conf/nats.conf"
+      - "1883:1883"
     volumes:
-      - ./config/nats:/etc/conf
+      - ./volumes/mosquitto:/etc/mosquitto
+      - ./config/mosquitto/passwd:/etc/mosquitto/passwd
+      - ./config/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
     networks:
       - internal
   # Database
