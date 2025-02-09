@@ -24,7 +24,7 @@ services:
     image: timescale/timescaledb:latest-pg15
     container_name: database
     restart: unless-stopped
-    env_file: docker-compose.yml
+    env_file: docker-compose.env
     volumes:
       - ./volumes/database:/var/lib/postgresql/data
     networks:
@@ -37,14 +37,16 @@ services:
       dockerfile: Dockerfile
     container_name: client
     restart: unless-stopped
-    env_file: docker-compose.yml
+    env_file: docker-compose.env
+    args:
+      SERVER: https://server.${DOMAIN}/
     depends_on:
       - server
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.client.rule=Host(`client.${DOMAIN}`)"
       - "traefik.http.routers.client.entrypoints=web, websecure"
-      - "traefik.http.routers.client.tls.certresolver=resolver"      
+      - "traefik.http.routers.client.tls.certresolver=resolver"
       - "traefik.http.routers.client.tls=true"
       - 'traefik.http.routers.client.middlewares=authelia@docker'
     networks:
@@ -57,9 +59,9 @@ services:
       dockerfile: Dockerfile
     container_name: server
     restart: unless-stopped
-    env_file: docker-compose.yml
+    env_file: docker-compose.env
     depends_on:
-      - nats
+      - mosquitto
       - database
     networks:
       - internal
@@ -67,7 +69,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.server.rule=Host(`server.${DOMAIN}`)"
       - "traefik.http.routers.server.entrypoints=web, websecure"
-      - "traefik.http.routers.server.tls.certresolver=resolver"      
+      - "traefik.http.routers.server.tls.certresolver=resolver"
       - "traefik.http.routers.server.tls=true"
       - 'traefik.http.routers.server.middlewares=authelia@docker'
 
@@ -91,7 +93,7 @@ services:
     image: authelia/authelia
     container_name: authelia
     restart: unless-stopped
-    env_file: docker-compose.yml
+    env_file: docker-compose.env
     environment:
       - DOMAIN=${DOMAIN}
     volumes:
