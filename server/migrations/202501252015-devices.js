@@ -5,7 +5,7 @@ module.exports = {
 		const transaction = await queryInterface.sequelize.transaction();
 		try {
 			await queryInterface.createTable("devices", {
-				id: { type: Sequelize.INTEGER, allowNull: false, primaryKey: true },
+				id: { type: Sequelize.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
 				name: { type: Sequelize.STRING, allowNull: false },
 				part_number: { type: Sequelize.STRING, allowNull: false },
 				serial_number: { type: Sequelize.STRING, allowNull: false },
