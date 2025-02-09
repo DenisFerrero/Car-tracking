@@ -35,11 +35,11 @@ services:
     build:
       context: client
       dockerfile: Dockerfile
+      args:
+        SERVER: https://server.${DOMAIN}/
     container_name: client
     restart: unless-stopped
     env_file: docker-compose.env
-    args:
-      SERVER: https://server.${DOMAIN}/
     depends_on:
       - server
     labels:
