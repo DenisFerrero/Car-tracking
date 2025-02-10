@@ -2,12 +2,10 @@ version: "3.3"
 
 services:
   # Mosquitto
-  mosquitto:
+  mqtt:
     image: eclipse-mosquitto
-    container_name: mosquitto
+    container_name: mqtt
     restart: unless-stopped
-    ports:
-      - "1883:1883"
     volumes:
       - ./volumes/mosquitto:/etc/mosquitto
       - ./config/mosquitto/passwd:/etc/mosquitto/passwd
@@ -16,8 +14,10 @@ services:
       - internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.mosquitto.rule=Host(`mosquitto.${DOMAIN}`)"
-      - "traefik.http.routers.mosquitto.entrypoints=mosquitto"
+      - "traefik.tcp.routers.mqtt.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mqtt.entrypoints=mqtt"
+      - "traefik.tcp.routers.mqtt.service=mqtt"
+      - "traefik.tcp.services.mqtt.loadbalancer.server.port=1883"
 
   # Database
   database:
@@ -35,20 +35,18 @@ services:
     build:
       context: client
       dockerfile: Dockerfile
-      args:
-        SERVER: https://server.${DOMAIN}/
     container_name: client
     restart: unless-stopped
     env_file: docker-compose.env
+    environment:
+      - NUXT_PUBLIC_SERVER=http://server.car-tracking.${DOMAIN}
     depends_on:
       - server
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.client.rule=Host(`client.${DOMAIN}`)"
-      - "traefik.http.routers.client.entrypoints=web, websecure"
-      - "traefik.http.routers.client.tls.certresolver=resolver"
-      - "traefik.http.routers.client.tls=true"
-      - 'traefik.http.routers.client.middlewares=authelia@docker'
+      - "traefik.http.routers.client.rule=Host(`client.car-tracking.${DOMAIN}`)"
+      - "traefik.http.routers.client.entrypoints=web"
+      - "traefik.http.services.client.loadbalancer.server.port=3000"
     networks:
       - internal
 
@@ -61,17 +59,16 @@ services:
     restart: unless-stopped
     env_file: docker-compose.env
     depends_on:
-      - mosquitto
+      - mqtt
       - database
     networks:
       - internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.server.rule=Host(`server.${DOMAIN}`)"
-      - "traefik.http.routers.server.entrypoints=web, websecure"
-      - "traefik.http.routers.server.tls.certresolver=resolver"
-      - "traefik.http.routers.server.tls=true"
-      - 'traefik.http.routers.server.middlewares=authelia@docker'
+      - "traefik.http.routers.server.rule=Host(`server.car-tracking.${DOMAIN}`)"
+      - "traefik.http.routers.server.entrypoints=web"
+      - "traefik.http.routers.server.service=server"
+      - "traefik.http.services.server.loadbalancer.server.port=4000"
 
   # Traefik
   traefik:
@@ -81,35 +78,40 @@ services:
     ports:
       - 80:80
       - 443:443
+      # MQTT related
+      - 1883:1883 # Not secure channel, disable whenever security level will be integrated
     volumes:
       - /run/docker.sock:/run/docker.sock:ro
-      - ./volumes/traefik/config/:/etc/traefik/:ro
+      - ./config/traefik/traefik.yml:/traefik.yml/:ro
+      - ./volumes/traefik/config/:/var/traefik/config:rw
       - ./volumes/traefik/certs/:/var/traefik/certs/:rw
     networks:
       - internal
 
   # Authelia
-  authelia:
-    image: authelia/authelia
-    container_name: authelia
-    restart: unless-stopped
-    env_file: docker-compose.env
-    environment:
-      - DOMAIN=${DOMAIN}
-    volumes:
-      - ./config:/config
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.authelia.rule=Host(`auth.${DOMAIN}`)'
-      - 'traefik.http.routers.authelia.entrypoints=web, websecure'
-      - 'traefik.http.routers.authelia.tls=true'
-      - 'traefik.http.routers.authelia.tls.certresolver=resolver'
-      - 'traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://auth.${DOMAIN}'
-      - 'traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true'
-      - 'traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email'
-    depends_on:
-      - database
-    networks:
-      - internal
+  #authelia:
+  #  image: authelia/authelia
+  #  container_name: authelia
+  #  restart: unless-stopped
+  #  env_file: docker-compose.env
+  #  environment:
+  #    - DOMAIN=${DOMAIN}
+  #  volumes:
+  #    - ./config/authelia:/config
+  #  labels:
+  #    - 'traefik.enable=true'
+  #    - 'traefik.http.routers.authelia.rule=Host(`auth.car-tracking.${DOMAIN}`)'
+  #    - 'traefik.http.routers.authelia.entrypoints=web'
+  #    - 'traefik.http.routers.authelia.entrypoints=web, websecure'
+  #    - 'traefik.http.routers.authelia.tls=true'
+  #    - 'traefik.http.routers.authelia.tls.certresolver=resolver'
+  #    - 'traefik.http.services.authelia.loadbalancer.server.port=9091'
+  #    - 'traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://auth.car-tracking.${DOMAIN}'
+  #    - 'traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true'
+  #    - 'traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email'
+  #  depends_on:
+  #    - database
+  #  networks:
+  #    - internal
 networks:
   internal:
