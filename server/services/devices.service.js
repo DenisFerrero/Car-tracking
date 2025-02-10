@@ -88,6 +88,7 @@ module.exports = {
 			if (topic === "discover") {
 				const deviceInfo = JSON.parse(message.toString());
 				const result = await this.broker.call("devices.discover", deviceInfo);
+				this.broker.cacher.clean("devices.*");
 				await mqtt.publishAsync(`discover.${deviceInfo.imei}.ack`, `${result}`);
 			}
 		});

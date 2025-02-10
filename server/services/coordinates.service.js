@@ -96,6 +96,7 @@ module.exports = {
 		mqtt.on("message", (topic, message) => {
 			if (topic === "coordinates") {
 				this.broker.call("coordinates.store", JSON.parse(message.toString()));
+				this.broker.cacher.clean("coordinates.*");
 			}
 		});
 	},
