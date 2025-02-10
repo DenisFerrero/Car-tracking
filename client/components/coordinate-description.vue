@@ -8,25 +8,25 @@
       <div class="list-group">
         <div class="list-group-item d-flex justify-content-between bg-dark border-dark">
           <span class="fw-bold">X</span>
-          <span>{{ props.coordinate.x.toFixed(4) }}</span>
+          <span>{{ props.coordinate.x?.toFixed(4) }}</span>
         </div>
         <div class="list-group-item d-flex justify-content-between bg-dark border-dark">
           <span class="fw-bold">Y</span>
-          <span>{{ props.coordinate.y.toFixed(4) }}</span>
+          <span>{{ props.coordinate.y?.toFixed(4) }}</span>
         </div>
         <div class="list-group-item d-flex justify-content-between bg-dark border-dark">
           <span class="fw-bold">Altitude</span>
-          <span v-if="typeof props.coordinate.altitude === 'number'">{{ props.coordinate.altitude.toFixed(2) }} meters</span>
+          <span v-if="typeof props.coordinate.altitude === 'number'">{{ props.coordinate.altitude?.toFixed(2) }} meters</span>
           <span v-else class="fst-italic">Not defined</span>
         </div>
         <div class="list-group-item d-flex justify-content-between bg-dark border-dark">
           <span class="fw-bold">Pressure</span>
-          <span v-if="typeof props.coordinate.pressure === 'number'">{{ props.coordinate.pressure.toFixed(2) }} atm</span>
+          <span v-if="typeof props.coordinate.pressure === 'number'">{{ props.coordinate.pressure?.toFixed(2) }} atm</span>
           <span v-else class="fst-italic">Not defined</span>
         </div>
         <div class="list-group-item d-flex justify-content-between bg-dark border-dark">
           <span class="fw-bold">Temperature</span>
-          <span v-if="typeof props.coordinate.temperature === 'number'">{{ props.coordinate.temperature.toFixed(2) }} °C</span>
+          <span v-if="typeof props.coordinate.temperature === 'number'">{{ props.coordinate.temperature?.toFixed(2) }} °C</span>
           <span v-else class="fst-italic">Not defined</span>
         </div>
         <div class="list-group-item d-flex justify-content-between bg-dark border-dark">

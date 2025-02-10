@@ -1,10 +1,13 @@
 #include <MQTT.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <Arduino.h>
 
 void printVariables ();
 
+extern WiFiClientSecure secureWifiNet;
 extern WiFiClient wifiNet;
+
 extern MQTTClient client;
 
 struct deviceInfo {

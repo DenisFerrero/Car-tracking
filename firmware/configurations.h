@@ -20,6 +20,8 @@
 #define MQTT_CONNECTION_RETRY 100
 // Delay between each reconnection attempt. Default 1000
 #define MQTT_CONNECTION_DELAY 100
+// TLS certificate if the connection is protected. Download certificate from here: https://letsencrypt.org/certs/isrgrootx1.pem
+// #define MQTT_CERTIFICATE
 
 // Publish coordinates each X milliseconds. Default 20*1000
 #define PUBLISH_RATE 20*1000

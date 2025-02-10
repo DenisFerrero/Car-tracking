@@ -1,9 +1,12 @@
 #include <connections.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <MQTT.h>
 #include <configurations.h>
 
+WiFiClientSecure secureWifiNet;
 WiFiClient wifiNet;
+
 MQTTClient client;
 
 void printVariables () {
@@ -58,6 +61,11 @@ void printVariables () {
 
   Serial.print("MQTT connection retry delay between each attempt: ");
   Serial.println(MQTT_CONNECTION_DELAY);
+
+  #ifdef MQTT_CERTIFICATE
+  Serial.print("MQTT certification: ");
+  Serial.println(MQTT_CERTIFICATE);
+  #endif
   #pragma endregion MQTT
 
   #pragma region Application
@@ -118,7 +126,13 @@ bool startMQTT (MQTTClientCallbackSimple dispatcher) {
   Serial.print(MQTT_BROKER);
 
   #if CONNECTION_MODE == 1
-  client.begin(MQTT_BROKER, MQTT_PORT, wifiNet);
+    #ifdef MQTT_CERTIFICATE
+      client.begin(MQTT_BROKER, MQTT_PORT, secureWifiNet);
+      secureWifiNet.setCACert(MQTT_CERTIFICATE);
+    #else
+      client.begin(MQTT_BROKER, MQTT_PORT, wifiNet);
+    #endif
+
   #endif
 
   #if CONNECTION_MODE == 2
