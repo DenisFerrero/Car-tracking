@@ -63,7 +63,6 @@ const { $socket } = useNuxtApp();
 const editDevice = ref({});
 
 function setDevice (device) {
-  console.log(device);
   editDevice.value = JSON.parse(JSON.stringify(device));
 }
 

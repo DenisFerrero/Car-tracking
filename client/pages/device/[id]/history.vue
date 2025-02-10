@@ -95,14 +95,12 @@ async function loadCoordinates () {
     start: new Date(dates.value[0]).toISOString(), end: new Date(dates.value[1]).toISOString(),
     sort: 'timestamp', pageSize: 100, page: 1
   };
-  console.log('Request #1');
   const results = await $socket.syncEmit('call', 'coordinates.list', params);
   let pResults = [];
 
   if (results.totalPages > 0) {
     const promises = [];
     for (let i = 1; i < results.totalPages; i++) {
-      console.log('Request #' + i);
       promises.push($socket.syncEmit('call', 'coordinates.list', Object.assign({}, params, { page: i })));
     }
     pResults = await Promise.all(promises);
