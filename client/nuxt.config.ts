@@ -8,7 +8,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      server: process.env.SERVER || 'http://localhost:4000'
+      server: 'http://localhost:4000'
     }
   },
 
