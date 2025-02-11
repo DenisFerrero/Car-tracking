@@ -1,6 +1,7 @@
 #include <coordinates.h>
 #include <configurations.h>
 #include <math.h>
+#include <connections.h>
 #define _USE_MATH_DEFINES // Ensures math constants are available for M_PI (π)
 
 // Earth radius in meters to calculate the distance between two points
@@ -9,9 +10,27 @@
 // Get GPS current position
 coordinate getCoordinate () {
   coordinate result;
+  String response;
 
-  result.x = 45.45833;
-  result.y = 7.8527995;
+  Serial1.println("AT+CGPSINFO");  // Request GPS info from SIM7670
+  delay(2000);
+
+  while (Serial1.available()) { response = Serial1.readString(); }
+
+  // Parse response: +CGPSINFO: 4044.1234,N,07400.5678,W
+  if (response.indexOf("+CGPSINFO:") != -1) {
+    int comma1 = response.indexOf(",");
+    int comma2 = response.indexOf(",", comma1 + 1);
+    int comma3 = response.indexOf(",", comma2 + 1);
+    int comma4 = response.indexOf(",", comma3 + 1);
+
+    String lat_str = response.substring(comma1 + 1, comma2);
+    String lon_str = response.substring(comma3 + 1, comma4);
+    result.x = lat_str.toFloat() / 100.0;  // Convert to decimal
+    result.y = lon_str.toFloat() / 100.0;
+  }
+
+  // TODO
   result.altitude = 130;
   result.pressure = 170;
   result.temperature = 35;

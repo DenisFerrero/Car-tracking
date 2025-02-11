@@ -2,11 +2,14 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <Arduino.h>
+#include <configurations.h>
+#include <TinyGsmClient.h>
 
 void printVariables ();
 
 extern WiFiClientSecure secureWifiNet;
 extern WiFiClient wifiNet;
+extern TinyGsmClient gsmNet;
 
 extern MQTTClient client;
 
@@ -30,3 +33,4 @@ bool reconnectMQTT();
 
 String getMacAddress ();
 deviceInfo getDeviceInfo ();
+String getDeviceProperty(String property);

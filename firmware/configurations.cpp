@@ -28,6 +28,20 @@
     #define WIFI_CONNECTION_DELAY 1000
   #endif
 #endif
+#if CONNECTION_MODE == 2 || CONNECTION_MODE == 3
+  // Set SIM APN if not already
+  #ifndef SIM_APN
+    #error "Missing SIM APN"
+  #endif
+  // Set SIM User if not already
+  #ifndef SIM_USER
+    #define SIM_USER ""
+  #endif
+  // Set SIM Password if not already
+  #ifndef SIM_PASSWORD
+    #define SIM_PASSWORD ""
+  #endif
+#endif
 
 #ifndef MQTT_BROKER
   #error "MQTT broker not defined"

@@ -1,5 +1,9 @@
 // Print those variables at startup
 #define START_UP_PRINT_ENV 1
+
+// Board model
+#define TINY_GSM_MODEM_A7670
+
 // 1. WiFi / 2. Sim module / 3. WiFi priority, fallback to Sim module. Default 1
 #define CONNECTION_MODE 1
 // WiFI credentials
@@ -9,6 +13,12 @@
 #define WIFI_CONNECTION_RETRY 100
 // Delay between each reconnection attempt. Default 1000
 #define WIFI_CONNECTION_DELAY 1000
+// SIM APN
+#define SIM_APN ""
+// SIM user
+#define SIM_USER ""
+// SIM password
+#define SIM_PASSWORD ""
 
 // MQTT Broker address and credentials 
 #define MQTT_BROKER "192.168.1.254"
@@ -20,6 +30,7 @@
 #define MQTT_CONNECTION_RETRY 100
 // Delay between each reconnection attempt. Default 1000
 #define MQTT_CONNECTION_DELAY 100
+// TODO Integrate
 // TLS certificate if the connection is protected. Download certificate from here: https://letsencrypt.org/certs/isrgrootx1.pem
 // #define MQTT_CERTIFICATE
 

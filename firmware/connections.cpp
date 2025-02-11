@@ -3,9 +3,17 @@
 #include <WiFiClientSecure.h>
 #include <MQTT.h>
 #include <configurations.h>
+#include <TinyGsmClient.h>
 
-WiFiClientSecure secureWifiNet;
 WiFiClient wifiNet;
+TinyGsm modem(Serial1);
+TinyGsmClient gsmNet(modem);
+
+// Code used to request information over the serial of the sim module
+#define SIM_IMEI "CGSN"
+#define SIM_MANUFACTURER "CGMI"
+#define SIM_MODEL "CGMM"
+#define SIM_REVISION "CGMR"
 
 MQTTClient client;
 
@@ -39,6 +47,17 @@ void printVariables () {
 
   Serial.print("WiFi connection retry delay between each attempt: ");
   Serial.println(WIFI_CONNECTION_DELAY);
+  #endif
+
+  #if CONNECTION_MODE == 1 || CONNECTION_MODE == 3
+  Serial.print("SIM APN: ");
+  Serial.println(SIM_APN);
+
+  Serial.print("SIM User: ");
+  Serial.println(SIM_USER);
+
+  Serial.print("SIM Password: ");
+  Serial.println(SIM_PASSWORD);
   #endif
   #pragma endregion Connection
 
@@ -87,6 +106,7 @@ void printVariables () {
 
 bool startConnection () {
   bool connected = false;
+  Serial1.begin(115200, SERIAL_8N1, 26, 27);
 
   #if CONNECTION_MODE == 1 || CONNECTION_MODE == 3
 
@@ -112,10 +132,26 @@ bool startConnection () {
   #if CONNECTION_MODE == 2 || CONNECTION_MODE == 3
   
   if (!connected) {
-    connected = true;
+    Serial.println("Initializing modem...");
+    if (!modem.restart()) {
+      Serial.println("Modem restart failed!");
+      return false;
+    }
+
+    Serial.println("Connecting to cellular network...");
+    if (!modem.gprsConnect(SIM_APN, SIM_USER, SIM_PASSWORD)) {
+      Serial.println("GPRS connection failed!");
+      return false;
+    }
+
+    Serial.println("Connected to cellular network!");
   }
 
   #endif
+
+  // Enable GPS
+  Serial1.println("AT+CGPS=1,1");
+  delay(2000);
 
   return connected;
 }
@@ -126,22 +162,19 @@ bool startMQTT (MQTTClientCallbackSimple dispatcher) {
   Serial.print(MQTT_BROKER);
 
   #if CONNECTION_MODE == 1
-    #ifdef MQTT_CERTIFICATE
-      client.begin(MQTT_BROKER, MQTT_PORT, secureWifiNet);
-      secureWifiNet.setCACert(MQTT_CERTIFICATE);
-    #else
-      client.begin(MQTT_BROKER, MQTT_PORT, wifiNet);
-    #endif
-
+  client.begin(MQTT_BROKER, MQTT_PORT, wifiNet);
   #endif
 
   #if CONNECTION_MODE == 2
+  client.begin(MQTT_BROKER, MQTT_PORT, gsmNet);
   #endif
   
   #if CONNECTION_MODE == 3
   // Use WiFi if connected
   if (WiFi.status() == WL_CONNECTED) {
     client.begin(MQTT_BROKER, MQTT_PORT, wifiNet);
+  } else {
+    client.begin(MQTT_BROKER, MQTT_PORT, gsmNet);
   }
   #endif
 
@@ -174,39 +207,38 @@ bool reconnectMQTT () {
 }
 
 String getMacAddress () {
-  String result = "";
-
-  #if CONNECTION_MODE == 1
-  result = "12345"; // WiFi.macAddress();
-  #endif
-  
-  #if CONNECTION_MODE == 2
-  result = "12345";
-  #endif
-
-  #if CONNECTION_MODE == 3
-  // Pick the WiFi mac address if connected
-  if (WiFi.status() == WL_CONNECTED) {
-    result = "12345"; // WiFi.macAddress();
-  }
-  // Pick the Sim module mac address
-  else {
-    result = "12345";
-  }
-  #endif
-
-  return result;
+  return WiFi.macAddress();
 }
 
 deviceInfo getDeviceInfo () {
   deviceInfo result;
 
-  result.part_number = "part_number";
-  result.serial_number = "serial_number";
-  result.manufacturer = "manufacturer";
-  result.model = "model";
-  result.revision = "revision";
-  result.imei = "imei";
+  result.imei = getDeviceProperty(SIM_IMEI);
+  result.manufacturer = getDeviceProperty(SIM_MANUFACTURER);
+  result.model = getDeviceProperty(SIM_MODEL);
+  result.revision = getDeviceProperty(SIM_REVISION);
+  // Cannot gather from Sim module serial, remove them in future
+  result.serial_number = "N/A";
+  result.part_number = "N/A";
+
+  return result;
+}
+
+String getDeviceProperty (String property) {
+  String tempBuffer;
+  String result = "";
+  
+  // TODO Apply "\r\n" if you not receive any response!
+  Serial1.println("AT+" + property);
+  delay(2000);
+
+  while (Serial1.available()) { tempBuffer += Serial1.readString(); }
+
+  // Parse response: +<property>: <result>
+  if (tempBuffer.indexOf("+" + property + ":") != -1) {
+    int indexMessage = tempBuffer.indexOf("+" + property + ":");
+    result = tempBuffer.substring(indexMessage + (property.length()) + 2, tempBuffer.length());
+  }
 
   return result;
 }
