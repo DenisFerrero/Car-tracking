@@ -6,8 +6,6 @@ const mqtt = (require("../helpers/mqtt"))();
 const model = {
 	id: { type: DataTypes.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
 	name: { type: DataTypes.STRING, allowNull: false },
-	part_number: { type: DataTypes.STRING, allowNull: false },
-	serial_number: { type: DataTypes.STRING, allowNull: false },
 	manufacturer: { type: DataTypes.STRING, allowNull: true },
 	model: { type: DataTypes.STRING, allowNull: true },
 	revision: { type: DataTypes.STRING, allowNull: true },
@@ -44,8 +42,6 @@ module.exports = {
 
 		discover: {
 			params: {
-				part_number: { type: "string" },
-				serial_number: { type: "string" },
 				imei: { type: "string" },
 				manufacturer: { type: "string", optional: true },
 				model: { type: "string", optional: true },

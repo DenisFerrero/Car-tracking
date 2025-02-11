@@ -19,16 +19,6 @@
           <span>{{ props.device.imei }}</span>
         </div>
         <div class="list-group-item d-flex justify-content-between bg-dark border-dark">
-          <span class="fw-bold">Part number</span>
-          <span v-if="typeof props.device.part_number === 'string'">{{ props.device.part_number }}</span>
-          <span v-else class="fst-italic">Not defined</span>
-        </div>
-        <div class="list-group-item d-flex justify-content-between bg-dark border-dark">
-          <span class="fw-bold">Serial number</span>
-          <span v-if="typeof props.device.serial_number === 'string'">{{ props.device.serial_number }}</span>
-          <span v-else class="fst-italic">Not defined</span>
-        </div>
-        <div class="list-group-item d-flex justify-content-between bg-dark border-dark">
           <span class="fw-bold">Manufacturer</span>
           <span v-if="typeof props.device.manufacturer === 'string'">{{ props.device.manufacturer }}</span>
           <span v-else class="fst-italic">Not defined</span>

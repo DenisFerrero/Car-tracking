@@ -7,8 +7,6 @@ module.exports = {
 			await queryInterface.createTable("devices", {
 				id: { type: Sequelize.INTEGER, allowNull: false, primaryKey: true, autoIncrement: true },
 				name: { type: Sequelize.STRING, allowNull: false },
-				part_number: { type: Sequelize.STRING, allowNull: false },
-				serial_number: { type: Sequelize.STRING, allowNull: false },
 				imei: { type: Sequelize.STRING, allowNull: false },
 				manufacturer: { type: Sequelize.STRING, allowNull: true },
 				model: { type: Sequelize.STRING, allowNull: true },
