@@ -6,9 +6,9 @@ const mqtt = (require("../helpers/mqtt"))();
 
 const model = {
 	timestamp: { type: DataTypes.DATE, allowNull: false, primaryKey: true },
-	x: { type: DataTypes.REAL, allowNull: false },
-	y: { type: DataTypes.REAL, allowNull: false },
-	altitude: { type: DataTypes.REAL, allowNull: true },
+	x: { type: DataTypes.DOUBLE, allowNull: false },
+	y: { type: DataTypes.DOUBLE, allowNull: false },
+	altitude: { type: DataTypes.DOUBLE, allowNull: true },
 	pressure: { type: DataTypes.REAL, allowNull: true },
 	temperature: { type: DataTypes.REAL, allowNull: true },
 	device_id: { type: DataTypes.INTEGER, allowNull: false }

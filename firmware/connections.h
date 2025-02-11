@@ -28,6 +28,7 @@ struct deviceInfo {
 };
 
 bool startConnection ();
+bool startGPS ();
 bool startMQTT(MQTTClientCallbackSimple dispatcher);
 bool reconnectMQTT();
 

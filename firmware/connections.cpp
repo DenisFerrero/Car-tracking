@@ -1,3 +1,4 @@
+#include "GPS_config.h"
 #include <connections.h>
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
@@ -8,6 +9,8 @@
 WiFiClient wifiNet;
 TinyGsm modem(Serial1);
 TinyGsmClient gsmNet(modem);
+
+#define TINY_GSM_RX_BUFFER 2048 // Set RX buffer to 1Kb
 
 // Code used to request information over the serial of the sim module
 #define SIM_IMEI "CGSN"
@@ -106,7 +109,6 @@ void printVariables () {
 
 bool startConnection () {
   bool connected = false;
-  Serial1.begin(115200, SERIAL_8N1, 26, 27);
 
   #if CONNECTION_MODE == 1 || CONNECTION_MODE == 3
 
@@ -149,11 +151,99 @@ bool startConnection () {
 
   #endif
 
-  // Enable GPS
-  Serial1.println("AT+CGPS=1,1");
-  delay(2000);
-
   return connected;
+}
+
+bool startGPS () {
+  // Turn on DC boost to power on the modem
+  #ifdef BOARD_POWERON_PIN
+  pinMode(BOARD_POWERON_PIN, OUTPUT);
+  digitalWrite(BOARD_POWERON_PIN, HIGH);
+  #endif
+
+  // Set modem reset pin ,reset modem
+  pinMode(MODEM_RESET_PIN, OUTPUT);
+  digitalWrite(MODEM_RESET_PIN, !MODEM_RESET_LEVEL);
+  delay(100);
+  digitalWrite(MODEM_RESET_PIN, MODEM_RESET_LEVEL);
+  delay(2600);
+  digitalWrite(MODEM_RESET_PIN, !MODEM_RESET_LEVEL);
+
+  // Turn on modem
+  pinMode(BOARD_PWRKEY_PIN, OUTPUT);
+  digitalWrite(BOARD_PWRKEY_PIN, LOW);
+  delay(100);
+  digitalWrite(BOARD_PWRKEY_PIN, HIGH);
+  delay(1000);
+  digitalWrite(BOARD_PWRKEY_PIN, LOW);
+
+  // Set modem baud
+  Serial1.begin(115200, SERIAL_8N1, MODEM_RX_PIN, MODEM_TX_PIN);
+
+  Serial.println("Start modem...");
+  delay(3000);
+
+  /*
+   * [Comment from example]
+   * During testing, it was found that there may be a power outage.
+   * Add a loop detection here. When the GPS timeout does not start,
+   * resend the AT to check if the modem is online
+   */
+  Serial.print("Modem starting");
+  int retry = 0;
+  while (!modem.testAT(1000)) {
+    Serial.print(".");
+    if (retry++ > 10) {
+      digitalWrite(BOARD_PWRKEY_PIN, LOW);
+      delay(100);
+      digitalWrite(BOARD_PWRKEY_PIN, HIGH);
+      delay(1000);    //Ton = 1000ms ,Min = 500ms, Max 2000ms
+      digitalWrite(BOARD_PWRKEY_PIN, LOW);
+      retry = 0;
+    }
+  }
+  Serial.println();
+
+  String modemName = "UNKOWN";
+  while (1) {
+    modemName = modem.getModemName();
+    if (modemName == "UNKOWN") {
+      Serial.println("Unable to obtain module information normally, try again");
+      delay(1000);
+    } else if (modemName.startsWith("A7670G")) {
+      while (1) {
+        Serial.println("A7670G does not support built-in GPS function, please run examples/GPSShield");
+        delay(1000);
+      }
+    } else {
+      Serial.print("Model Name:");
+      Serial.println(modemName);
+      break;
+    }
+    delay(5000);
+  }
+
+  delay(200);
+
+  Serial.println("Enabling GPS/GNSS/GLONASS");
+  while (!modem.enableGPS(MODEM_GPS_ENABLE_GPIO, MODEM_GPS_ENABLE_LEVEL)) {
+      Serial.print(".");
+  }
+
+  Serial.println();
+  Serial.println("GPS Enabled");
+
+  modem.setGPSBaud(115200);
+
+  modem.setGPSMode(3);    //GPS + BD
+
+  modem.configNMEASentence(1, 1, 1, 1, 1, 1);
+
+  modem.setGPSOutputRate(1);
+
+  modem.enableNMEA();
+
+  return true;
 }
 
 bool startMQTT (MQTTClientCallbackSimple dispatcher) {
@@ -204,6 +294,8 @@ bool reconnectMQTT () {
     attempt += 1;
     Serial.print(".");
   }
+
+  return client.connected();
 }
 
 String getMacAddress () {
@@ -213,13 +305,16 @@ String getMacAddress () {
 deviceInfo getDeviceInfo () {
   deviceInfo result;
 
-  result.imei = getDeviceProperty(SIM_IMEI);
-  result.manufacturer = getDeviceProperty(SIM_MANUFACTURER);
-  result.model = getDeviceProperty(SIM_MODEL);
-  result.revision = getDeviceProperty(SIM_REVISION);
-  // Cannot gather from Sim module serial, remove them in future
-  result.serial_number = "N/A";
-  result.part_number = "N/A";
+  result.imei = "12345";
+  result.manufacturer = "manufacturer";
+  result.model = "model";
+  result.revision = "revision";
+
+  // TODO Test
+  // result.imei = getDeviceProperty(SIM_IMEI);
+  // result.manufacturer = getDeviceProperty(SIM_MANUFACTURER);
+  // result.model = getDeviceProperty(SIM_MODEL);
+  // result.revision = getDeviceProperty(SIM_REVISION);
 
   return result;
 }

@@ -2,36 +2,42 @@
 #include <configurations.h>
 #include <math.h>
 #include <connections.h>
+#include <TinyGPSPlus.h>
 #define _USE_MATH_DEFINES // Ensures math constants are available for M_PI (π)
 
 // Earth radius in meters to calculate the distance between two points
 #define EARTH_RADIUS 6371000.0
+
+// The TinyGPSPlus object
+TinyGPSPlus gps;
 
 // Get GPS current position
 coordinate getCoordinate () {
   coordinate result;
   String response;
 
-  Serial1.println("AT+CGPSINFO");  // Request GPS info from SIM7670
-  delay(2000);
+  Serial.print(F("Location: "));
+  if (gps.location.isValid()) {
+    Serial.print(gps.location.lat(), 8);
+    result.x = gps.location.lat();
+    Serial.print(F(","));
+    Serial.print(gps.location.lng(), 8);
+    result.y = gps.location.lng();
+    Serial.println();
+  } else {
+    Serial.println(F("INVALID"));
+  }
 
-  while (Serial1.available()) { response = Serial1.readString(); }
-
-  // Parse response: +CGPSINFO: 4044.1234,N,07400.5678,W
-  if (response.indexOf("+CGPSINFO:") != -1) {
-    int comma1 = response.indexOf(",");
-    int comma2 = response.indexOf(",", comma1 + 1);
-    int comma3 = response.indexOf(",", comma2 + 1);
-    int comma4 = response.indexOf(",", comma3 + 1);
-
-    String lat_str = response.substring(comma1 + 1, comma2);
-    String lon_str = response.substring(comma3 + 1, comma4);
-    result.x = lat_str.toFloat() / 100.0;  // Convert to decimal
-    result.y = lon_str.toFloat() / 100.0;
+  Serial.print(F("Altitude: "));
+  if (gps.altitude.isValid()) {
+    Serial.print(gps.altitude.meters(), 6);
+    result.altitude = gps.altitude.meters();
+    Serial.println();
+  } else {
+    Serial.println(F("INVALID"));
   }
 
   // TODO
-  result.altitude = 130;
   result.pressure = 170;
   result.temperature = 35;
 
@@ -67,4 +73,18 @@ bool shareCoordinate (const coordinate &coord1, const coordinate &coord2) {
   #if THRESHOLD_DISTANCE > 0
   return calculateDistance(coord1, coord2) > THRESHOLD_DISTANCE;
   #endif
+}
+
+// This custom version of delay() ensures that the gps object is being "fed".
+void smartDelay(unsigned long ms)
+{
+  int ch = 0;
+  unsigned long start = millis();
+  do {
+    while (Serial1.available()) {
+      ch = Serial1.read();
+      // Serial.write(ch);
+      gps.encode(ch);
+    }
+  } while (millis() - start < ms);
 }

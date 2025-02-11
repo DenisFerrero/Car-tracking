@@ -6,9 +6,9 @@ module.exports = {
 		try {
 			await queryInterface.createTable("coordinates", {
 				timestamp: { type: Sequelize.DATE, allowNull: false, primaryKey: true },
-				x: { type: Sequelize.REAL, allowNull: false },
-				y: { type: Sequelize.REAL, allowNull: false },
-				altitude: { type: Sequelize.REAL, allowNull: true },
+				x: { type: Sequelize.DOUBLE, allowNull: false },
+				y: { type: Sequelize.DOUBLE, allowNull: false },
+				altitude: { type: Sequelize.DOUBLE, allowNull: true },
 				pressure: { type: Sequelize.REAL, allowNull: true },
 				temperature: { type: Sequelize.REAL, allowNull: true },
 				device_id: { type: Sequelize.INTEGER, allowNull: false }

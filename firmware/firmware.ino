@@ -37,6 +37,9 @@ void setup() {
   } else {
     Serial.println("Connection started correctly");
   }
+  // Start GPS
+  startGPS();
+
   // Start MQTT connection to broker
   if (!startMQTT(dispatcher)) {
     Serial.println("Connection to MQTT failed");
@@ -73,4 +76,6 @@ void loop() {
       lastCoordinate = currentCoordinate;
     }
   }
+  // Continue reading data from GPS
+  smartDelay(1);
 }
