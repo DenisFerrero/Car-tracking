@@ -1,7 +1,7 @@
 <template>
   <div class="d-flex flex-wrap col-12 justify-content-center p-2 bg-primary" style="min-height: 100vh;">
     <!-- Map -->
-    <div class="col-11 col-lg-9 pe-lg-3">
+    <div v-if="currentPosition !== null" class="col-11 col-lg-9 pe-lg-3">
       <LMap
         :zoom="15"
         style="height: 96vh"
@@ -31,8 +31,11 @@
         </client-only>
       </div>
     </div>
+    <div v-else class="col-11 col-lg-9 pe-lg-3 d-flex justify-content-center align-items-center display-5 text-white">
+      Cannot load the map without any coordinates
+    </div>
     <!-- Other data -->
-    <div class="col-12 col-lg-3 pe-2">
+    <div class="col-12 col-lg-3 pe-lg-2">
       <div class="col-12 d-flex justify-content-center border-dark text-white mt-2 mt-lg-0">
         <h2>History</h2>
       </div>
@@ -62,7 +65,7 @@ const { $socket } = useNuxtApp();
 
 const device = ref({});
 const coordinates = ref([]);
-const currentPosition = ref({ x: 0, y: 0, altitude: 0, pressure: 0, temperature: 0, timestamp: '' })
+const currentPosition = ref(null);
 
 const { data: device_data } = await useAsyncData('device', () => $fetch(config.public.server + '/api/devices/' + route.params.id, { pageSize: 100 }));
 device.value = device_data.value;
@@ -107,7 +110,9 @@ async function loadCoordinates () {
   }
 
   coordinates.value = results.rows.concat(...pResults.map(p => p.rows));
-  currentPosition.value = coordinates.value.at(-1);
+  if (coordinates.value.length > 0) {
+    currentPosition.value = coordinates.value.at(-1);
+  }
 }
 
 const rawCoordinates = computed(() => coordinates.value.map(coordinate => [coordinate.x, coordinate.y]));

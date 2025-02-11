@@ -57,7 +57,7 @@ module.exports = {
 					query: { device_id: ctx.params.device_id },
 				});
 
-				return result.rows[0] || null;
+				return result.rows[0] || {};
 			}
 		},
 
