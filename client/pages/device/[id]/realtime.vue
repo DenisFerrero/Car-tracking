@@ -54,7 +54,7 @@ const { data: coordinates_data } = await useAsyncData('coordinates', function ()
   });
 });
 
-if (coordinates.value?.x && coordinates.value?.y)
+if (typeof coordinates_data.value?.x === 'number' && typeof coordinates_data.value?.y === 'number')
   coordinates.value.push(coordinates_data.value);
 
 onMounted(() => { $socket.on("coordinates.device." + route.params.id, (result) => coordinates.value.push(result)); });
