@@ -141,18 +141,12 @@ const temperatureSeries = computed(function () {
   }];
 });
 
-function dataPointSelection (event, chartContext, config) {
-  const index = config.dataPointIndex;
-  currentPosition.value = coordinates.value[index];
-}
-
 if (import.meta.client) {
   const style = getComputedStyle(document.documentElement);
 
   altitudeChartOptions.value = {
     chart: {
-      type: "line",
-      events: { dataPointSelection },
+      type: "area",
       height: 350,
       zoom: {
         type: "x", // Enable horizontal zooming
@@ -182,7 +176,6 @@ if (import.meta.client) {
         text: "Altitude (meters)",
       }
     },
-    markers: { size: 5 },
     theme: {
       mode: 'dark', // light or dark
       palette: 'palette1', // Choose a predefined palette
@@ -194,8 +187,6 @@ if (import.meta.client) {
       y: {
         formatter: (value) => `${value} meters`, // Format altitude in tooltip
       },
-      intersect: true,
-      shared: false
     },
     chart: {
       background: style.getPropertyValue('--bs-secondary')
@@ -206,8 +197,7 @@ if (import.meta.client) {
 
   pressureChartOptions.value = {
     chart: {
-      type: "line",
-      events: { dataPointSelection },
+      type: "area",
       height: 350,
       zoom: {
         type: "x", // Enable horizontal zooming
@@ -241,16 +231,13 @@ if (import.meta.client) {
       mode: 'dark', // light or dark
       palette: 'palette1', // Choose a predefined palette
     },
-    markers: { size: 5 },
     tooltip: {
       x: {
         format: "yyyy-MM-dd HH:mm:ss", // Display full timestamp
       },
       y: {
         formatter: (value) => `${value} atmosphere`, // Format altitude in tooltip
-      },
-      intersect: true,
-      shared: false
+      }
     },
     chart: {
       background: style.getPropertyValue('--bs-secondary')
@@ -261,8 +248,7 @@ if (import.meta.client) {
 
   temperatureChartOptions.value = {
     chart: {
-      type: "line",
-      events: { dataPointSelection },
+      type: "area",
       height: 350,
       zoom: {
         type: "x", // Enable horizontal zooming
@@ -296,16 +282,13 @@ if (import.meta.client) {
       mode: 'dark', // light or dark
       palette: 'palette1', // Choose a predefined palette
     },
-    markers: { size: 5 },
     tooltip: {
       x: {
         format: "yyyy-MM-dd HH:mm:ss", // Display full timestamp
       },
       y: {
         formatter: (value) => `${value} °C`, // Format altitude in tooltip
-      },
-      intersect: true,
-      shared: false
+      }
     },
     chart: {
       background: style.getPropertyValue('--bs-secondary')
