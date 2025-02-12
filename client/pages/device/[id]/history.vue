@@ -103,7 +103,7 @@ async function loadCoordinates () {
 
   if (results.totalPages > 0) {
     const promises = [];
-    for (let i = 1; i < results.totalPages; i++) {
+    for (let i = 2; i <= results.totalPages; i++) {
       promises.push($socket.syncEmit('call', 'coordinates.list', Object.assign({}, params, { page: i })));
     }
     pResults = await Promise.all(promises);
