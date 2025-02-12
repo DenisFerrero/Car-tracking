@@ -7,9 +7,9 @@
             Devices
           </h5>
           <div class="list-group">
-              <div v-for="row in results.rows" :key="row.id" class="list-group-item list-group-item-action text-white bg-info border-dark d-flex justify-content-between align-items-center">
-                <div>{{ row.name }}</div>
-                <div>
+              <div v-for="row in results.rows" :key="row.id" class="list-group-item list-group-item-action text-white bg-info border-dark d-flex flex-wrap justify-content-between align-items-center">
+                <div class="col-12 col-lg-auto text-center">{{ row.name }}</div>
+                <div class="col-12 col-lg-auto mt-2 mt-lg-0 d-flex justify-content-between">
                   <button class="btn btn-sm btn-secondary me-2" data-bs-toggle="modal" data-bs-target="#editModal" @click="setDevice(row)">Edit</button>
                   <nuxt-link :to="`/device/${row.id}/realtime`">
                     <button class="btn btn-sm btn-secondary me-2">Realtime</button>

@@ -16,20 +16,6 @@
         <LMarker :lat-lng="[currentPosition.x, currentPosition.y]"/>
         <LPolyline v-if="rawCoordinates.length > 1" :lat-lngs="rawCoordinates" color="red" />
       </LMap>
-      <!-- Graphs -->
-      <div v-if="coordinates.length > 0" class="d-flex flex-wrap col-12 mt-2">
-        <client-only>
-          <div class="col-12 col-lg-4 pe-1">
-            <ApexChart type="line" :options="altitudeChartOptions" :series="altitudeSeries" />
-          </div>
-          <div class="col-12 col-lg-4 pe-1">
-            <ApexChart type="line" :options="pressureChartOptions" :series="pressureSeries" />
-          </div>
-          <div class="col-12 col-lg-4">
-            <ApexChart type="line" :options="temperatureChartOptions" :series="temperatureSeries" />
-          </div>
-        </client-only>
-      </div>
     </div>
     <div v-else class="col-11 col-lg-9 pe-lg-3 d-flex justify-content-center align-items-center display-5 text-white">
       Cannot load the map without any coordinates
@@ -53,6 +39,23 @@
       <nuxt-link :to="'/device/' + route.params.id + '/realtime/'" class="col-12 d-flex justify-content-center btn btn-block btn-info border-dark text-white mt-4">
         <h4>Go to realtime</h4>
       </nuxt-link>
+    </div>
+    <!-- Graphs -->
+    <div v-if="coordinates.length > 0" class="d-flex flex-wrap col-12 mt-2">
+      <client-only>
+        <div class="col-12 mt-2 d-flex justify-content-center border-dark text-white">
+          <h3>Graphs</h3>
+        </div>
+        <div class="col-12 col-lg-4 pe-1">
+          <ApexChart type="line" :options="altitudeChartOptions" :series="altitudeSeries" />
+        </div>
+        <div class="col-12 col-lg-4 pe-1">
+          <ApexChart type="line" :options="pressureChartOptions" :series="pressureSeries" />
+        </div>
+        <div class="col-12 col-lg-4">
+          <ApexChart type="line" :options="temperatureChartOptions" :series="temperatureSeries" />
+        </div>
+      </client-only>
     </div>
   </div>
 </template>
