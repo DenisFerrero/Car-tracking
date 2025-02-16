@@ -46,3 +46,23 @@ body::-webkit-scrollbar-thumb
 {
 	background-color: map-get($custom-colors, "dark");
 }
+
+// Custom rules
+
+// HTML
+
+html {
+  background-color: map-get($custom-colors, "primary");
+}
+
+// [Map]
+
+.map {
+  height: 56vh;
+}
+
+@include media-breakpoint-up(md) {
+  .map {
+    height: 90vh;
+  }
+}

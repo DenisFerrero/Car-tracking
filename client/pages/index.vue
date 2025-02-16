@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-useHead({ title: 'Devices' });
+useHead({ title: 'Car tracking - Devices' });
 
 const config = useRuntimeConfig();
 const results = ref({});

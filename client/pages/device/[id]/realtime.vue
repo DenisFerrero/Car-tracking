@@ -1,10 +1,12 @@
 <template>
-  <div class="d-flex flex-wrap vw-100 justify-content-center p-2 bg-primary" style="min-height: 100vh;">
+  <div class="d-flex flex-wrap vw-100 justify-content-center p-2 bg-primary">
+    <div class="col-12 d-flex justify-content-center border-dark text-white">
+      <h2>Realtime</h2>
+    </div>
     <!-- Map -->
-    <div v-if="currentPosition !== null" class="col-11 col-lg-9 pe-lg-3" >
+    <div v-if="currentPosition !== null" class="col-11 col-lg-9 pe-lg-3 map" >
       <LMap
         :zoom="15"
-        style="height: 96vh"
         :center="[currentPosition.x, currentPosition.y]"
         :use-global-leaflet="false"
       >
@@ -22,10 +24,7 @@
     </div>
     <!-- Other data -->
     <div class="col-12 col-lg-3 pe-lg-2">
-      <div class="col-12 d-flex justify-content-center border-dark text-white mt-2 mt-lg-0">
-        <h2>Realtime</h2>
-      </div>
-      <device-description :device="device" class="mt-2"/> 
+      <device-description :device="device" class="mt-2 mt-lg-0"/> 
       <coordinate-description v-if="currentPosition !== null" :coordinate="currentPosition" class="mt-2" />
       <nuxt-link :to="'/device/' + route.params.id + '/history/'" class="col-12 d-flex justify-content-center btn btn-block btn-info border-dark text-white mt-4">
         <h4>Go to history</h4>
@@ -34,7 +33,7 @@
   </div>
 </template>
 <script setup>
-useHead({ title: 'Realtime' });
+useHead({ title: 'Car tracking - Realtime' });
 
 const config = useRuntimeConfig();
 const route = useRoute();

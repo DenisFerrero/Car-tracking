@@ -1,31 +1,45 @@
 <template>
-  <div class="d-flex flex-wrap col-12 justify-content-center p-2 bg-primary" style="min-height: 100vh;">
+  <div class="d-flex flex-wrap col-12 justify-content-center p-2 bg-primary">
+    <div class="col-12 d-flex justify-content-center border-dark text-white">
+      <h2>History</h2>
+    </div>
     <!-- Map -->
-    <div v-if="currentPosition !== null" class="col-11 col-lg-9 pe-lg-3">
-      <LMap
-        :zoom="15"
-        style="height: 96vh"
-        :center="[currentPosition.x, currentPosition.y]"
-        :use-global-leaflet="false"
-      >
-        <LTileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          layer-type="base"
-          name="OpenStreetMap"
-        />
-        <LMarker :lat-lng="[currentPosition.x, currentPosition.y]"/>
-        <LPolyline v-if="rawCoordinates.length > 1" :lat-lngs="rawCoordinates" color="red" />
-      </LMap>
+    <div v-if="currentCoordinate !== null" class="col-11 col-lg-9 pe-lg-3">
+      <div class="map">
+        <LMap
+          :zoom="15"
+          :center="[currentCoordinate.x, currentCoordinate.y]"
+          :use-global-leaflet="false"
+        >
+          <LTileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            layer-type="base"
+            name="OpenStreetMap"
+          />
+          <LMarker :lat-lng="[currentCoordinate.x, currentCoordinate.y]"/>
+          <LPolyline v-if="rawCoordinates.length > 1" :lat-lngs="rawCoordinates" color="red" />
+        </LMap>
+      </div>
+      <div class="col-12 d-flex flex-wrap justify-content-center align-items-center mt-2">
+        <div class="btn-group me-2" role="group">
+          <button type="button" class="btn btn-lg btn-secondary border-dark" @click="click_Play">Play</button>
+          <button type="button" class="btn btn-lg btn-secondary border-dark" @click="click_Pause">Pause</button>
+          <button type="button" class="btn btn-lg btn-secondary border-dark" @click="click_Stop">Stop</button>
+        </div>
+        <div class="col-10 col-lg-2 mt-2 mt-lg-0">
+          <div class="input-group">
+            <input v-model="stepTimeout" type="number" class="form-control" :disabled="timeoutId !== undefined" placeholder="Step timeout">
+            <span class="input-group-text">ms</span>
+          </div>
+        </div>
+      </div>
     </div>
     <div v-else class="col-11 col-lg-9 pe-lg-3 d-flex justify-content-center align-items-center display-5 text-white">
       Cannot load the map without any coordinates
     </div>
     <!-- Other data -->
     <div class="col-12 col-lg-3 pe-lg-2">
-      <div class="col-12 d-flex justify-content-center border-dark text-white mt-2 mt-lg-0">
-        <h2>History</h2>
-      </div>
-      <div class="card bg-info border-dark mt-2">
+      <div class="card bg-info border-dark mt-2 mt-lg-0">
         <div class="card-body">
           <div class="card-title">
             <h3 class="text-white">Filters</h3>
@@ -35,7 +49,7 @@
         </div>
       </div>
       <device-description :device="device" class="mt-2"/> 
-      <coordinate-description v-if="coordinates.length > 0" :coordinate="currentPosition" class="mt-2" />
+      <coordinate-description v-if="coordinates.length > 0" :coordinate="currentCoordinate" class="mt-2" />
       <nuxt-link :to="'/device/' + route.params.id + '/realtime/'" class="col-12 d-flex justify-content-center btn btn-block btn-info border-dark text-white mt-4">
         <h4>Go to realtime</h4>
       </nuxt-link>
@@ -60,7 +74,7 @@
   </div>
 </template>
 <script setup>
-useHead({ title: 'History' });
+useHead({ title: 'Car tracking - History' });
 
 const config = useRuntimeConfig();
 const route = useRoute();
@@ -68,7 +82,7 @@ const { $socket } = useNuxtApp();
 
 const device = ref({});
 const coordinates = ref([]);
-const currentPosition = ref(null);
+const currentCoordinate = ref(null);
 
 const { data: device_data } = await useAsyncData('device', () => $fetch(config.public.server + '/api/devices/' + route.params.id, { pageSize: 100 }));
 device.value = device_data.value;
@@ -95,6 +109,8 @@ function formatDate (_date) {
 
 onMounted(loadCoordinates);
 
+const rawCoordinates = ref([]);
+
 async function loadCoordinates () {
   const params = {
     query: { device_id: route.params.id },
@@ -114,11 +130,60 @@ async function loadCoordinates () {
 
   coordinates.value = results.rows.concat(...pResults.map(p => p.rows));
   if (coordinates.value.length > 0) {
-    currentPosition.value = coordinates.value.at(-1);
+    currentCoordinate.value = coordinates.value.at(-1);
+  }
+
+  rawCoordinates.value = coordinates.value.map(coordinate => [coordinate.x, coordinate.y]);
+}
+
+// #region Replay
+
+const timeoutId = ref(undefined);
+const stepTimeout = ref(500);
+
+async function stepCoordinate () {
+  const index = rawCoordinates.value.length;
+  const coordinate = coordinates.value[index]; 
+
+  if (coordinate !== undefined) {
+    rawCoordinates.value = [...rawCoordinates.value, [coordinate.x, coordinate.y]];
+    currentCoordinate.value = coordinate;
+
+    timeoutId.value = setTimeout(stepCoordinate, stepTimeout.value);
+  } else {
+    timeoutId.value = undefined;
   }
 }
 
-const rawCoordinates = computed(() => coordinates.value.map(coordinate => [coordinate.x, coordinate.y]));
+function click_Play () {
+  // If the raw coordinates are already completely fill, empty it to start again
+  if (rawCoordinates.value.length === coordinates.value.length) {
+    rawCoordinates.value = [];
+  }
+
+  stepCoordinate();
+}
+
+function click_Pause () {
+  if (timeoutId.value !== undefined) {
+    clearTimeout(timeoutId.value);
+    timeoutId.value = undefined;
+  }
+}
+
+function click_Stop () {
+  if (timeoutId.value !== undefined) {
+    clearTimeout(timeoutId.value);
+    timeoutId.value = undefined;
+  }
+
+  rawCoordinates.value = coordinates.value.map(coordinate => [coordinate.x, coordinate.y]);
+  currentCoordinate.value = coordinates.value.at(-1);
+}
+
+// #endregion
+
+// #region Graphs
 
 const altitudeChartOptions = ref({});
 const altitudeSeries = computed(function () {
@@ -300,4 +365,6 @@ if (import.meta.client) {
     series: altitudeSeries,
   };
 }
+
+// #endregion
 </script>
