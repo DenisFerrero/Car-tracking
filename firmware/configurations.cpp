@@ -67,9 +67,14 @@
   #define MQTT_CONNECTION_DELAY 1000
 #endif
 
-// Interval for position sharing
-#ifndef PUBLISH_RATE
-  #define PUBLISH_RATE 20*1000
+
+// Interval for position sharing when connected using Sim module
+#ifndef PUBLISH_RATE_WIFI
+  #define PUBLISH_RATE_WIFI 5*1000
+#endif
+// Interval for position sharing when connected using Sim module
+#ifndef PUBLISH_RATE_SIM
+  #define PUBLISH_RATE_SIM 20*1000
 #endif
 // Distance, in meters, threshold between the last coordinate and the current one, if greater allow to share the position
 #ifndef THRESHOLD_DISTANCE

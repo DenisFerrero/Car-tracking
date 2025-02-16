@@ -34,8 +34,10 @@
 // TLS certificate if the connection is protected. Download certificate from here: https://letsencrypt.org/certs/isrgrootx1.pem
 // #define MQTT_CERTIFICATE
 
-// Publish coordinates each X milliseconds. Default 20*1000
-#define PUBLISH_RATE 20*1000
+// Publish coordinates each X milliseconds when connected on Sim module. Default 20*1000
+#define PUBLISH_RATE_SIM 20*1000
+// Publish coordinates each X milliseconds when connected on Wifi. Default 5*1000
+#define PUBLISH_RATE_WIFI 5*1000
 // Distance, in meters, threshold between the last coordinate and the current one, if greater allow to share the position
 // Method use to prevent to share the current position if the car is steady and not moving, allows to save the amount of MB used by the Sim module
 // If you want to share the distance any way just set the value to 0

@@ -94,8 +94,12 @@ void printVariables () {
 
   Serial.println("[APPLICATION]");
   
-  Serial.print("Publish coordinates each: ");
-  Serial.print(PUBLISH_RATE);
+  Serial.print("Publish, when connected to Wifi, coordinates each: ");
+  Serial.print(PUBLISH_RATE_WIFI);
+  Serial.println("ms");
+
+  Serial.print("Publish, when connected to Sim, coordinates each: ");
+  Serial.print(PUBLISH_RATE_SIM);
   Serial.println("ms");
 
   Serial.print("Threshold distance: ");

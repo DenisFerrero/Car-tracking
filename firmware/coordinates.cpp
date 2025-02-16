@@ -75,6 +75,18 @@ bool shareCoordinate (const coordinate &coord1, const coordinate &coord2) {
   #endif
 }
 
+int getPublishRate () {
+  #if CONNECTION_MODE == 1 || CONNECTION_MODE == 3
+  if (WiFi.status() == WL_CONNECTED) {
+    return PUBLISH_RATE_WIFI;
+  }
+  #endif
+
+  #if CONNECTION_MODE == 2 || CONNECTION_MODE == 3
+  return PUBLISH_RATE_SIM;
+  #endif
+}
+
 // This custom version of delay() ensures that the gps object is being "fed".
 void smartDelay(unsigned long ms)
 {

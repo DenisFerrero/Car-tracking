@@ -64,7 +64,7 @@ void loop() {
     // Check availability for any message
     client.loop();
     // Publish the coordinates
-    if ((millis() - lastMillis) > PUBLISH_RATE && device.id > 0) {
+    if ((millis() - lastMillis) > getPublishRate() && device.id > 0) {
       lastMillis = millis();
       
       coordinate currentCoordinate = getCoordinate();

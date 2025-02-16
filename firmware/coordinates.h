@@ -16,4 +16,5 @@ struct coordinate {
 coordinate getCoordinate ();
 double calculateDistance(const coordinate &coord1, const coordinate &coord2);
 bool shareCoordinate (const coordinate &coord1, const coordinate &coord2);
+int getPublishRate();
 void smartDelay(unsigned long ms);
