@@ -78,6 +78,7 @@ useHead({ title: 'Car tracking - History' });
 
 const config = useRuntimeConfig();
 const route = useRoute();
+const router = useRouter();
 const { $socket } = useNuxtApp();
 
 const device = ref({});
@@ -87,7 +88,17 @@ const currentCoordinate = ref(null);
 const { data: device_data } = await useAsyncData('device', () => $fetch(config.public.server + '/api/devices/' + route.params.id, { pageSize: 100 }));
 device.value = device_data.value;
 
-const dates = ref([new Date().setHours(0, 0, 0, 0), new Date()]);
+let startDate = new Date().setHours(0, 0, 0, 0);
+if (route.query.start) {
+  startDate = new Date(route.query.start);
+}
+
+let endDate = new Date();
+if (route.query.end) {
+  endDate = new Date(route.query.end);
+}
+
+const dates = ref([startDate, endDate]);
 
 function formatPicker (dates) {
   const d1 = formatDate(dates[0]);
@@ -112,9 +123,13 @@ onMounted(loadCoordinates);
 const rawCoordinates = ref([]);
 
 async function loadCoordinates () {
+  const start = new Date(dates.value[0]).toISOString();
+  const end = new Date(dates.value[1]).toISOString();
+
+  router.push({ query: { start, end } });
+
   const params = {
-    query: { device_id: route.params.id },
-    start: new Date(dates.value[0]).toISOString(), end: new Date(dates.value[1]).toISOString(),
+    query: { device_id: route.params.id }, start, end,
     sort: 'timestamp', pageSize: 100, page: 1
   };
   const results = await $socket.syncEmit('call', 'coordinates.list', params);
