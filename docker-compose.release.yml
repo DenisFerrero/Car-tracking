@@ -1,60 +1,186 @@
-version: "3.3"
-
 services:
-  # Mosquitto
-  mqtt:
-    image: eclipse-mosquitto
-    container_name: mqtt
-    restart: unless-stopped
-    ports:
-      - "1883:1883"
-    volumes:
-      - ./volumes/mosquitto:/etc/mosquitto
-      - ./config/mosquitto/passwd:/etc/mosquitto/passwd
-      - ./config/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
-    networks:
-      - internal
-
-  # Database
-  database:
-    image: timescale/timescaledb:latest-pg15
-    container_name: database
-    restart: unless-stopped
-    env_file: docker-compose.env
-    volumes:
-      - ./volumes/database:/var/lib/postgresql/data
-    networks:
-      - internal
-
-  # Client
-  client:
-    build:
-      context: client
-      dockerfile: Dockerfile
-    container_name: client
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    env_file: docker-compose.env
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik
     environment:
-      - NUXT_PUBLIC_SERVER=http://server:4000
-    depends_on:
-      - server
+      - DOCKER_API_VERSION=1.44
+    command:
+      - "--log.level=INFO"
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls.certresolver=le"
+      - "--certificatesresolvers.le.acme.tlschallenge=true"
+      - "--certificatesresolvers.le.acme.email=${LETSENCRYPT_EMAIL}"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./volumes/letsencrypt:/letsencrypt
     networks:
-      - internal
+      traefik:
+        ipv4_address: 10.0.0.10
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=dashboard-auth"
 
-  # Server
-  server:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+    networks:
+      - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --appendonly yes
+    volumes:
+      - ./volumes/redis:/data
+    networks:
+      - traefik
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  authelia:
+    image: authelia/authelia:latest
+    container_name: authelia
+    volumes:
+      - ./authelia/config:/config
+    environment:
+      - X_AUTHELIA_CONFIG_FILTERS=template
+      - DOMAIN=${DOMAIN}
+    networks:
+      - traefik
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authelia.rule=Host(`${DOMAIN}`) && PathPrefix(`/authelia`)"
+      - "traefik.http.routers.authelia.entrypoints=websecure"
+      - "traefik.http.services.authelia.loadbalancer.server.port=9091"
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.22
+    container_name: mosquitto
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    networks:
+      - traefik
+      - mqtt
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mqtt.rule=Host(`${DOMAIN}`) && PathPrefix(`/mqtt`)"
+      - "traefik.http.routers.mqtt.entrypoints=websecure"
+      - "traefik.http.services.mqtt.loadbalancer.server.port=9001"
+      - "traefik.http.middlewares.mqtt-stripprefix.stripprefix.prefixes=/mqtt"
+      - "traefik.http.routers.mqtt.middlewares=mqtt-stripprefix"
+      - "traefik.http.middlewares.mqtt-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+
+  backend:
     build:
       context: server
       dockerfile: Dockerfile
-    container_name: server
-    restart: unless-stopped
-    env_file: docker-compose.env
-    depends_on:
-      - mqtt
-      - database
+    container_name: backend
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD} 
+      - DB_HOST=postgres
+      - MQTT_URL=mqtt://${MQTT_USERNAME}:${MQTT_PASSWORD}@mosquitto:1883
     networks:
-      - internal
+      - backend
+      - traefik
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.services.backend.loadbalancer.server.port=4000"
+      - "traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.middlewares.backend-auth.forwardauth.address=http://authelia:9091/api/verify?rd=https://${DOMAIN}/authelia"
+      - "traefik.http.middlewares.backend-auth.forwardauth.trustforwardheader=true"
+      - "traefik.http.middlewares.backend-auth.forwardauth.authresponseheaders=Remote-User,Remote-Name,Remote-Email,Remote-Groups"
+      - "traefik.http.routers.backend.middlewares=api-stripprefix,backend-auth"
+      - "traefik.http.middlewares.backend-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+
+  frontend:
+    build:
+      context: client
+      dockerfile: Dockerfile
+    container_name: frontend
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - NUXT_PUBLIC_SERVER=https://backend:4000
+      - NUXT_PUBLIC_AUTHELIA_URL=https://${DOMAIN}/authelia
+    networks:
+      - traefik
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`) && PathPrefix(`/ui`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.ui-stripprefix.stripprefix.prefixes=/ui"
+      - "traefik.http.middlewares.frontend-auth.forwardauth.address=http://authelia:9091/api/verify?rd=https://${DOMAIN}/authelia"
+      - "traefik.http.middlewares.frontend-auth.forwardauth.trustforwardheader=true"
+      - "traefik.http.middlewares.frontend-auth.forwardauth.authresponseheaders=Remote-User,Remote-Name,Remote-Email,Remote-Groups"
+      - "traefik.http.routers.frontend.middlewares=ui-stripprefix,frontend-auth"
+      - "traefik.http.middlewares.frontend-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - traefik
+    restart: unless-stopped
+    depends_on:
+      - traefik
+
 networks:
-  internal:
+  traefik:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.0.0.0/16
+         gateway: 10.0.0.1
+  backend:
+    internal: true
+  mqtt:
+    internal: true
