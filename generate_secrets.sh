@@ -9,4 +9,4 @@ echo "[Authelia storage]"
 docker run --rm authelia/authelia:latest authelia crypto rand --length 32
 # Authelia user password
 echo "[Authelia credentials]"
-docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password 'admin'
+docker run --rm authelia/authelia:latest authelia crypto hash generate argon2 --password '6\5u+fkW4l{z47F#'
