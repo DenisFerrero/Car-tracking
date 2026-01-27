@@ -4,14 +4,6 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.scss'],
 
-  plugins: [{ src: '~/plugins/socket.client.js', ssr: false }],
-
-  runtimeConfig: {
-    public: {
-      server: 'http://localhost:4000'
-    }
-  },
-
   app: {
     head: {
       link: [
@@ -20,5 +12,14 @@ export default defineNuxtConfig({
     }
   },
 
+  plugins: [{ src: '~/plugins/socket.client.js', ssr: false }],
+
+  runtimeConfig: {
+    public: {
+      server: 'http://localhost:4000'
+    }
+  },
+
   modules: ['@nuxt/eslint', '@nuxtjs/leaflet']
 })
+
