@@ -14,19 +14,15 @@ Update the file ``.env`` as you want, the variables are the following
 - **MQTT_USERNAME**/**MQTT_PASSWORD**, change as you, mqtt will be accessible from the internet so it's necessary to change these values
 - **CLOUDFLARE_TUNNEL_TOKEN**, Cloudlflare tunnel token
 
-### Authelia configuration
+### Nginx
 
-It's not possible to set dynamic variables in authelia configuration file so it's necessary to replace manually in the file ``./authelia/config/configuration.yml``.
-Also some secrets are generated, run
+Run this command to create your users and their access to the website
 
-``sh
-sh ./generate_secrets.sh
-``
+```sh
+htpasswd -c ./nginx/.htpasswd <your-username>
+```
 
-- Replace **<your-domain>** with the same value of the .env *DOMAIN* variable
-- Replace **<generated-jwt-token>**, **<generated-session-token>**, **<generated-storage-token>** with the generated values
-
-The script has generated also a password for your user it's necessary to replace it inside the file ``./authelia/config/users_database.yml``
+Basic user ``test`` already stored, its password is ``test``
 
 ### Mosquitto
 
