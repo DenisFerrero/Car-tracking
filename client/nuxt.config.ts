@@ -1,8 +1,26 @@
+import tailwindcss from '@tailwindcss/vite';
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
+  future: {
+    compatibilityVersion: 4
+  },
   devtools: { enabled: true },
+  ssr: false,
 
-  css: ['~/assets/css/main.scss'],
+  vite: {
+    plugins: [
+      tailwindcss()
+    ],
+    server: {
+      allowedHosts: ['car-tracking.local']
+    }
+  },
+
+  css: [
+    'leaflet/dist/leaflet.css',
+    '~/assets/css/main.css'
+  ],
 
   app: {
     head: {
@@ -12,11 +30,10 @@ export default defineNuxtConfig({
     }
   },
 
-  plugins: [{ src: '~/plugins/socket.client.js', ssr: false }],
 
   runtimeConfig: {
     public: {
-      server: 'http://localhost:4000'
+      server: process.env.NUXT_PUBLIC_SERVER || 'https://car-tracking.local'
     }
   },
 
