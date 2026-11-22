@@ -173,6 +173,8 @@ String errorText(AppLocalizations l, Object error) {
     'too_many_areas' => l.errTooManyAreas,
     'too_many_phones' => l.errTooManyPhones,
     'too_many_vehicles' => l.errTooManyVehicles,
+    'too_many_dashboards' => l.errTooManyDashboards,
+    'too_many_dashboard_shares' => l.errTooManyDashboardShares,
     'vehicle_has_tracker' => l.errVehicleHasTracker,
     'not_a_tracker' => l.errNotATracker,
     'deadline_untitled' => l.deadlineNeedsTitle,

@@ -28,6 +28,9 @@ OpenStreetMap maps, no Google token.
 - **Analysis** ([features](app/features.md)): trips, trip log for reimbursements, costs with
   the history of price, consumption and wear, national average fuel prices, statistics over
   time, deadlines (service, inspection, insurance, road tax).
+- **Custom dashboards** ([dashboards](app/dashboards.md)): widgets chosen from a catalog of
+  values for one or more vehicles; the current one replaces the analysis of every vehicle, the
+  layout is shared with friends.
 
 ## Repository
 

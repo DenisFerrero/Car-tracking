@@ -6,8 +6,8 @@ import '../../core/api.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../core/providers.dart';
+import '../dashboards/vehicle_analysis.dart';
 import 'alerts.dart';
-import 'analysis_tab.dart';
 import 'areas_tab.dart';
 import 'history_tab.dart';
 import 'live_tab.dart';
@@ -208,7 +208,7 @@ class _DeviceViewState extends ConsumerState<_DeviceView> with SingleTickerProvi
             switch (page) {
               _Page.live => LiveTab(device: device),
               _Page.history => HistoryTab(device: device, period: key),
-              _Page.analysis => AnalysisTab(device: device, period: key),
+              _Page.analysis => VehicleAnalysis(device: device, period: key),
               _Page.areas => AreasTab(device: device),
               _Page.settings => SettingsTab(device: device),
             },

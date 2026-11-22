@@ -8,6 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:car_tracking/screens/dashboards/catalog.dart';
+
+import '../test/dashboards_test.dart' show dashboardBackend, dashboardJson, fakeResult;
 import '../test/device_test.dart' show analysisBackend;
 import '../test/support.dart';
 import '../test/vehicle_test.dart' show deadline, trendsJson;
@@ -299,6 +302,48 @@ void main() {
     await shot(tester, '24_move_tracker');
   });
 
+  testWidgets('25 dashboard', (tester) async {
+    await open(tester, '/dashboards', size: tall, backend: _dashboards());
+    await shot(tester, '25_dashboard');
+  });
+  testWidgets('26 dashboard edit', (tester) async {
+    await open(tester, '/dashboards', backend: _dashboards());
+    await tapAndSettle(tester, find.byKey(const Key('dashboardEdit')));
+    await shot(tester, '26_dashboard_edit');
+  });
+  testWidgets('27 widget editor', (tester) async {
+    await open(tester, '/dashboards', backend: _dashboards());
+    await tapAndSettle(tester, find.byKey(const Key('dashboardEdit')));
+    await tapAndSettle(tester, find.text(it.mDistance).first);
+    await shot(tester, '27_widget_editor');
+  });
+  testWidgets('28 dashboard received', (tester) async {
+    await open(tester, '/dashboards', backend: _dashboards(current: true, received: true));
+    await shot(tester, '28_dashboard_received');
+  });
+  testWidgets('29 dashboard menu', (tester) async {
+    await open(tester, '/dashboards', backend: _dashboards(current: true));
+    await tapAndSettle(tester, find.byKey(const Key('dashboardMenu')));
+    await shot(tester, '29_dashboard_menu');
+  });
+  testWidgets('30 dashboard share', (tester) async {
+    await open(tester, '/dashboards', backend: _dashboards());
+    await tapAndSettle(tester, find.byKey(const Key('dashboardMenu')));
+    await tapAndSettle(tester, find.text(it.dashboardShare));
+    await shot(tester, '30_dashboard_share');
+  });
+  testWidgets('31 dashboard use', (tester) async {
+    await open(tester, '/dashboards', backend: _dashboards(received: true));
+    await tapAndSettle(tester, find.byKey(const Key('use_30')));
+    await tapAndSettle(tester, find.byKey(const Key('useAll')));
+    await tapAndSettle(tester, find.byKey(const Key('use_device_1')));
+    await shot(tester, '31_dashboard_use');
+  });
+  testWidgets('32 analysis with the current dashboard', (tester) async {
+    await open(tester, '/devices/1?tab=2', size: tall, backend: _dashboards(current: true, kind: 'diagnostics'));
+    await shot(tester, '32_analysis_dashboard');
+  });
+
   // Desktop browser
   final pages = {
     'map': '/',
@@ -331,6 +376,22 @@ void main() {
     await open(tester, '/devices/1', size: desktop, dark: true);
     await shot(tester, 'd12_dark_live');
   });
+  testWidgets('desktop dashboard', (tester) async {
+    await open(tester, '/dashboards', size: desktop, backend: _dashboards());
+    await shot(tester, 'd14_dashboard');
+  });
+  testWidgets('desktop dark dashboard', (tester) async {
+    await open(tester, '/dashboards', size: desktop, dark: true, backend: _dashboards());
+    await shot(tester, 'd15_dark_dashboard');
+  });
+  testWidgets('desktop analysis with the current dashboard', (tester) async {
+    await open(tester, '/devices/1?tab=2', size: desktop, backend: _dashboards(current: true));
+    await shot(tester, 'd16_analysis_dashboard');
+  });
+  testWidgets('desktop dark dashboard received', (tester) async {
+    await open(tester, '/dashboards', size: desktop, dark: true, backend: _dashboards(current: true, received: true));
+    await shot(tester, 'd17_dark_dashboard_received');
+  });
   testWidgets('desktop dark settings', (tester) async {
     await open(tester, '/devices/1?tab=4', size: desktop, dark: true);
     await shot(tester, 'd13_dark_settings');
@@ -342,4 +403,37 @@ Future<void> pairingVehicleStep(WidgetTester tester) async {
   await tester.enterText(find.byKey(const Key('imei')), '863820040182648');
   await tester.enterText(find.byKey(const Key('pairing')), '6MDF-SV3C');
   await tapAndSettle(tester, find.text(it.verify));
+}
+
+/// A dashboard of a template with the values of the tests (the current one), and a
+/// dashboard received from a friend
+FakeBackend _dashboards({bool current = false, bool received = false, String kind = 'overview'}) =>
+    dashboardBackend(
+      initial: [
+        {...dashboardJson(1, 'Famiglia', [for (final widget in template(kind)) widget.toJson()]), 'current': current},
+      ],
+      result: _onlyChosen,
+    )
+      ..on('GET', '/api/dashboards/shares', (_) => [
+            if (received)
+              {
+                'id': 30,
+                'from': 'Luca',
+                'name': 'Flotta aziendale',
+                'layout': Dashboard.layout('30d', template('diagnostics')),
+                'createdAt': iso(DateTime.now()),
+              },
+          ]);
+
+/// Values of the test, only of the vehicles of the widget when it has some (the analysis
+/// of a vehicle)
+Map<String, dynamic> _onlyChosen(Map<String, dynamic> widget) {
+  final result = fakeResult(widget);
+  final chosen = widget['devices'];
+  if (chosen is! List) return result;
+  bool keep(Object? item) => chosen.contains((item as Map)['deviceId'] ?? item['id']);
+  return {
+    for (final MapEntry(:key, :value) in result.entries)
+      key: key == 'devices' || key == 'values' || key == 'series' || key == 'items' ? (value as List).where(keep).toList() : value,
+  };
 }

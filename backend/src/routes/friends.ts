@@ -9,7 +9,8 @@ import { badRequest, notFound, parse } from "../http/errors.ts";
 // from its QR code in the app). Whoever has it sends a friend request, the friendship
 // starts when the owner of the code accepts it (two crossed requests: friends at once).
 // Devices are shared only with friends. A new code makes the old one useless; removing
-// a friend ends the shares between the two users, in both directions.
+// a friend ends the shares between the two users, in both directions, and withdraws the
+// dashboard layouts sent between them and not used yet.
 
 // Crockford base32: no I, L, O, U (no confusion with 1 and 0 when typed)
 const ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
@@ -161,6 +162,9 @@ export function registerFriendRoutes (app: FastifyInstance, ctx: Context): void 
 				WHERE v.role = 'viewer' AND o.role = 'owner' AND o.device_id = v.device_id
 					AND ((v.user_id = ${userId} AND o.user_id = ${friendId}) OR (v.user_id = ${friendId} AND o.user_id = ${userId}))
 				RETURNING v.device_id, v.user_id`;
+			await tx`
+				DELETE FROM dashboard_shares
+				WHERE (from_id = ${userId} AND to_id = ${friendId}) OR (from_id = ${friendId} AND to_id = ${userId})`;
 			for (const share of ended) {
 				await tx`DELETE FROM geofences WHERE device_id = ${share.device_id} AND user_id = ${share.user_id}`;
 				await tx`DELETE FROM notification_settings WHERE device_id = ${share.device_id} AND user_id = ${share.user_id}`;

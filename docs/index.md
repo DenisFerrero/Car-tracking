@@ -28,6 +28,9 @@ OpenStreetMap, nessun token Google.
 - **Analisi** ([funzioni](app/features.md)): viaggi, registro viaggi per i rimborsi, costi con
   storico di prezzo, consumo e usura, prezzo medio nazionale dei carburanti, statistiche nel
   tempo, scadenze (tagliando, revisione, assicurazione, bollo).
+- **Dashboard personalizzate** ([dashboard](app/dashboards.md)): widget scelti da un catalogo
+  di dati per uno o più veicoli; quella corrente sostituisce l'analisi di ogni veicolo, il
+  layout si condivide con gli amici.
 
 ## Componenti del repository
 

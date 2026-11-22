@@ -4171,6 +4171,672 @@ abstract class AppLocalizations {
   /// In it, this message translates to:
   /// **'Nessun backup riuscito nelle ultime 26 ore'**
   String get backupStale;
+
+  /// No description provided for @navDashboards.
+  ///
+  /// In it, this message translates to:
+  /// **'Dashboard'**
+  String get navDashboards;
+
+  /// No description provided for @errTooManyDashboards.
+  ///
+  /// In it, this message translates to:
+  /// **'Hai già il numero massimo di dashboard (20)'**
+  String get errTooManyDashboards;
+
+  /// No description provided for @dashboardNew.
+  ///
+  /// In it, this message translates to:
+  /// **'Nuova dashboard'**
+  String get dashboardNew;
+
+  /// No description provided for @dashboardName.
+  ///
+  /// In it, this message translates to:
+  /// **'Nome della dashboard'**
+  String get dashboardName;
+
+  /// No description provided for @dashboardEmpty.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessuna dashboard. Creane una vuota o parti da un modello: potrai cambiare ogni widget.'**
+  String get dashboardEmpty;
+
+  /// No description provided for @dashboardNoWidgets.
+  ///
+  /// In it, this message translates to:
+  /// **'Dashboard vuota: aggiungi un widget con Modifica.'**
+  String get dashboardNoWidgets;
+
+  /// No description provided for @templateBlank.
+  ///
+  /// In it, this message translates to:
+  /// **'Vuota'**
+  String get templateBlank;
+
+  /// No description provided for @templateOverview.
+  ///
+  /// In it, this message translates to:
+  /// **'Panoramica dei veicoli'**
+  String get templateOverview;
+
+  /// No description provided for @templateDiagnostics.
+  ///
+  /// In it, this message translates to:
+  /// **'Diagnostica dei tracker'**
+  String get templateDiagnostics;
+
+  /// No description provided for @dashboardEdit.
+  ///
+  /// In it, this message translates to:
+  /// **'Modifica'**
+  String get dashboardEdit;
+
+  /// No description provided for @dashboardRename.
+  ///
+  /// In it, this message translates to:
+  /// **'Rinomina'**
+  String get dashboardRename;
+
+  /// No description provided for @dashboardDelete.
+  ///
+  /// In it, this message translates to:
+  /// **'Elimina dashboard'**
+  String get dashboardDelete;
+
+  /// No description provided for @dashboardDeleteBody.
+  ///
+  /// In it, this message translates to:
+  /// **'Eliminare la dashboard «{name}»? I dati dei veicoli restano.'**
+  String dashboardDeleteBody(String name);
+
+  /// No description provided for @dashboardSaved.
+  ///
+  /// In it, this message translates to:
+  /// **'Dashboard salvata'**
+  String get dashboardSaved;
+
+  /// No description provided for @dashboardDiscard.
+  ///
+  /// In it, this message translates to:
+  /// **'Uscire senza salvare le modifiche?'**
+  String get dashboardDiscard;
+
+  /// No description provided for @discard.
+  ///
+  /// In it, this message translates to:
+  /// **'Esci senza salvare'**
+  String get discard;
+
+  /// No description provided for @dashboardPeriod.
+  ///
+  /// In it, this message translates to:
+  /// **'Periodo'**
+  String get dashboardPeriod;
+
+  /// No description provided for @widgetAdd.
+  ///
+  /// In it, this message translates to:
+  /// **'Aggiungi widget'**
+  String get widgetAdd;
+
+  /// No description provided for @widgetEdit.
+  ///
+  /// In it, this message translates to:
+  /// **'Modifica widget'**
+  String get widgetEdit;
+
+  /// No description provided for @widgetDuplicate.
+  ///
+  /// In it, this message translates to:
+  /// **'Duplica'**
+  String get widgetDuplicate;
+
+  /// No description provided for @widgetRemove.
+  ///
+  /// In it, this message translates to:
+  /// **'Rimuovi'**
+  String get widgetRemove;
+
+  /// No description provided for @widgetMetric.
+  ///
+  /// In it, this message translates to:
+  /// **'Dato'**
+  String get widgetMetric;
+
+  /// No description provided for @widgetExtraKey.
+  ///
+  /// In it, this message translates to:
+  /// **'Campo dei dati aggiuntivi'**
+  String get widgetExtraKey;
+
+  /// No description provided for @widgetExtraKeyHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Il nome come appare in Dati aggiuntivi, es. rpm'**
+  String get widgetExtraKeyHint;
+
+  /// No description provided for @widgetView.
+  ///
+  /// In it, this message translates to:
+  /// **'Visualizzazione'**
+  String get widgetView;
+
+  /// No description provided for @widgetDevices.
+  ///
+  /// In it, this message translates to:
+  /// **'Veicoli'**
+  String get widgetDevices;
+
+  /// No description provided for @widgetAllDevices.
+  ///
+  /// In it, this message translates to:
+  /// **'Tutti i miei veicoli attivi'**
+  String get widgetAllDevices;
+
+  /// No description provided for @widgetAllDevicesSub.
+  ///
+  /// In it, this message translates to:
+  /// **'Anche quelli aggiunti in futuro, non gli archiviati'**
+  String get widgetAllDevicesSub;
+
+  /// No description provided for @widgetDevicesNeeded.
+  ///
+  /// In it, this message translates to:
+  /// **'Scegli almeno un veicolo'**
+  String get widgetDevicesNeeded;
+
+  /// No description provided for @widgetKeyNeeded.
+  ///
+  /// In it, this message translates to:
+  /// **'Scrivi il nome del campo'**
+  String get widgetKeyNeeded;
+
+  /// No description provided for @widgetPeriod.
+  ///
+  /// In it, this message translates to:
+  /// **'Periodo'**
+  String get widgetPeriod;
+
+  /// No description provided for @widgetPeriodDashboard.
+  ///
+  /// In it, this message translates to:
+  /// **'Come la dashboard'**
+  String get widgetPeriodDashboard;
+
+  /// No description provided for @widgetAgg.
+  ///
+  /// In it, this message translates to:
+  /// **'Valore'**
+  String get widgetAgg;
+
+  /// No description provided for @widgetBucket.
+  ///
+  /// In it, this message translates to:
+  /// **'Raggruppamento'**
+  String get widgetBucket;
+
+  /// No description provided for @widgetTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Titolo (facoltativo)'**
+  String get widgetTitle;
+
+  /// No description provided for @widgetWidth.
+  ///
+  /// In it, this message translates to:
+  /// **'Larghezza'**
+  String get widgetWidth;
+
+  /// No description provided for @widgetHeight.
+  ///
+  /// In it, this message translates to:
+  /// **'Altezza'**
+  String get widgetHeight;
+
+  /// No description provided for @widgetPreview.
+  ///
+  /// In it, this message translates to:
+  /// **'Anteprima'**
+  String get widgetPreview;
+
+  /// No description provided for @widgetUnavailable.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 veicolo non più disponibile} other{{n} veicoli non più disponibili}}'**
+  String widgetUnavailable(int n);
+
+  /// No description provided for @widgetNoDevices.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessun veicolo disponibile per questo dato'**
+  String get widgetNoDevices;
+
+  /// No description provided for @widgetPeriodTooLong.
+  ///
+  /// In it, this message translates to:
+  /// **'Periodo troppo lungo per questo dato'**
+  String get widgetPeriodTooLong;
+
+  /// No description provided for @widgetVehicles.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 veicolo} other{{n} veicoli}}'**
+  String widgetVehicles(int n);
+
+  /// No description provided for @widgetNoDeadlines.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessuna scadenza'**
+  String get widgetNoDeadlines;
+
+  /// No description provided for @widgetSize.
+  ///
+  /// In it, this message translates to:
+  /// **'{w} × {h}'**
+  String widgetSize(int w, int h);
+
+  /// No description provided for @groupTrips.
+  ///
+  /// In it, this message translates to:
+  /// **'Viaggi'**
+  String get groupTrips;
+
+  /// No description provided for @groupCosts.
+  ///
+  /// In it, this message translates to:
+  /// **'Costi'**
+  String get groupCosts;
+
+  /// No description provided for @groupTracker.
+  ///
+  /// In it, this message translates to:
+  /// **'Dati del tracker'**
+  String get groupTracker;
+
+  /// No description provided for @groupState.
+  ///
+  /// In it, this message translates to:
+  /// **'Stato attuale'**
+  String get groupState;
+
+  /// No description provided for @mDistance.
+  ///
+  /// In it, this message translates to:
+  /// **'Km percorsi'**
+  String get mDistance;
+
+  /// No description provided for @mBusinessKm.
+  ///
+  /// In it, this message translates to:
+  /// **'Km di lavoro'**
+  String get mBusinessKm;
+
+  /// No description provided for @mPersonalKm.
+  ///
+  /// In it, this message translates to:
+  /// **'Km personali'**
+  String get mPersonalKm;
+
+  /// No description provided for @mDriving.
+  ///
+  /// In it, this message translates to:
+  /// **'Tempo di guida'**
+  String get mDriving;
+
+  /// No description provided for @mTrips.
+  ///
+  /// In it, this message translates to:
+  /// **'Numero di viaggi'**
+  String get mTrips;
+
+  /// No description provided for @mMaxSpeed.
+  ///
+  /// In it, this message translates to:
+  /// **'Velocità massima'**
+  String get mMaxSpeed;
+
+  /// No description provided for @mAlarms.
+  ///
+  /// In it, this message translates to:
+  /// **'Allarmi'**
+  String get mAlarms;
+
+  /// No description provided for @mTraffic.
+  ///
+  /// In it, this message translates to:
+  /// **'Dati sulla SIM'**
+  String get mTraffic;
+
+  /// No description provided for @mRestVoltage.
+  ///
+  /// In it, this message translates to:
+  /// **'Batteria a riposo'**
+  String get mRestVoltage;
+
+  /// No description provided for @mCost.
+  ///
+  /// In it, this message translates to:
+  /// **'Costo stimato'**
+  String get mCost;
+
+  /// No description provided for @mFuelCost.
+  ///
+  /// In it, this message translates to:
+  /// **'Spesa carburante'**
+  String get mFuelCost;
+
+  /// No description provided for @mWearCost.
+  ///
+  /// In it, this message translates to:
+  /// **'Usura'**
+  String get mWearCost;
+
+  /// No description provided for @mFuel.
+  ///
+  /// In it, this message translates to:
+  /// **'Litri di carburante'**
+  String get mFuel;
+
+  /// No description provided for @mSpeed.
+  ///
+  /// In it, this message translates to:
+  /// **'Velocità in movimento'**
+  String get mSpeed;
+
+  /// No description provided for @mAltitude.
+  ///
+  /// In it, this message translates to:
+  /// **'Altitudine'**
+  String get mAltitude;
+
+  /// No description provided for @mSignal.
+  ///
+  /// In it, this message translates to:
+  /// **'Segnale LTE'**
+  String get mSignal;
+
+  /// No description provided for @mSatellites.
+  ///
+  /// In it, this message translates to:
+  /// **'Satelliti'**
+  String get mSatellites;
+
+  /// No description provided for @mVoltage.
+  ///
+  /// In it, this message translates to:
+  /// **'Tensione'**
+  String get mVoltage;
+
+  /// No description provided for @mTemperature.
+  ///
+  /// In it, this message translates to:
+  /// **'Temperatura'**
+  String get mTemperature;
+
+  /// No description provided for @mPressure.
+  ///
+  /// In it, this message translates to:
+  /// **'Pressione'**
+  String get mPressure;
+
+  /// No description provided for @mExtra.
+  ///
+  /// In it, this message translates to:
+  /// **'Dato aggiuntivo'**
+  String get mExtra;
+
+  /// No description provided for @mOdometer.
+  ///
+  /// In it, this message translates to:
+  /// **'Contachilometri'**
+  String get mOdometer;
+
+  /// No description provided for @mDeadlines.
+  ///
+  /// In it, this message translates to:
+  /// **'Scadenze'**
+  String get mDeadlines;
+
+  /// No description provided for @mStatus.
+  ///
+  /// In it, this message translates to:
+  /// **'Posizione e stato'**
+  String get mStatus;
+
+  /// No description provided for @viewNumber.
+  ///
+  /// In it, this message translates to:
+  /// **'Numero'**
+  String get viewNumber;
+
+  /// No description provided for @viewLine.
+  ///
+  /// In it, this message translates to:
+  /// **'Linea nel tempo'**
+  String get viewLine;
+
+  /// No description provided for @viewBars.
+  ///
+  /// In it, this message translates to:
+  /// **'Barre nel tempo'**
+  String get viewBars;
+
+  /// No description provided for @viewVehicles.
+  ///
+  /// In it, this message translates to:
+  /// **'Barre per veicolo'**
+  String get viewVehicles;
+
+  /// No description provided for @viewTable.
+  ///
+  /// In it, this message translates to:
+  /// **'Tabella per veicolo'**
+  String get viewTable;
+
+  /// No description provided for @viewList.
+  ///
+  /// In it, this message translates to:
+  /// **'Elenco'**
+  String get viewList;
+
+  /// No description provided for @viewMap.
+  ///
+  /// In it, this message translates to:
+  /// **'Mappa'**
+  String get viewMap;
+
+  /// No description provided for @aggAvg.
+  ///
+  /// In it, this message translates to:
+  /// **'Media'**
+  String get aggAvg;
+
+  /// No description provided for @aggMin.
+  ///
+  /// In it, this message translates to:
+  /// **'Minimo'**
+  String get aggMin;
+
+  /// No description provided for @aggMax.
+  ///
+  /// In it, this message translates to:
+  /// **'Massimo'**
+  String get aggMax;
+
+  /// No description provided for @aggLast.
+  ///
+  /// In it, this message translates to:
+  /// **'Ultimo valore'**
+  String get aggLast;
+
+  /// No description provided for @groupAuto.
+  ///
+  /// In it, this message translates to:
+  /// **'Automatico'**
+  String get groupAuto;
+
+  /// No description provided for @groupHour.
+  ///
+  /// In it, this message translates to:
+  /// **'Ore'**
+  String get groupHour;
+
+  /// No description provided for @groupDay.
+  ///
+  /// In it, this message translates to:
+  /// **'Giorni'**
+  String get groupDay;
+
+  /// No description provided for @groupWeek.
+  ///
+  /// In it, this message translates to:
+  /// **'Settimane'**
+  String get groupWeek;
+
+  /// No description provided for @groupMonth.
+  ///
+  /// In it, this message translates to:
+  /// **'Mesi'**
+  String get groupMonth;
+
+  /// No description provided for @periodToday.
+  ///
+  /// In it, this message translates to:
+  /// **'Oggi'**
+  String get periodToday;
+
+  /// No description provided for @period12m.
+  ///
+  /// In it, this message translates to:
+  /// **'Ultimi 12 mesi'**
+  String get period12m;
+
+  /// No description provided for @periodYtd.
+  ///
+  /// In it, this message translates to:
+  /// **'Da inizio anno'**
+  String get periodYtd;
+
+  /// No description provided for @dashboardSetCurrent.
+  ///
+  /// In it, this message translates to:
+  /// **'Imposta come corrente'**
+  String get dashboardSetCurrent;
+
+  /// No description provided for @dashboardUnsetCurrent.
+  ///
+  /// In it, this message translates to:
+  /// **'Non più corrente'**
+  String get dashboardUnsetCurrent;
+
+  /// No description provided for @dashboardCurrent.
+  ///
+  /// In it, this message translates to:
+  /// **'Dashboard corrente'**
+  String get dashboardCurrent;
+
+  /// No description provided for @dashboardCurrentSet.
+  ///
+  /// In it, this message translates to:
+  /// **'«{name}» è la dashboard corrente: la vedi nell\'analisi di ogni veicolo'**
+  String dashboardCurrentSet(String name);
+
+  /// No description provided for @dashboardCurrentUnset.
+  ///
+  /// In it, this message translates to:
+  /// **'Nell\'analisi dei veicoli torna quella standard'**
+  String get dashboardCurrentUnset;
+
+  /// No description provided for @analysisStandard.
+  ///
+  /// In it, this message translates to:
+  /// **'Analisi standard'**
+  String get analysisStandard;
+
+  /// No description provided for @analysisOpenDashboard.
+  ///
+  /// In it, this message translates to:
+  /// **'Apri nelle dashboard'**
+  String get analysisOpenDashboard;
+
+  /// No description provided for @analysisNoWidgets.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessun widget della dashboard corrente vale per questo veicolo'**
+  String get analysisNoWidgets;
+
+  /// No description provided for @dashboardShare.
+  ///
+  /// In it, this message translates to:
+  /// **'Condividi con un amico'**
+  String get dashboardShare;
+
+  /// No description provided for @dashboardShareHint.
+  ///
+  /// In it, this message translates to:
+  /// **'L\'amico riceve solo i widget: non i tuoi veicoli né i loro dati. Li userà con i suoi veicoli.'**
+  String get dashboardShareHint;
+
+  /// No description provided for @dashboardShareNoFriends.
+  ///
+  /// In it, this message translates to:
+  /// **'Non hai ancora amici: aggiungili da Account › Amici'**
+  String get dashboardShareNoFriends;
+
+  /// No description provided for @dashboardShared.
+  ///
+  /// In it, this message translates to:
+  /// **'Dashboard inviata a {name}'**
+  String dashboardShared(String name);
+
+  /// No description provided for @dashboardReceived.
+  ///
+  /// In it, this message translates to:
+  /// **'{name} ti ha condiviso la dashboard «{dashboard}»'**
+  String dashboardReceived(String name, String dashboard);
+
+  /// No description provided for @dashboardReceivedWidgets.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 widget} other{{n} widget}} · scegli i tuoi veicoli'**
+  String dashboardReceivedWidgets(int n);
+
+  /// No description provided for @dashboardUse.
+  ///
+  /// In it, this message translates to:
+  /// **'Usa'**
+  String get dashboardUse;
+
+  /// No description provided for @dashboardDecline.
+  ///
+  /// In it, this message translates to:
+  /// **'Rifiuta'**
+  String get dashboardDecline;
+
+  /// No description provided for @dashboardUseHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Su quali dei tuoi veicoli mostrare i widget? Quelli che non valgono per un veicolo (es. dati del tracker su un\'auto senza tracker) usano gli altri scelti.'**
+  String get dashboardUseHint;
+
+  /// No description provided for @dashboardUseNoVehicles.
+  ///
+  /// In it, this message translates to:
+  /// **'Scegli almeno un veicolo'**
+  String get dashboardUseNoVehicles;
+
+  /// No description provided for @dashboardAdded.
+  ///
+  /// In it, this message translates to:
+  /// **'Dashboard «{name}» aggiunta'**
+  String dashboardAdded(String name);
+
+  /// No description provided for @errTooManyDashboardShares.
+  ///
+  /// In it, this message translates to:
+  /// **'Il tuo amico ha già troppe dashboard da guardare: riprova più tardi'**
+  String get errTooManyDashboardShares;
 }
 
 class _AppLocalizationsDelegate

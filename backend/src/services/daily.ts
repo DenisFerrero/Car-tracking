@@ -139,15 +139,17 @@ export async function updateDailyStats (ctx: Context): Promise<void> {
 	}
 }
 
-/** Stored days of a period and today computed now */
-export async function daysOf (sql: Sql, timeZone: string, device: Device, from: string): Promise<DayStats[]> {
+/** Stored days of a period (until today when to is null) and today computed now */
+export async function daysOf (sql: Sql, timeZone: string, device: Device, from: string, to: string | null = null): Promise<DayStats[]> {
 	const current = await today(sql, timeZone);
+	const last = to ?? current;
 	const rows = await sql<DayStats[]>`
 		SELECT to_char(day, 'YYYY-MM-DD') AS day, distance_km AS "distanceKm", business_km AS "businessKm", personal_km AS "personalKm",
 			driving_min AS "drivingMin", trips, max_speed AS "maxSpeed", rest_voltage AS "restVoltage", min_voltage AS "minVoltage",
 			traffic_bytes::float AS "trafficBytes", alarms
-		FROM daily_stats WHERE device_id = ${device.id} AND day >= ${from}::date AND day < ${current}::date ORDER BY day`;
-	return [...rows, await computeDay(sql, timeZone, device, current)];
+		FROM daily_stats WHERE device_id = ${device.id} AND day >= ${from}::date AND day <= ${last}::date AND day < ${current}::date
+		ORDER BY day`;
+	return from <= current && last >= current ? [...rows, await computeDay(sql, timeZone, device, current)] : rows;
 }
 
 /** Recomputes a past day after a change of the trip log */

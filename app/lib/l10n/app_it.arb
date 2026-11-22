@@ -1623,5 +1623,185 @@
     }
   },
   "backupNoOffsite": "Nessuna copia fuori dal server",
-  "backupStale": "Nessun backup riuscito nelle ultime 26 ore"
+  "backupStale": "Nessun backup riuscito nelle ultime 26 ore",
+  "navDashboards": "Dashboard",
+  "errTooManyDashboards": "Hai già il numero massimo di dashboard (20)",
+  "dashboardNew": "Nuova dashboard",
+  "dashboardName": "Nome della dashboard",
+  "dashboardEmpty": "Nessuna dashboard. Creane una vuota o parti da un modello: potrai cambiare ogni widget.",
+  "dashboardNoWidgets": "Dashboard vuota: aggiungi un widget con Modifica.",
+  "templateBlank": "Vuota",
+  "templateOverview": "Panoramica dei veicoli",
+  "templateDiagnostics": "Diagnostica dei tracker",
+  "dashboardEdit": "Modifica",
+  "dashboardRename": "Rinomina",
+  "dashboardDelete": "Elimina dashboard",
+  "dashboardDeleteBody": "Eliminare la dashboard «{name}»? I dati dei veicoli restano.",
+  "@dashboardDeleteBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardSaved": "Dashboard salvata",
+  "dashboardDiscard": "Uscire senza salvare le modifiche?",
+  "discard": "Esci senza salvare",
+  "dashboardPeriod": "Periodo",
+  "widgetAdd": "Aggiungi widget",
+  "widgetEdit": "Modifica widget",
+  "widgetDuplicate": "Duplica",
+  "widgetRemove": "Rimuovi",
+  "widgetMetric": "Dato",
+  "widgetExtraKey": "Campo dei dati aggiuntivi",
+  "widgetExtraKeyHint": "Il nome come appare in Dati aggiuntivi, es. rpm",
+  "widgetView": "Visualizzazione",
+  "widgetDevices": "Veicoli",
+  "widgetAllDevices": "Tutti i miei veicoli attivi",
+  "widgetAllDevicesSub": "Anche quelli aggiunti in futuro, non gli archiviati",
+  "widgetDevicesNeeded": "Scegli almeno un veicolo",
+  "widgetKeyNeeded": "Scrivi il nome del campo",
+  "widgetPeriod": "Periodo",
+  "widgetPeriodDashboard": "Come la dashboard",
+  "widgetAgg": "Valore",
+  "widgetBucket": "Raggruppamento",
+  "widgetTitle": "Titolo (facoltativo)",
+  "widgetWidth": "Larghezza",
+  "widgetHeight": "Altezza",
+  "widgetPreview": "Anteprima",
+  "widgetUnavailable": "{n, plural, =1{1 veicolo non più disponibile} other{{n} veicoli non più disponibili}}",
+  "@widgetUnavailable": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "widgetNoDevices": "Nessun veicolo disponibile per questo dato",
+  "widgetPeriodTooLong": "Periodo troppo lungo per questo dato",
+  "widgetVehicles": "{n, plural, =1{1 veicolo} other{{n} veicoli}}",
+  "@widgetVehicles": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "widgetNoDeadlines": "Nessuna scadenza",
+  "widgetSize": "{w} × {h}",
+  "@widgetSize": {
+    "placeholders": {
+      "w": {
+        "type": "int"
+      },
+      "h": {
+        "type": "int"
+      }
+    }
+  },
+  "groupTrips": "Viaggi",
+  "groupCosts": "Costi",
+  "groupTracker": "Dati del tracker",
+  "groupState": "Stato attuale",
+  "mDistance": "Km percorsi",
+  "mBusinessKm": "Km di lavoro",
+  "mPersonalKm": "Km personali",
+  "mDriving": "Tempo di guida",
+  "mTrips": "Numero di viaggi",
+  "mMaxSpeed": "Velocità massima",
+  "mAlarms": "Allarmi",
+  "mTraffic": "Dati sulla SIM",
+  "mRestVoltage": "Batteria a riposo",
+  "mCost": "Costo stimato",
+  "mFuelCost": "Spesa carburante",
+  "mWearCost": "Usura",
+  "mFuel": "Litri di carburante",
+  "mSpeed": "Velocità in movimento",
+  "mAltitude": "Altitudine",
+  "mSignal": "Segnale LTE",
+  "mSatellites": "Satelliti",
+  "mVoltage": "Tensione",
+  "mTemperature": "Temperatura",
+  "mPressure": "Pressione",
+  "mExtra": "Dato aggiuntivo",
+  "mOdometer": "Contachilometri",
+  "mDeadlines": "Scadenze",
+  "mStatus": "Posizione e stato",
+  "viewNumber": "Numero",
+  "viewLine": "Linea nel tempo",
+  "viewBars": "Barre nel tempo",
+  "viewVehicles": "Barre per veicolo",
+  "viewTable": "Tabella per veicolo",
+  "viewList": "Elenco",
+  "viewMap": "Mappa",
+  "aggAvg": "Media",
+  "aggMin": "Minimo",
+  "aggMax": "Massimo",
+  "aggLast": "Ultimo valore",
+  "groupAuto": "Automatico",
+  "groupHour": "Ore",
+  "groupDay": "Giorni",
+  "groupWeek": "Settimane",
+  "groupMonth": "Mesi",
+  "periodToday": "Oggi",
+  "period12m": "Ultimi 12 mesi",
+  "periodYtd": "Da inizio anno",
+  "dashboardSetCurrent": "Imposta come corrente",
+  "dashboardUnsetCurrent": "Non più corrente",
+  "dashboardCurrent": "Dashboard corrente",
+  "dashboardCurrentSet": "«{name}» è la dashboard corrente: la vedi nell'analisi di ogni veicolo",
+  "@dashboardCurrentSet": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardCurrentUnset": "Nell'analisi dei veicoli torna quella standard",
+  "analysisStandard": "Analisi standard",
+  "analysisOpenDashboard": "Apri nelle dashboard",
+  "analysisNoWidgets": "Nessun widget della dashboard corrente vale per questo veicolo",
+  "dashboardShare": "Condividi con un amico",
+  "dashboardShareHint": "L'amico riceve solo i widget: non i tuoi veicoli né i loro dati. Li userà con i suoi veicoli.",
+  "dashboardShareNoFriends": "Non hai ancora amici: aggiungili da Account › Amici",
+  "dashboardShared": "Dashboard inviata a {name}",
+  "@dashboardShared": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardReceived": "{name} ti ha condiviso la dashboard «{dashboard}»",
+  "@dashboardReceived": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "dashboard": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardReceivedWidgets": "{n, plural, =1{1 widget} other{{n} widget}} · scegli i tuoi veicoli",
+  "@dashboardReceivedWidgets": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardUse": "Usa",
+  "dashboardDecline": "Rifiuta",
+  "dashboardUseHint": "Su quali dei tuoi veicoli mostrare i widget? Quelli che non valgono per un veicolo (es. dati del tracker su un'auto senza tracker) usano gli altri scelti.",
+  "dashboardUseNoVehicles": "Scegli almeno un veicolo",
+  "dashboardAdded": "Dashboard «{name}» aggiunta",
+  "@dashboardAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "errTooManyDashboardShares": "Il tuo amico ha già troppe dashboard da guardare: riprova più tardi"
 }

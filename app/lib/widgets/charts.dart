@@ -299,6 +299,80 @@ class Bars extends StatelessWidget {
   }
 }
 
+/// Bars of more series side by side (a series per vehicle), with a legend
+class GroupedBars extends StatelessWidget {
+  const GroupedBars({super.key, required this.labels, required this.series, this.unit = ''});
+
+  final List<String> labels;
+
+  /// Values aligned with the labels, null = no value
+  final List<({String label, Color color, List<double?> values})> series;
+  final String unit;
+
+  @override
+  Widget build(BuildContext context) {
+    final values = [for (final s in series) for (final v in s.values) ?v];
+    if (values.isEmpty) return Center(child: Text(context.l10n.noData));
+    final theme = Theme.of(context);
+    final high = values.reduce(math.max);
+    final step = math.max(1, (labels.length / 8).ceil());
+    final width = math.max(2.0, math.min(16.0, 200 / labels.length / series.length));
+    return Column(children: [
+      Expanded(
+        child: BarChart(BarChartData(
+          maxY: high <= 0 ? 1 : high * 1.15,
+          borderData: FlBorderData(show: false),
+          gridData: FlGridData(
+            drawVerticalLine: false,
+            getDrawingHorizontalLine: (_) => FlLine(color: theme.dividerColor.withValues(alpha: 0.3), strokeWidth: 1),
+          ),
+          titlesData: FlTitlesData(
+            topTitles: const AxisTitles(),
+            rightTitles: const AxisTitles(),
+            leftTitles: AxisTitles(
+              axisNameWidget: unit.trim().isEmpty ? null : Text(unit.trim(), style: const TextStyle(fontSize: 10)),
+              axisNameSize: unit.trim().isEmpty ? 0 : 14,
+              sideTitles: SideTitles(showTitles: true, reservedSize: 40, getTitlesWidget: _axisLabel),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 24,
+                getTitlesWidget: (value, meta) {
+                  final index = value.round();
+                  if (index < 0 || index >= labels.length || index % step != 0) return const SizedBox.shrink();
+                  return SideTitleWidget(meta: meta, child: Text(labels[index], style: const TextStyle(fontSize: 10)));
+                },
+              ),
+            ),
+          ),
+          barTouchData: BarTouchData(
+            touchTooltipData: BarTouchTooltipData(
+              getTooltipItem: (group, groupIndex, rod, rodIndex) => BarTooltipItem(
+                '${series[rodIndex].label} · ${labels[group.x]}: ${_number(rod.toY)}$unit',
+                const TextStyle(fontSize: 11, color: Colors.white),
+              ),
+            ),
+          ),
+          barGroups: [
+            for (var i = 0; i < labels.length; i++)
+              BarChartGroupData(x: i, barsSpace: 1, barRods: [
+                for (final s in series)
+                  BarChartRodData(
+                    toY: s.values[i] ?? 0,
+                    color: s.color,
+                    width: width,
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+                  ),
+              ]),
+          ],
+        )),
+      ),
+      if (series.length > 1) Legend(items: [for (final s in series) (label: s.label, color: s.color)]),
+    ]);
+  }
+}
+
 /// Donut with the shares and a legend
 class Donut extends StatelessWidget {
   const Donut({super.key, required this.items});

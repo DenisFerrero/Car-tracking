@@ -60,7 +60,7 @@ export function registerAccountRoutes (app: FastifyInstance, ctx: Context): void
 
 	/**
 	 * Copy of the personal data (GDPR, art. 15 and 20): profile, access history, friends,
-	 * devices owned with their positions, areas, notifications. No secrets (password hash,
+	 * devices owned with their positions, areas, notifications, dashboards. No secrets (password hash,
 	 * passkeys, TOTP, tokens), no data of other users besides the names of the friends.
 	 */
 	app.get("/api/account/export", { config: STRICT }, async (request, reply) => {
@@ -72,7 +72,7 @@ export function registerAccountRoutes (app: FastifyInstance, ctx: Context): void
 				d.last_seen_at AS "lastSeenAt", du.role, du.expires_at AS "shareExpiresAt"
 			FROM device_users du JOIN devices d ON d.id = du.device_id WHERE du.user_id = ${userId} ORDER BY d.id`;
 		const owned = (devices as unknown as { id: number; role: string }[]).filter(device => device.role === "owner").map(device => device.id);
-		const [events, friends, areas, notifications, settings, positions, dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, extraData] = await Promise.all([
+		const [events, friends, areas, notifications, settings, positions, dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, extraData, dashboards] = await Promise.all([
 			sql`SELECT event, host(ip) AS ip, user_agent AS "userAgent", created_at AS "createdAt" FROM auth_events WHERE user_id = ${userId} ORDER BY created_at`,
 			sql`SELECT u.name, f.created_at AS since FROM friendships f JOIN users u ON u.id = f.friend_id WHERE f.user_id = ${userId} ORDER BY u.name`,
 			sql`SELECT device_id AS "deviceId", name, lat, lon, radius, schedule, created_at AS "createdAt" FROM geofences WHERE user_id = ${userId} ORDER BY id`,
@@ -94,13 +94,14 @@ export function registerAccountRoutes (app: FastifyInstance, ctx: Context): void
 			sql`
 				SELECT device_id AS "deviceId", kind, to_char(valid_from, 'YYYY-MM-DD') AS "validFrom", value
 				FROM vehicle_rates WHERE device_id = ANY (${owned}) ORDER BY device_id, kind, valid_from`,
-			sql`SELECT device_id AS "deviceId", time, data FROM device_extra WHERE device_id = ANY (${owned}) ORDER BY device_id, time`
+			sql`SELECT device_id AS "deviceId", time, data FROM device_extra WHERE device_id = ANY (${owned}) ORDER BY device_id, time`,
+			sql`SELECT name, layout, is_current AS "current", created_at AS "createdAt", updated_at AS "updatedAt" FROM dashboards WHERE user_id = ${userId} ORDER BY id`
 		]);
 		const day = new Date().toISOString().slice(0, 10);
 		reply.header("content-disposition", `attachment; filename="car-tracking-${day}.json"`);
 		return {
 			exportedAt: new Date(), profile, authEvents: events, friends, devices, areas, notifications, notificationSettings: settings, positions,
-			dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, extraData
+			dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, extraData, dashboards
 		};
 	});
 

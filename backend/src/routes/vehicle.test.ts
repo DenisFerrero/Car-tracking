@@ -205,7 +205,9 @@ describe("statistics, trip log, car", { skip: !process.env.TEST_DATABASE_URL && 
 
 	test("odometer and deadlines by date and km, reminders, done", async () => {
 		const path = `/api/devices/${deviceId}/maintenance`;
-		const date = (days: number) => iso(Date.now() + days * DAY);
+		// Days of the time zone of the platform, as the backend counts them
+		const today = Date.parse(new Date().toLocaleDateString("en-CA", { timeZone: h.server.ctx.config.TIMEZONE }));
+		const date = (days: number) => iso(today + days * DAY);
 		const notices = () => live.of("notification").filter(item => item.notification.kind === "maintenance");
 		assert.equal((await h.api("GET", path, { token: bruno.token })).body.error, "owner_only");
 		const phone = await h.api("POST", "/api/phones", { token: anna.token, body: { name: "Pixel" } });

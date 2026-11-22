@@ -26,6 +26,12 @@ their number: a tap zooms in, or lists the ones at the same spot.
 
 A shared device shows only **Live** and **Areas**, plus *Leave the share*.
 
+## Dashboards
+
+Personal dashboards with widgets chosen from a catalog of values (km, costs, tracker data,
+deadlines, position) for one or more vehicles; the current one replaces the analysis of
+every vehicle and the layout can be sent to friends: see [Custom dashboards](dashboards.md).
+
 ## Friends and sharing
 
 - Everyone has a personal code (`ABCDE-FGHJK`, also as a QR code): whoever enters it sends a

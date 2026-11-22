@@ -67,6 +67,7 @@ plugins:
             App: App
             Funzioni: Features
             Telefono e veicoli: Phone and vehicles
+            Dashboard personalizzate: Custom dashboards
             Dispositivi: Devices
             Nuovo tracker: New tracker
             Catalogo: Catalog
@@ -102,6 +103,7 @@ nav:
       - App: app/index.md
       - Funzioni: app/features.md
       - Telefono e veicoli: app/phone-vehicles.md
+      - Dashboard personalizzate: app/dashboards.md
   - Dispositivi:
       - Nuovo tracker: devices/new-device.md
       - Catalogo: devices/index.md

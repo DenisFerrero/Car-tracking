@@ -37,6 +37,15 @@ bilingual documentation site. Full documentation: `docs/` (published on GitHub P
 - Widget tests on the full app, coverage **≥ 98%** (`python tool/coverage.py 98`).
 - Build the APK only when asked.
 
+## Dashboards: keep the catalog current
+
+Custom dashboards show the values of a catalog, the same in `backend/src/services/metrics.ts`
+and `app/lib/screens/dashboards/catalog.dart`. **Every new value of the platform** (a sensor
+or a column of the positions, a daily total, a cost, a state) gets its metric in both, with
+the kinds of device, the views, the texts IT/EN, the tests and a row in the catalog of
+`docs/app/dashboards.md` (+ `.en.md`). A metric removed or renamed drops the saved widgets
+that use it: prefer adding to changing.
+
 ## Firmware (`firmware/`)
 
 - Build in place (no temporary copies). Board selected with `BOARD` in `configurations.h`.

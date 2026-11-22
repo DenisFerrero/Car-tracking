@@ -14,6 +14,7 @@ import { Sessions, registerAuth } from "./http/session.ts";
 import { registerAccountRoutes } from "./routes/account.ts";
 import { registerAdminRoutes } from "./routes/admin.ts";
 import { registerAuthRoutes } from "./routes/auth.ts";
+import { registerDashboardRoutes } from "./routes/dashboards.ts";
 import { registerDataRoutes } from "./routes/data.ts";
 import { registerDeviceRoutes } from "./routes/devices.ts";
 import { registerExtraRoutes } from "./routes/extra.ts";
@@ -152,6 +153,7 @@ export async function buildApp (ctx: Context, gateway: Gateway): Promise<Fastify
 	registerExtraRoutes(app, ctx);
 	registerDataRoutes(app, ctx);
 	registerVehicleRoutes(app, ctx);
+	registerDashboardRoutes(app, ctx);
 	registerGeofenceRoutes(app, ctx);
 	registerNotificationRoutes(app, ctx);
 

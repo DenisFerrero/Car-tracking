@@ -10,6 +10,7 @@ import '../core/format.dart';
 import '../core/models.dart';
 import '../core/providers.dart';
 import '../core/push.dart';
+import 'dashboards/sharing.dart';
 
 /// Shell of the platform: navigation bar (rail on wide screens), realtime toasts for
 /// the notifications, devices granted or revoked, push registration on Android.
@@ -102,6 +103,15 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           if (location.startsWith('/devices/$id')) context.go('/devices');
           showMessage(context, context.l10n.accessRevoked(device?.name ?? ''));
         }
+      case 'dashboardShare':
+        // A dashboard layout sent by a friend: used or declined in the dashboards
+        ref.invalidate(sharedDashboardsProvider);
+        ScaffoldMessenger.of(context)
+          ..removeCurrentSnackBar()
+          ..showSnackBar(SnackBar(
+            content: Text(context.l10n.dashboardReceived(event['name'] as String, event['dashboard'] as String)),
+            action: SnackBarAction(label: context.l10n.open, onPressed: () => context.go('/dashboards')),
+          ));
       case 'registered' || 'device':
         ref.invalidate(devicesProvider);
       case 'friends':
@@ -135,6 +145,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final destinations = [
       (icon: Icons.map_outlined, selected: Icons.map, label: l.navMap),
       (icon: Icons.directions_car_outlined, selected: Icons.directions_car, label: l.navDevices),
+      (icon: Icons.dashboard_outlined, selected: Icons.dashboard, label: l.navDashboards),
       (icon: Icons.notifications_outlined, selected: Icons.notifications, label: l.navNotifications),
       (icon: Icons.person_outline, selected: Icons.person, label: l.navAccount),
     ];
@@ -144,7 +155,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     Widget icon(int index, bool selected) {
       final item = destinations[index];
       final widget = Icon(selected ? item.selected : item.icon);
-      return index == 2 && unread > 0 ? Badge(label: Text('$unread'), child: widget) : widget;
+      return index == 3 && unread > 0 ? Badge(label: Text('$unread'), child: widget) : widget;
     }
 
     void select(int index) => widget.shell.goBranch(index, initialLocation: index == widget.shell.currentIndex);

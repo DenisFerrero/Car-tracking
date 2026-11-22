@@ -2442,4 +2442,384 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get backupStale => 'Nessun backup riuscito nelle ultime 26 ore';
+
+  @override
+  String get navDashboards => 'Dashboard';
+
+  @override
+  String get errTooManyDashboards =>
+      'Hai già il numero massimo di dashboard (20)';
+
+  @override
+  String get dashboardNew => 'Nuova dashboard';
+
+  @override
+  String get dashboardName => 'Nome della dashboard';
+
+  @override
+  String get dashboardEmpty =>
+      'Nessuna dashboard. Creane una vuota o parti da un modello: potrai cambiare ogni widget.';
+
+  @override
+  String get dashboardNoWidgets =>
+      'Dashboard vuota: aggiungi un widget con Modifica.';
+
+  @override
+  String get templateBlank => 'Vuota';
+
+  @override
+  String get templateOverview => 'Panoramica dei veicoli';
+
+  @override
+  String get templateDiagnostics => 'Diagnostica dei tracker';
+
+  @override
+  String get dashboardEdit => 'Modifica';
+
+  @override
+  String get dashboardRename => 'Rinomina';
+
+  @override
+  String get dashboardDelete => 'Elimina dashboard';
+
+  @override
+  String dashboardDeleteBody(String name) {
+    return 'Eliminare la dashboard «$name»? I dati dei veicoli restano.';
+  }
+
+  @override
+  String get dashboardSaved => 'Dashboard salvata';
+
+  @override
+  String get dashboardDiscard => 'Uscire senza salvare le modifiche?';
+
+  @override
+  String get discard => 'Esci senza salvare';
+
+  @override
+  String get dashboardPeriod => 'Periodo';
+
+  @override
+  String get widgetAdd => 'Aggiungi widget';
+
+  @override
+  String get widgetEdit => 'Modifica widget';
+
+  @override
+  String get widgetDuplicate => 'Duplica';
+
+  @override
+  String get widgetRemove => 'Rimuovi';
+
+  @override
+  String get widgetMetric => 'Dato';
+
+  @override
+  String get widgetExtraKey => 'Campo dei dati aggiuntivi';
+
+  @override
+  String get widgetExtraKeyHint =>
+      'Il nome come appare in Dati aggiuntivi, es. rpm';
+
+  @override
+  String get widgetView => 'Visualizzazione';
+
+  @override
+  String get widgetDevices => 'Veicoli';
+
+  @override
+  String get widgetAllDevices => 'Tutti i miei veicoli attivi';
+
+  @override
+  String get widgetAllDevicesSub =>
+      'Anche quelli aggiunti in futuro, non gli archiviati';
+
+  @override
+  String get widgetDevicesNeeded => 'Scegli almeno un veicolo';
+
+  @override
+  String get widgetKeyNeeded => 'Scrivi il nome del campo';
+
+  @override
+  String get widgetPeriod => 'Periodo';
+
+  @override
+  String get widgetPeriodDashboard => 'Come la dashboard';
+
+  @override
+  String get widgetAgg => 'Valore';
+
+  @override
+  String get widgetBucket => 'Raggruppamento';
+
+  @override
+  String get widgetTitle => 'Titolo (facoltativo)';
+
+  @override
+  String get widgetWidth => 'Larghezza';
+
+  @override
+  String get widgetHeight => 'Altezza';
+
+  @override
+  String get widgetPreview => 'Anteprima';
+
+  @override
+  String widgetUnavailable(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n veicoli non più disponibili',
+      one: '1 veicolo non più disponibile',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetNoDevices => 'Nessun veicolo disponibile per questo dato';
+
+  @override
+  String get widgetPeriodTooLong => 'Periodo troppo lungo per questo dato';
+
+  @override
+  String widgetVehicles(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n veicoli',
+      one: '1 veicolo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetNoDeadlines => 'Nessuna scadenza';
+
+  @override
+  String widgetSize(int w, int h) {
+    return '$w × $h';
+  }
+
+  @override
+  String get groupTrips => 'Viaggi';
+
+  @override
+  String get groupCosts => 'Costi';
+
+  @override
+  String get groupTracker => 'Dati del tracker';
+
+  @override
+  String get groupState => 'Stato attuale';
+
+  @override
+  String get mDistance => 'Km percorsi';
+
+  @override
+  String get mBusinessKm => 'Km di lavoro';
+
+  @override
+  String get mPersonalKm => 'Km personali';
+
+  @override
+  String get mDriving => 'Tempo di guida';
+
+  @override
+  String get mTrips => 'Numero di viaggi';
+
+  @override
+  String get mMaxSpeed => 'Velocità massima';
+
+  @override
+  String get mAlarms => 'Allarmi';
+
+  @override
+  String get mTraffic => 'Dati sulla SIM';
+
+  @override
+  String get mRestVoltage => 'Batteria a riposo';
+
+  @override
+  String get mCost => 'Costo stimato';
+
+  @override
+  String get mFuelCost => 'Spesa carburante';
+
+  @override
+  String get mWearCost => 'Usura';
+
+  @override
+  String get mFuel => 'Litri di carburante';
+
+  @override
+  String get mSpeed => 'Velocità in movimento';
+
+  @override
+  String get mAltitude => 'Altitudine';
+
+  @override
+  String get mSignal => 'Segnale LTE';
+
+  @override
+  String get mSatellites => 'Satelliti';
+
+  @override
+  String get mVoltage => 'Tensione';
+
+  @override
+  String get mTemperature => 'Temperatura';
+
+  @override
+  String get mPressure => 'Pressione';
+
+  @override
+  String get mExtra => 'Dato aggiuntivo';
+
+  @override
+  String get mOdometer => 'Contachilometri';
+
+  @override
+  String get mDeadlines => 'Scadenze';
+
+  @override
+  String get mStatus => 'Posizione e stato';
+
+  @override
+  String get viewNumber => 'Numero';
+
+  @override
+  String get viewLine => 'Linea nel tempo';
+
+  @override
+  String get viewBars => 'Barre nel tempo';
+
+  @override
+  String get viewVehicles => 'Barre per veicolo';
+
+  @override
+  String get viewTable => 'Tabella per veicolo';
+
+  @override
+  String get viewList => 'Elenco';
+
+  @override
+  String get viewMap => 'Mappa';
+
+  @override
+  String get aggAvg => 'Media';
+
+  @override
+  String get aggMin => 'Minimo';
+
+  @override
+  String get aggMax => 'Massimo';
+
+  @override
+  String get aggLast => 'Ultimo valore';
+
+  @override
+  String get groupAuto => 'Automatico';
+
+  @override
+  String get groupHour => 'Ore';
+
+  @override
+  String get groupDay => 'Giorni';
+
+  @override
+  String get groupWeek => 'Settimane';
+
+  @override
+  String get groupMonth => 'Mesi';
+
+  @override
+  String get periodToday => 'Oggi';
+
+  @override
+  String get period12m => 'Ultimi 12 mesi';
+
+  @override
+  String get periodYtd => 'Da inizio anno';
+
+  @override
+  String get dashboardSetCurrent => 'Imposta come corrente';
+
+  @override
+  String get dashboardUnsetCurrent => 'Non più corrente';
+
+  @override
+  String get dashboardCurrent => 'Dashboard corrente';
+
+  @override
+  String dashboardCurrentSet(String name) {
+    return '«$name» è la dashboard corrente: la vedi nell\'analisi di ogni veicolo';
+  }
+
+  @override
+  String get dashboardCurrentUnset =>
+      'Nell\'analisi dei veicoli torna quella standard';
+
+  @override
+  String get analysisStandard => 'Analisi standard';
+
+  @override
+  String get analysisOpenDashboard => 'Apri nelle dashboard';
+
+  @override
+  String get analysisNoWidgets =>
+      'Nessun widget della dashboard corrente vale per questo veicolo';
+
+  @override
+  String get dashboardShare => 'Condividi con un amico';
+
+  @override
+  String get dashboardShareHint =>
+      'L\'amico riceve solo i widget: non i tuoi veicoli né i loro dati. Li userà con i suoi veicoli.';
+
+  @override
+  String get dashboardShareNoFriends =>
+      'Non hai ancora amici: aggiungili da Account › Amici';
+
+  @override
+  String dashboardShared(String name) {
+    return 'Dashboard inviata a $name';
+  }
+
+  @override
+  String dashboardReceived(String name, String dashboard) {
+    return '$name ti ha condiviso la dashboard «$dashboard»';
+  }
+
+  @override
+  String dashboardReceivedWidgets(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n widget',
+      one: '1 widget',
+    );
+    return '$_temp0 · scegli i tuoi veicoli';
+  }
+
+  @override
+  String get dashboardUse => 'Usa';
+
+  @override
+  String get dashboardDecline => 'Rifiuta';
+
+  @override
+  String get dashboardUseHint =>
+      'Su quali dei tuoi veicoli mostrare i widget? Quelli che non valgono per un veicolo (es. dati del tracker su un\'auto senza tracker) usano gli altri scelti.';
+
+  @override
+  String get dashboardUseNoVehicles => 'Scegli almeno un veicolo';
+
+  @override
+  String dashboardAdded(String name) {
+    return 'Dashboard «$name» aggiunta';
+  }
+
+  @override
+  String get errTooManyDashboardShares =>
+      'Il tuo amico ha già troppe dashboard da guardare: riprova più tardi';
 }

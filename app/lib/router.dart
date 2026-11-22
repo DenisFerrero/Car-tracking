@@ -6,6 +6,7 @@ import 'screens/account.dart';
 import 'screens/add_device.dart';
 import 'screens/admin.dart';
 import 'screens/auth.dart';
+import 'screens/dashboards/dashboards_screen.dart';
 import 'screens/device/device_screen.dart';
 import 'screens/device/costs_screen.dart';
 import 'screens/device/extra_screen.dart';
@@ -106,6 +107,9 @@ GoRouter buildRouter(Session session) {
                 ),
               ],
             ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/dashboards', builder: (context, state) => const DashboardsScreen()),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),

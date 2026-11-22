@@ -28,6 +28,12 @@ ingrandisce, oppure elenca quelli nello stesso punto.
 
 Un dispositivo condiviso mostra solo **Live** e **Aree**, più *Rinuncia alla condivisione*.
 
+## Dashboard
+
+Dashboard personali con i widget scelti da un catalogo di dati (km, costi, dati del tracker,
+scadenze, posizione) per uno o più veicoli; quella corrente sostituisce l'analisi di ogni
+veicolo e il layout si può inviare agli amici: vedi [Dashboard personalizzate](dashboards.md).
+
 ## Amici e condivisione
 
 - Ognuno ha un codice personale (`ABCDE-FGHJK`, anche QR code): chi lo inserisce invia una

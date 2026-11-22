@@ -27,6 +27,7 @@ La documentazione completa è pubblicata su GitHub Pages dalla cartella [`docs/`
 | [Backup](docs/server/backup.md) | Backup giornalieri, copia cifrata fuori dal server, ripristino |
 | [App](docs/app/index.md) | Installazione Android, store alternativi, aggiornamenti, [funzioni](docs/app/features.md) |
 | [Telefono e veicoli](docs/app/phone-vehicles.md) | Il telefono come localizzatore, veicoli senza tracker |
+| [Dashboard](docs/app/dashboards.md) | Dashboard personalizzate, dashboard corrente, condivisione del layout con gli amici |
 | [Dispositivi](docs/devices/index.md) | Catalogo delle schede supportate, distinte, collegamenti, accessori |
 | [Firmware](docs/firmware/index.md) | Configurazione, provisioning, aggiornamenti a distanza, antifurto |
 | [Riferimento](docs/reference/protocol.md) | Protocollo binario, [sicurezza](docs/reference/security.md), [consumo dati SIM](docs/reference/data-usage.md) |
