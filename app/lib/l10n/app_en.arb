@@ -789,5 +789,22 @@
   "dashboardUseHint": "Which of your vehicles should the widgets show? The ones that don't apply to a vehicle (e.g. tracker data on a car without a tracker) use the other ones chosen.",
   "dashboardUseNoVehicles": "Choose at least one vehicle",
   "dashboardAdded": "Dashboard «{name}» added",
-  "errTooManyDashboardShares": "Your friend already has too many dashboards waiting: try again later"
+  "errTooManyDashboardShares": "Your friend already has too many dashboards waiting: try again later",
+  "platformLog": "Platform log",
+  "platformLogSub": "Errors, warnings, slow requests and queries, to improve the platform",
+  "logErrors": "Errors",
+  "logWarnings": "Warnings",
+  "logSlowRequests": "Slow requests",
+  "logSlowQueries": "Slow queries",
+  "logEmpty": "Nothing to report in the period",
+  "logTimes": "{n, plural, =1{one time} other{{n} times}}",
+  "logLast": "last {ago}",
+  "logDurations": "avg {avg} · max {max}",
+  "logCalls": "{n, plural, =1{1 run} other{{n} runs}}",
+  "logFirst": "First time: {time}",
+  "logRequestsHint": "Requests over {ms} ms, by route. Kept {n} days.",
+  "logQueriesHint": "Queries with a mean duration over {ms} ms (or a maximum ten times as much), collected every hour. Kept {n} days.",
+  "logErrorsHint": "Errors and warnings of the backend, equal ones grouped. Kept {n} days.",
+  "logQueriesOff": "Slow queries aren't collected: the database must load pg_stat_statements (see the server documentation).",
+  "logCopied": "Details copied"
 }

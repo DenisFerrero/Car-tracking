@@ -32,6 +32,9 @@
 - **Validazione**: ogni chiamata (body, query, parametri e messaggi WebSocket) è
   validata con schemi zod *strict*: campi sconosciuti, tipi errati e valori fuori
   intervallo sono rifiutati con 400 prima di raggiungere la logica.
+- **Log**: token e cookie non finiscono mai nei log; il [log della piattaforma](../server/logs.md)
+  (errori e lentezze, 30 giorni, solo amministratori) non contiene corpi, query string, IP,
+  email né utenti, e le richieste compaiono solo come schema del percorso.
 - **Rate limit e DoS**: limite globale per IP (`RATE_LIMIT`, 300/min) applicato **prima**
   dell'autenticazione, così anche le richieste anonime e i token falsi lo consumano;
   limiti stretti su login, TOTP, recupero, inviti e codici amico (`AUTH_RATE_LIMIT`; i codici

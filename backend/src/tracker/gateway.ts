@@ -108,7 +108,7 @@ export class Gateway implements Downlink {
 				.then(() => this.#handle(session, payload))
 				.catch(error => {
 					if (error instanceof ProtocolError) this.#ctx.log.info({ err: error, imei: session.imei }, "Frame rejected");
-					else this.#ctx.log.error({ err: error, imei: session.imei }, "Frame failed");
+					else this.#ctx.log.error({ err: error, imei: session.imei, component: "tracker" }, "Frame failed");
 				})
 				.finally(() => { session.queued -= 1; });
 		});
@@ -122,7 +122,7 @@ export class Gateway implements Downlink {
 	/** Bad credentials: counted against the address, the connection is closed */
 	#fail (session: Session, reason: string): void {
 		this.#failures.hit(session.ip);
-		this.#ctx.log.warn({ ip: session.ip, reason }, "Tracker authentication failed");
+		this.#ctx.log.warn({ ip: session.ip, reason, component: "tracker" }, "Tracker authentication failed");
 		session.socket.close(4001, "unauthorized");
 	}
 

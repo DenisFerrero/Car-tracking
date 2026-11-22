@@ -4837,6 +4837,108 @@ abstract class AppLocalizations {
   /// In it, this message translates to:
   /// **'Il tuo amico ha già troppe dashboard da guardare: riprova più tardi'**
   String get errTooManyDashboardShares;
+
+  /// No description provided for @platformLog.
+  ///
+  /// In it, this message translates to:
+  /// **'Log della piattaforma'**
+  String get platformLog;
+
+  /// No description provided for @platformLogSub.
+  ///
+  /// In it, this message translates to:
+  /// **'Errori, avvisi, richieste e query lente, per migliorare la piattaforma'**
+  String get platformLogSub;
+
+  /// No description provided for @logErrors.
+  ///
+  /// In it, this message translates to:
+  /// **'Errori'**
+  String get logErrors;
+
+  /// No description provided for @logWarnings.
+  ///
+  /// In it, this message translates to:
+  /// **'Avvisi'**
+  String get logWarnings;
+
+  /// No description provided for @logSlowRequests.
+  ///
+  /// In it, this message translates to:
+  /// **'Richieste lente'**
+  String get logSlowRequests;
+
+  /// No description provided for @logSlowQueries.
+  ///
+  /// In it, this message translates to:
+  /// **'Query lente'**
+  String get logSlowQueries;
+
+  /// No description provided for @logEmpty.
+  ///
+  /// In it, this message translates to:
+  /// **'Niente da segnalare nel periodo'**
+  String get logEmpty;
+
+  /// No description provided for @logTimes.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 volta} other{{n} volte}}'**
+  String logTimes(int n);
+
+  /// No description provided for @logLast.
+  ///
+  /// In it, this message translates to:
+  /// **'ultima {ago}'**
+  String logLast(String ago);
+
+  /// No description provided for @logDurations.
+  ///
+  /// In it, this message translates to:
+  /// **'media {avg} · max {max}'**
+  String logDurations(String avg, String max);
+
+  /// No description provided for @logCalls.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 esecuzione} other{{n} esecuzioni}}'**
+  String logCalls(int n);
+
+  /// No description provided for @logFirst.
+  ///
+  /// In it, this message translates to:
+  /// **'Prima volta: {time}'**
+  String logFirst(String time);
+
+  /// No description provided for @logRequestsHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Richieste oltre {ms} ms, per percorso. Conservati {n} giorni.'**
+  String logRequestsHint(int ms, int n);
+
+  /// No description provided for @logQueriesHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Query con durata media oltre {ms} ms (o massima 10 volte tanto), rilevate ogni ora. Conservati {n} giorni.'**
+  String logQueriesHint(int ms, int n);
+
+  /// No description provided for @logErrorsHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Errori e avvisi del backend, uguali raggruppati. Conservati {n} giorni.'**
+  String logErrorsHint(int n);
+
+  /// No description provided for @logQueriesOff.
+  ///
+  /// In it, this message translates to:
+  /// **'Le query lente non vengono raccolte: il database deve caricare pg_stat_statements (vedi la documentazione del server).'**
+  String get logQueriesOff;
+
+  /// No description provided for @logCopied.
+  ///
+  /// In it, this message translates to:
+  /// **'Dettagli copiati'**
+  String get logCopied;
 }
 
 class _AppLocalizationsDelegate

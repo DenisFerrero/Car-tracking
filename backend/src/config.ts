@@ -52,6 +52,12 @@ const schema = z.object({
 	RETENTION_DAYS: z.coerce.number().int().min(7).default(365),
 	// Phones are people: their positions are kept for less time
 	PHONE_RETENTION_DAYS: z.coerce.number().int().min(1).default(30),
+	// Log of the platform (errors, warnings, slow requests and queries) for the analysis
+	// afterwards: days kept, thresholds in milliseconds of a slow request and of a slow
+	// query (mean; pg_stat_statements loaded by the database)
+	LOG_RETENTION_DAYS: z.coerce.number().int().min(1).max(365).default(30),
+	LOG_SLOW_REQUEST_MS: z.coerce.number().int().min(1).default(1000),
+	LOG_SLOW_QUERY_MS: z.coerce.number().int().min(1).default(100),
 	// A tracker silent for longer is reported offline (heartbeat every 4 hours)
 	OFFLINE_AFTER_HOURS: z.coerce.number().positive().default(9),
 	// Monthly data plan of the SIM, for the traffic charts

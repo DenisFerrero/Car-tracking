@@ -5,7 +5,7 @@ The backend needs **Node.js 24** (`engines`, LTS). With another local version us
 
 ```bash
 # Database
-docker run -d --name ct-db -p 5432:5432 -e POSTGRES_PASSWORD=dev timescale/timescaledb:2.24.0-pg17
+docker run -d --name ct-db -p 5432:5432 -e POSTGRES_PASSWORD=dev timescale/timescaledb:2.24.0-pg17 postgres -c shared_preload_libraries=timescaledb,pg_stat_statements
 
 # Backend (reads ../.env: DATABASE_URL, CRYPTO_MASTER_KEY, PUBLIC_URL=http://localhost:4000)
 cd backend && npm ci
@@ -35,7 +35,7 @@ by `npm run provision -- 356938035643809`.
 
 ```bash
 # Backend: end-to-end tests on a dedicated empty database (the schema is recreated)
-docker run -d --name ct-test-db -p 55432:5432 -e POSTGRES_PASSWORD=test -e POSTGRES_DB=ct_test timescale/timescaledb:2.24.0-pg17
+docker run -d --name ct-test-db -p 55432:5432 -e POSTGRES_PASSWORD=test -e POSTGRES_DB=ct_test timescale/timescaledb:2.24.0-pg17 postgres -c shared_preload_libraries=timescaledb,pg_stat_statements
 cd backend && npm run typecheck
 TEST_DATABASE_URL=postgres://postgres:test@localhost:55432/ct_test npm run test:coverage   # 98% line threshold
 

@@ -38,7 +38,9 @@ export function errorHandler (error: FastifyError | ApiError, request: FastifyRe
 	}
 	const status = error.statusCode ?? 500;
 	if (status >= 500) {
-		request.log.error(error);
+		// Also in the platform log, by route pattern (no URL, body or user)
+		const route = `${request.method} ${request.routeOptions.url ?? "(unknown)"}`;
+		request.log.error({ err: error, component: "http", status: 500 }, route);
 		reply.status(500).send({ error: "internal", message: "Internal error" });
 		return;
 	}

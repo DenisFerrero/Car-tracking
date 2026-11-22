@@ -1803,5 +1803,87 @@
       }
     }
   },
-  "errTooManyDashboardShares": "Il tuo amico ha già troppe dashboard da guardare: riprova più tardi"
+  "errTooManyDashboardShares": "Il tuo amico ha già troppe dashboard da guardare: riprova più tardi",
+  "platformLog": "Log della piattaforma",
+  "platformLogSub": "Errori, avvisi, richieste e query lente, per migliorare la piattaforma",
+  "logErrors": "Errori",
+  "logWarnings": "Avvisi",
+  "logSlowRequests": "Richieste lente",
+  "logSlowQueries": "Query lente",
+  "logEmpty": "Niente da segnalare nel periodo",
+  "logTimes": "{n, plural, =1{1 volta} other{{n} volte}}",
+  "@logTimes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "logLast": "ultima {ago}",
+  "@logLast": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "logDurations": "media {avg} · max {max}",
+  "@logDurations": {
+    "placeholders": {
+      "avg": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "logCalls": "{n, plural, =1{1 esecuzione} other{{n} esecuzioni}}",
+  "@logCalls": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "logFirst": "Prima volta: {time}",
+  "@logFirst": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "logRequestsHint": "Richieste oltre {ms} ms, per percorso. Conservati {n} giorni.",
+  "@logRequestsHint": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "logQueriesHint": "Query con durata media oltre {ms} ms (o massima 10 volte tanto), rilevate ogni ora. Conservati {n} giorni.",
+  "@logQueriesHint": {
+    "placeholders": {
+      "ms": {
+        "type": "int"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "logErrorsHint": "Errori e avvisi del backend, uguali raggruppati. Conservati {n} giorni.",
+  "@logErrorsHint": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "logQueriesOff": "Le query lente non vengono raccolte: il database deve caricare pg_stat_statements (vedi la documentazione del server).",
+  "logCopied": "Dettagli copiati"
 }

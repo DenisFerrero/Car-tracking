@@ -2812,4 +2812,85 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errTooManyDashboardShares =>
       'Your friend already has too many dashboards waiting: try again later';
+
+  @override
+  String get platformLog => 'Platform log';
+
+  @override
+  String get platformLogSub =>
+      'Errors, warnings, slow requests and queries, to improve the platform';
+
+  @override
+  String get logErrors => 'Errors';
+
+  @override
+  String get logWarnings => 'Warnings';
+
+  @override
+  String get logSlowRequests => 'Slow requests';
+
+  @override
+  String get logSlowQueries => 'Slow queries';
+
+  @override
+  String get logEmpty => 'Nothing to report in the period';
+
+  @override
+  String logTimes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n times',
+      one: 'one time',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String logLast(String ago) {
+    return 'last $ago';
+  }
+
+  @override
+  String logDurations(String avg, String max) {
+    return 'avg $avg · max $max';
+  }
+
+  @override
+  String logCalls(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n runs',
+      one: '1 run',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String logFirst(String time) {
+    return 'First time: $time';
+  }
+
+  @override
+  String logRequestsHint(int ms, int n) {
+    return 'Requests over $ms ms, by route. Kept $n days.';
+  }
+
+  @override
+  String logQueriesHint(int ms, int n) {
+    return 'Queries with a mean duration over $ms ms (or a maximum ten times as much), collected every hour. Kept $n days.';
+  }
+
+  @override
+  String logErrorsHint(int n) {
+    return 'Errors and warnings of the backend, equal ones grouped. Kept $n days.';
+  }
+
+  @override
+  String get logQueriesOff =>
+      'Slow queries aren\'t collected: the database must load pg_stat_statements (see the server documentation).';
+
+  @override
+  String get logCopied => 'Details copied';
 }

@@ -16,6 +16,7 @@ Copia `.env.example` in `.env` e sostituisci **tutti** i valori (valori casuali:
 | `RETENTION_DAYS`, `SIM_BUDGET_MB`, `OFFLINE_AFTER_HOURS` | Conservazione dei dati, piano dati della SIM (grafico del traffico), avviso di tracker non raggiungibile |
 | `PHONE_RETENTION_DAYS` | Conservazione delle posizioni personali dei telefoni (default 30), più breve di quella dei veicoli |
 | `TIMEZONE` | Fuso dei giorni delle statistiche, degli orari delle aree e dei backup |
+| `LOG_RETENTION_DAYS`, `LOG_SLOW_REQUEST_MS`, `LOG_SLOW_QUERY_MS` | [Log della piattaforma](logs.md): giorni di conservazione (default 30), soglie di richiesta e query lenta |
 | `ANDROID_PACKAGE`, `ANDROID_CERT_SHA256` | Passkey anche nell'app Android (vedi [App](../app/index.md)) |
 | `GITHUB_REPO`, `GITHUB_TOKEN` | Firmware e versioni dell'app dalle release del repository (`proprietario/nome`); se il repository cambia nome si aggiorna solo questa variabile. Token opzionale (limite di richieste) |
 | `FUEL_PRICES_URL` | Prezzi medi settimanali dei carburanti del MASE; vuoto per disattivarli |

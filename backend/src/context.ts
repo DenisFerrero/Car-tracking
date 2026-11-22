@@ -11,6 +11,7 @@ import type { Firmware } from "./services/firmware.ts";
 import type { FuelPrices } from "./services/fuel.ts";
 import type { Geofences } from "./services/geofences.ts";
 import type { Notifier } from "./services/notifier.ts";
+import type { PlatformLog } from "./services/platform-log.ts";
 import type { Releases } from "./services/releases.ts";
 
 /** Services shared by routes, tracker gateway and jobs */
@@ -29,6 +30,7 @@ export interface Context {
 	geofences: Geofences;
 	fuel: FuelPrices;
 	releases: Releases;
+	platformLog: PlatformLog;
 }
 
 export async function logAuthEvent (ctx: Context, event: string, data: { userId?: number | null; email?: string; ip?: string; userAgent?: string }): Promise<void> {

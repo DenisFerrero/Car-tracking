@@ -64,6 +64,7 @@ plugins:
             Installazione: Installation
             Aggiornamenti: Updates
             Backup: Backups
+            Log della piattaforma: Platform log
             App: App
             Funzioni: Features
             Telefono e veicoli: Phone and vehicles
@@ -99,6 +100,7 @@ nav:
       - Installazione: server/install.md
       - Aggiornamenti: server/updates.md
       - Backup: server/backup.md
+      - Log della piattaforma: server/logs.md
   - App:
       - App: app/index.md
       - Funzioni: app/features.md

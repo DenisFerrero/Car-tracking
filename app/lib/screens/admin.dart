@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../core/api.dart';
 import '../core/format.dart';
@@ -52,6 +53,17 @@ class AdminScreen extends ConsumerWidget {
       ),
       body: ListView(padding: readable(context, const EdgeInsets.only(bottom: 96)), children: [
         ...ref.watch(_backupProvider).maybeWhen(data: (backup) => [_BackupCard(backup: backup)], orElse: () => const <Widget>[]),
+        Card(
+          margin: const EdgeInsets.fromLTRB(8, 12, 8, 0),
+          child: ListTile(
+            key: const Key('openPlatformLog'),
+            leading: const Icon(Icons.monitor_heart_outlined),
+            title: Text(l.platformLog),
+            subtitle: Text(l.platformLogSub),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/account/admin/logs'),
+          ),
+        ),
         Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 4), child: Text(l.users)),
         ...users.when(
           loading: () => [const LinearProgressIndicator()],

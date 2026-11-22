@@ -7,6 +7,7 @@ import { requireAdmin } from "../http/session.ts";
 import { hashToken, randomToken } from "../auth/secrets.ts";
 import { deleteUser } from "../services/accounts.ts";
 import { backupState } from "../services/backups.ts";
+import { LOG_KINDS } from "../services/platform-log.ts";
 
 // Administration: users, invites, access resets. There is no public registration: the
 // administrator invites the users with a link (no email server needed, the link is
@@ -25,6 +26,33 @@ export function registerAdminRoutes (app: FastifyInstance, ctx: Context): void {
 	const link = (token: string) => `${ctx.config.PUBLIC_URL}/#/invite/${token}`;
 
 	app.get("/api/admin/backup", async () => backupState(ctx.config.BACKUP_DIR));
+
+	/**
+	 * Platform log of the last days, by kind: entries grouped by source and message, the
+	 * most frequent first, with times, durations and the details of the latest one
+	 */
+	app.get("/api/admin/logs", async (request) => {
+		const query = parse(z.strictObject({
+			kind: z.enum(LOG_KINDS),
+			days: z.coerce.number().int().min(1).max(ctx.config.LOG_RETENTION_DAYS).default(7)
+		}), request.query);
+		const groups = await sql`
+			SELECT source, message, sum(count)::int AS count, min(time) AS first, max(time) AS last,
+				max(coalesce((details ->> 'maxMs')::float, duration_ms)) AS "maxMs",
+				sum((details ->> 'calls')::int)::int AS calls,
+				round((sum(coalesce((details ->> 'avgMs')::float, duration_ms) * count) / nullif(sum(count) FILTER (WHERE duration_ms IS NOT NULL), 0))::numeric)::float AS "avgMs",
+				(array_agg(details ORDER BY time DESC))[1] AS details
+			FROM platform_log
+			WHERE kind = ${query.kind} AND time > now() - make_interval(days => ${query.days})
+			GROUP BY source, message ORDER BY sum(count) DESC, max(time) DESC LIMIT 100`;
+		return {
+			retentionDays: ctx.config.LOG_RETENTION_DAYS,
+			slowRequestMs: ctx.config.LOG_SLOW_REQUEST_MS,
+			slowQueryMs: ctx.config.LOG_SLOW_QUERY_MS,
+			slowQueries: ctx.platformLog.slowQueriesAvailable === true,
+			groups
+		};
+	});
 
 	app.get("/api/admin/users", async () => {
 		return sql`

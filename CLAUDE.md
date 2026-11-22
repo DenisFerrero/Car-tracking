@@ -27,6 +27,11 @@ bilingual documentation site. Full documentation: `docs/` (published on GitHub P
 - **zod validation on every call** (body, query, params, WebSocket messages), strict schemas.
 - Migrations in `backend/migrations/NNN_name.sql`, applied at startup.
 - Tests end-to-end on a real TimescaleDB (`TEST_DATABASE_URL`), coverage **≥ 98%** of lines.
+- **Platform log** (`src/services/platform-log.ts`, `docs/server/logs.md`): every `warn` /
+  `error` of `ctx.log` and of its children (`component` = source) is also saved for 30 days,
+  with slow requests and slow queries. Report failures through the logger, never with
+  personal data (bodies, query strings, IPs, emails, tokens): the fields `ip`, `email`,
+  `token`… are dropped, but keep messages and fields free of them.
 
 ## App (`app/`)
 

@@ -351,7 +351,8 @@ describe("error handler", () => {
 		};
 		return { sent, reply: object as unknown as FastifyReply };
 	};
-	const request = { log: { error: () => {} } } as unknown as FastifyRequest;
+	const logged: unknown[][] = [];
+	const request = { method: "GET", routeOptions: {}, log: { error: (...args: unknown[]) => logged.push(args) } } as unknown as FastifyRequest;
 
 	test("API errors, framework errors, internal errors without details", () => {
 		const api = reply();
@@ -369,6 +370,9 @@ describe("error handler", () => {
 		const internal = reply();
 		errorHandler(new Error("password=secret in the query") as FastifyError, request, internal.reply);
 		assert.deepEqual(internal.sent, { status: 500, body: { error: "internal", message: "Internal error" } });
+		// In the log (and the platform log) by route, without a route: unknown
+		assert.equal(logged.length, 1);
+		assert.equal(logged[0]![1], "GET (unknown)");
 	});
 });
 

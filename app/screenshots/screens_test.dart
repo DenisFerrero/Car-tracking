@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:car_tracking/screens/dashboards/catalog.dart';
 
 import '../test/dashboards_test.dart' show dashboardBackend, dashboardJson, fakeResult;
+import '../test/platform_log_test.dart' show logBackend;
 import '../test/device_test.dart' show analysisBackend;
 import '../test/support.dart';
 import '../test/vehicle_test.dart' show deadline, trendsJson;
@@ -339,6 +340,11 @@ void main() {
     await tapAndSettle(tester, find.byKey(const Key('use_device_1')));
     await shot(tester, '31_dashboard_use');
   });
+  testWidgets('33 platform log', (tester) async {
+    await open(tester, '/account/admin/logs', backend: logBackend());
+    await tapAndSettle(tester, find.text(it.logSlowRequests));
+    await shot(tester, '33_platform_log');
+  });
   testWidgets('32 analysis with the current dashboard', (tester) async {
     await open(tester, '/devices/1?tab=2', size: tall, backend: _dashboards(current: true, kind: 'diagnostics'));
     await shot(tester, '32_analysis_dashboard');
@@ -383,6 +389,11 @@ void main() {
   testWidgets('desktop dark dashboard', (tester) async {
     await open(tester, '/dashboards', size: desktop, dark: true, backend: _dashboards());
     await shot(tester, 'd15_dark_dashboard');
+  });
+  testWidgets('desktop platform log', (tester) async {
+    await open(tester, '/account/admin/logs', size: desktop, backend: logBackend());
+    await tapAndSettle(tester, find.text('GET /api/dashboards'));
+    await shot(tester, 'd18_platform_log');
   });
   testWidgets('desktop analysis with the current dashboard', (tester) async {
     await open(tester, '/devices/1?tab=2', size: desktop, backend: _dashboards(current: true));

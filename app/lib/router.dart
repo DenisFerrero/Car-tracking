@@ -18,6 +18,7 @@ import 'screens/home.dart';
 import 'screens/map_overview.dart';
 import 'screens/notifications.dart';
 import 'screens/phone.dart';
+import 'screens/platform_log.dart';
 import 'screens/server_setup.dart';
 
 /// Routes. The session decides where the user can go: server address (mobile),
@@ -119,7 +120,11 @@ GoRouter buildRouter(Session session) {
               path: '/account',
               builder: (context, state) => const AccountScreen(),
               routes: [
-                GoRoute(path: 'admin', builder: (context, state) => const AdminScreen()),
+                GoRoute(
+                  path: 'admin',
+                  builder: (context, state) => const AdminScreen(),
+                  routes: [GoRoute(path: 'logs', builder: (context, state) => const PlatformLogScreen())],
+                ),
                 GoRoute(path: 'friends', builder: (context, state) => const FriendsScreen()),
               ],
             ),

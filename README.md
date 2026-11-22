@@ -25,6 +25,7 @@ La documentazione completa è pubblicata su GitHub Pages dalla cartella [`docs/`
 | [Installazione del server](docs/server/install.md) | Variabili d'ambiente, esposizione con una sola porta (Traefik), avvio, utenti |
 | [Aggiornamenti](docs/server/updates.md) | Immagine delle release su GHCR, aggiornamento automatico con Watchtower, ritorno alla versione precedente |
 | [Backup](docs/server/backup.md) | Backup giornalieri, copia cifrata fuori dal server, ripristino |
+| [Log della piattaforma](docs/server/logs.md) | Errori, avvisi, richieste e query lente conservati 30 giorni, consultabili dagli amministratori |
 | [App](docs/app/index.md) | Installazione Android, store alternativi, aggiornamenti, [funzioni](docs/app/features.md) |
 | [Telefono e veicoli](docs/app/phone-vehicles.md) | Il telefono come localizzatore, veicoli senza tracker |
 | [Dashboard](docs/app/dashboards.md) | Dashboard personalizzate, dashboard corrente, condivisione del layout con gli amici |

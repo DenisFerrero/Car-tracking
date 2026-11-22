@@ -64,6 +64,13 @@ export async function buildApp (ctx: Context, gateway: Gateway): Promise<Fastify
 		onConstructorPoisoning: "error"
 	});
 	app.setErrorHandler(errorHandler);
+	// Slow requests in the platform log, by route pattern; not the WebSockets (they last as
+	// long as the connection) nor the paths without a route
+	app.addHook("onResponse", async (request, reply) => {
+		const route = request.routeOptions.url;
+		if (route === undefined || request.headers.upgrade === "websocket") return;
+		ctx.platformLog.request(request.method, route, reply.statusCode, reply.elapsedTime);
+	});
 
 	const tileOrigin = new URL(config.MAP_TILE_URL.replace(/\{[a-z]\}/g, "a")).origin;
 	await app.register(helmet, {

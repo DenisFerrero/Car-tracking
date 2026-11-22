@@ -31,6 +31,9 @@
 - **Validation**: every call (body, query, parameters and WebSocket messages) is validated
   with *strict* zod schemas: unknown fields, wrong types and out-of-range values are rejected
   with 400 before reaching the logic.
+- **Logs**: tokens and cookies never end up in the logs; the [platform log](../server/logs.md)
+  (errors and slowness, 30 days, administrators only) holds no bodies, query strings, IPs,
+  emails or users, and requests appear only as their route pattern.
 - **Rate limits and DoS**: global per-IP limit (`RATE_LIMIT`, 300/min) applied **before**
   authentication, so anonymous requests and fake tokens consume it too; tight limits on
   sign-in, TOTP, recovery, invitations and friend codes (`AUTH_RATE_LIMIT`; codes have 50

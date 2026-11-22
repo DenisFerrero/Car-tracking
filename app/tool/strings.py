@@ -839,6 +839,24 @@ S = {
   "dashboardUseNoVehicles": ("Scegli almeno un veicolo", "Choose at least one vehicle"),
   "dashboardAdded": ("Dashboard «{name}» aggiunta", "Dashboard «{name}» added"),
   "errTooManyDashboardShares": ("Il tuo amico ha già troppe dashboard da guardare: riprova più tardi", "Your friend already has too many dashboards waiting: try again later"),
+  # Platform log (administration)
+  "platformLog": ("Log della piattaforma", "Platform log"),
+  "platformLogSub": ("Errori, avvisi, richieste e query lente, per migliorare la piattaforma", "Errors, warnings, slow requests and queries, to improve the platform"),
+  "logErrors": ("Errori", "Errors"),
+  "logWarnings": ("Avvisi", "Warnings"),
+  "logSlowRequests": ("Richieste lente", "Slow requests"),
+  "logSlowQueries": ("Query lente", "Slow queries"),
+  "logEmpty": ("Niente da segnalare nel periodo", "Nothing to report in the period"),
+  "logTimes": ("{n, plural, =1{1 volta} other{{n} volte}}", "{n, plural, =1{one time} other{{n} times}}"),
+  "logLast": ("ultima {ago}", "last {ago}"),
+  "logDurations": ("media {avg} · max {max}", "avg {avg} · max {max}"),
+  "logCalls": ("{n, plural, =1{1 esecuzione} other{{n} esecuzioni}}", "{n, plural, =1{1 run} other{{n} runs}}"),
+  "logFirst": ("Prima volta: {time}", "First time: {time}"),
+  "logRequestsHint": ("Richieste oltre {ms} ms, per percorso. Conservati {n} giorni.", "Requests over {ms} ms, by route. Kept {n} days."),
+  "logQueriesHint": ("Query con durata media oltre {ms} ms (o massima 10 volte tanto), rilevate ogni ora. Conservati {n} giorni.", "Queries with a mean duration over {ms} ms (or a maximum ten times as much), collected every hour. Kept {n} days."),
+  "logErrorsHint": ("Errori e avvisi del backend, uguali raggruppati. Conservati {n} giorni.", "Errors and warnings of the backend, equal ones grouped. Kept {n} days."),
+  "logQueriesOff": ("Le query lente non vengono raccolte: il database deve caricare pg_stat_statements (vedi la documentazione del server).", "Slow queries aren't collected: the database must load pg_stat_statements (see the server documentation)."),
+  "logCopied": ("Dettagli copiati", "Details copied"),
 }
 
 # A key written twice would silently replace the first text
@@ -848,7 +866,7 @@ if _twice:
     raise SystemExit(f"Keys written twice: {', '.join(_twice)}")
 
 # Placeholders of type int (the rest are String)
-INTS = {"n", "status", "m", "h", "p", "w", "devices", "passkeys", "total"}
+INTS = {"n", "status", "m", "h", "p", "w", "devices", "passkeys", "total", "ms"}
 
 here = os.path.dirname(os.path.abspath(__file__))
 out = os.path.join(here, "..", "lib", "l10n")

@@ -17,6 +17,7 @@ import { FuelPrices } from "./services/fuel.ts";
 import { Geofences } from "./services/geofences.ts";
 import { Hub } from "./services/hub.ts";
 import { Notifier } from "./services/notifier.ts";
+import { capturing, PlatformLog } from "./services/platform-log.ts";
 import { Releases } from "./services/releases.ts";
 import { notifyLongStops } from "./services/stops.ts";
 import { updateDailyStats } from "./services/daily.ts";
@@ -36,10 +37,10 @@ export interface Server {
 	close (): Promise<void>;
 }
 
-async function applyRetention (sql: Sql, days: number): Promise<void> {
-	for (const table of ["positions", "traffic", "device_extra"]) {
+async function applyRetention (sql: Sql, days: number, logDays: number): Promise<void> {
+	for (const [table, keep] of [["positions", days], ["traffic", days], ["device_extra", days], ["platform_log", logDays]] as const) {
 		await sql`SELECT remove_retention_policy(${table}, if_exists => true)`;
-		await sql`SELECT add_retention_policy(${table}, ${`${days} days`}::interval)`;
+		await sql`SELECT add_retention_policy(${table}, ${`${keep} days`}::interval)`;
 	}
 }
 
@@ -82,6 +83,7 @@ export async function runJobs (ctx: Context): Promise<void> {
 		// Public data: each at most every 6 hours, failures only logged
 		await ctx.fuel.refreshIfStale();
 		await ctx.releases.checkIfDue();
+		await ctx.platformLog.snapshotQueries(ctx.sql);
 	}
 
 	// Positions of the phones: shorter retention than the trackers
@@ -96,18 +98,26 @@ export async function runJobs (ctx: Context): Promise<void> {
 	await ctx.sql`DELETE FROM notifications WHERE created_at < now() - interval '1 year'`;
 }
 
-export async function startServer (config: Config, log: FastifyBaseLogger = pino(createLogger(config.LOG_LEVEL)) as FastifyBaseLogger,
+export async function startServer (config: Config, output: FastifyBaseLogger = pino(createLogger(config.LOG_LEVEL)) as FastifyBaseLogger,
 	trackerTimeouts: Partial<GatewayTimeouts> = {}): Promise<Server> {
+	// Warnings and errors of every service (and of the requests) also in the platform log
+	const platformLog = new PlatformLog(config.LOG_SLOW_REQUEST_MS, config.LOG_SLOW_QUERY_MS);
+	const log = capturing(output, platformLog);
 	const sql = connect(config.DATABASE_URL);
 	await migrate(sql, message => log.info(message));
-	await applyRetention(sql, config.RETENTION_DAYS);
+	await applyRetention(sql, config.RETENTION_DAYS, config.LOG_RETENTION_DAYS);
+	// Statistics of the queries: used only when the database loads the library
+	await sql`CREATE EXTENSION IF NOT EXISTS pg_stat_statements`.catch(() => {});
+	await platformLog.snapshotQueries(sql, false);
+	platformLog.start(sql);
+	const of = (component: string) => log.child({ component });
 
 	const secrets = new DeviceSecrets(config.CRYPTO_MASTER_KEY);
-	const commands = new Commands(sql, secrets, log);
-	const hub = new Hub(sql, log, commands);
-	const firmware = new Firmware(sql, secrets, commands, hub, log);
+	const commands = new Commands(sql, secrets, of("commands"));
+	const hub = new Hub(sql, of("realtime"), commands);
+	const firmware = new Firmware(sql, secrets, commands, hub, of("firmware"));
 	const fcm = config.FCM_SERVICE_ACCOUNT_FILE ? new Fcm(config.FCM_SERVICE_ACCOUNT_FILE, { token: config.FCM_TOKEN_URL, api: config.FCM_API_URL }) : null;
-	const notifier = new Notifier(sql, log, hub, fcm, config.TIMEZONE);
+	const notifier = new Notifier(sql, of("notifications"), hub, fcm, config.TIMEZONE);
 	const ctx: Context = {
 		config,
 		sql,
@@ -121,11 +131,12 @@ export async function startServer (config: Config, log: FastifyBaseLogger = pino
 		firmware,
 		notifier,
 		geofences: new Geofences(sql, notifier, config.TIMEZONE),
-		fuel: new FuelPrices(sql, log, config.FUEL_PRICES_URL),
-		releases: new Releases(sql, log, firmware, notifier, { repo: config.GITHUB_REPO, apiUrl: config.GITHUB_API_URL, token: config.GITHUB_TOKEN })
+		fuel: new FuelPrices(sql, of("fuel"), config.FUEL_PRICES_URL),
+		releases: new Releases(sql, of("releases"), firmware, notifier, { repo: config.GITHUB_REPO, apiUrl: config.GITHUB_API_URL, token: config.GITHUB_TOKEN }),
+		platformLog
 	};
 
-	const gateway = new Gateway(ctx, new Cells(sql, log, config.CELL_GEOLOCATION_URL), trackerTimeouts);
+	const gateway = new Gateway(ctx, new Cells(sql, of("cells"), config.CELL_GEOLOCATION_URL), trackerTimeouts);
 	commands.setDownlink(gateway);
 	firmware.setDownlink(gateway);
 
@@ -133,9 +144,10 @@ export async function startServer (config: Config, log: FastifyBaseLogger = pino
 	const address = await app.listen({ host: config.HOST, port: config.PORT });
 	log.info({ publicUrl: config.PUBLIC_URL, push: fcm !== null }, "Car tracking backend ready");
 
+	const jobsLog = of("jobs");
 	const jobs = [
-		setInterval(() => void runJobs(ctx).catch(error => log.error({ err: error }, "Jobs failed")), JOB_INTERVAL),
-		setInterval(() => void expireShares(ctx).catch(error => log.error({ err: error }, "Share expiry failed")), SHARE_JOB_INTERVAL)
+		setInterval(() => void runJobs(ctx).catch(error => jobsLog.error({ err: error }, "Jobs failed")), JOB_INTERVAL),
+		setInterval(() => void expireShares(ctx).catch(error => jobsLog.error({ err: error }, "Share expiry failed")), SHARE_JOB_INTERVAL)
 	];
 
 	return {
@@ -148,6 +160,7 @@ export async function startServer (config: Config, log: FastifyBaseLogger = pino
 			hub.close();
 			await gateway.close();
 			await app.close();
+			await platformLog.stop();
 			await sql.end({ timeout: 5 });
 		}
 	};

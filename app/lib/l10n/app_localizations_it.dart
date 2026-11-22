@@ -2822,4 +2822,85 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get errTooManyDashboardShares =>
       'Il tuo amico ha già troppe dashboard da guardare: riprova più tardi';
+
+  @override
+  String get platformLog => 'Log della piattaforma';
+
+  @override
+  String get platformLogSub =>
+      'Errori, avvisi, richieste e query lente, per migliorare la piattaforma';
+
+  @override
+  String get logErrors => 'Errori';
+
+  @override
+  String get logWarnings => 'Avvisi';
+
+  @override
+  String get logSlowRequests => 'Richieste lente';
+
+  @override
+  String get logSlowQueries => 'Query lente';
+
+  @override
+  String get logEmpty => 'Niente da segnalare nel periodo';
+
+  @override
+  String logTimes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n volte',
+      one: '1 volta',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String logLast(String ago) {
+    return 'ultima $ago';
+  }
+
+  @override
+  String logDurations(String avg, String max) {
+    return 'media $avg · max $max';
+  }
+
+  @override
+  String logCalls(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n esecuzioni',
+      one: '1 esecuzione',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String logFirst(String time) {
+    return 'Prima volta: $time';
+  }
+
+  @override
+  String logRequestsHint(int ms, int n) {
+    return 'Richieste oltre $ms ms, per percorso. Conservati $n giorni.';
+  }
+
+  @override
+  String logQueriesHint(int ms, int n) {
+    return 'Query con durata media oltre $ms ms (o massima 10 volte tanto), rilevate ogni ora. Conservati $n giorni.';
+  }
+
+  @override
+  String logErrorsHint(int n) {
+    return 'Errori e avvisi del backend, uguali raggruppati. Conservati $n giorni.';
+  }
+
+  @override
+  String get logQueriesOff =>
+      'Le query lente non vengono raccolte: il database deve caricare pg_stat_statements (vedi la documentazione del server).';
+
+  @override
+  String get logCopied => 'Dettagli copiati';
 }

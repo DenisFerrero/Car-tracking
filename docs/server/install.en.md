@@ -16,6 +16,7 @@ Copy `.env.example` to `.env` and replace **all** the values (random values:
 | `RETENTION_DAYS`, `SIM_BUDGET_MB`, `OFFLINE_AFTER_HOURS` | Data retention, SIM data plan (traffic chart), unreachable tracker alert |
 | `PHONE_RETENTION_DAYS` | Retention of the personal positions of the phones (default 30), shorter than the vehicles' |
 | `TIMEZONE` | Time zone of the days of the statistics, of the area schedules and of the backups |
+| `LOG_RETENTION_DAYS`, `LOG_SLOW_REQUEST_MS`, `LOG_SLOW_QUERY_MS` | [Platform log](logs.md): days kept (default 30), thresholds of a slow request and query |
 | `ANDROID_PACKAGE`, `ANDROID_CERT_SHA256` | Passkeys in the Android app too (see [App](../app/index.md)) |
 | `GITHUB_REPO`, `GITHUB_TOKEN` | Firmware and app versions from the releases of the repository (`owner/name`); if the repository is renamed only this variable changes. Optional token (rate limit) |
 | `FUEL_PRICES_URL` | Weekly average fuel prices of the Italian ministry (MASE); empty to disable |
