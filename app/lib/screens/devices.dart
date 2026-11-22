@@ -69,16 +69,19 @@ class DevicesScreen extends ConsumerWidget {
                   Padding(padding: const EdgeInsets.all(32), child: Text(l.noDevices, textAlign: TextAlign.center)),
                 ])
               : ListView.separated(
-                  padding: const EdgeInsets.only(bottom: 96),
+                  padding: readable(context, const EdgeInsets.only(bottom: 96)),
                   itemCount: list.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, index) => DeviceTile(device: list[index]),
+                  itemBuilder: (context, index) => DeviceTile(device: _sorted(list)[index]),
                 ),
         ),
       ),
     );
   }
 }
+
+/// Archived vehicles at the end
+List<Device> _sorted(List<Device> list) => [...list.where((d) => !d.archived), ...list.where((d) => d.archived)];
 
 class DeviceTile extends StatelessWidget {
   const DeviceTile({super.key, required this.device});
@@ -105,6 +108,7 @@ class DeviceTile extends StatelessWidget {
         device.waitingFirstContact
             ? l.waitingFirstContact
             : [
+                if (device.archived) l.archived,
                 p == null ? l.noPosition : statusLabel(l, p.status),
                 formatAgo(l, device.lastSeenAt),
                 if (p?.accuracy != null) l.accuracyMeters('${p!.accuracy}'),
@@ -114,7 +118,7 @@ class DeviceTile extends StatelessWidget {
               ].join(' · '),
       ),
       // Signal and satellites: only the owner receives them
-      trailing: p == null || !device.isOwner || device.isPhone
+      trailing: p == null || !device.isOwner || !device.isTracker
           ? null
           : Row(mainAxisSize: MainAxisSize.min, children: [
               Tooltip(

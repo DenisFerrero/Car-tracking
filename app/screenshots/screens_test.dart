@@ -1,5 +1,6 @@
 // Screenshots of the main screens with the data of the tests, to check the interface by
-// eye (real fonts, phone size, light and dark theme). Not part of `flutter test`:
+// eye (real fonts, phone and desktop browser sizes, light and dark theme). Not part of
+// `flutter test`:
 //   flutter test screenshots --update-goldens   ->   screenshots/out/*.png
 import 'dart:io';
 
@@ -13,6 +14,9 @@ import '../test/vehicle_test.dart' show deadline, trendsJson;
 
 const phone = Size(412, 892);
 const tall = Size(412, 1700);
+
+/// Browser on a desktop: navigation rail instead of the bottom bar
+const desktop = Size(1280, 800);
 
 Future<void> loadFonts() async {
   final root = Platform.environment['FLUTTER_ROOT'] ?? '/sdks/flutter';
@@ -132,6 +136,15 @@ FakeBackend demoBackend() {
   // Account page
   Map<String, dynamic> session(int id, String agent, String client, {bool current = false}) =>
       {'id': id, 'client': client, 'user_agent': agent, 'ip': '10.0.0.$id', 'last_seen_at': iso(ago(Duration(minutes: id))), 'current': current};
+  // Pairing of a tracker; installations of the car
+  b
+    ..on('POST', '/api/devices/claim/check', (_) => {'available': true, 'registered': false})
+    ..on('GET', '/api/devices/1', (_) => {
+          ...ownerDevice(),
+          'installations': [
+            {'imei': '863820040182648', 'installedAt': iso(ago(const Duration(days: 30))), 'removedAt': null},
+          ],
+        });
   b.on('GET', '/api/account', (_) => {
         'passkeys': [
           {'id': 'pk1', 'name': 'Pixel 9', 'created_at': iso(ago(const Duration(days: 3))), 'last_used_at': iso(ago(const Duration(hours: 2))), 'backed_up': true},
@@ -151,6 +164,7 @@ List<Map<String, dynamic>> _devices() => [
       {...viewerDevice(), 'lastSeenAt': iso(ago(const Duration(hours: 1))), 'lastPosition': positionJson(status: 1, lat: 45.2, full: false)},
       phoneDevice(),
       {...phoneDevice(id: 4, owner: false, connected: false), 'name': 'iPhone Mario', 'lastPosition': {...positionJson(lat: 45.3, full: false), 'accuracy': 30}},
+      {...vehicleDevice(id: 5), 'name': 'Punto (venduta)', 'archived': true},
     ];
 
 Future<void> shot(WidgetTester tester, String name) async {
@@ -273,4 +287,59 @@ void main() {
     await open(tester, '/devices/1/trends', dark: true, size: tall);
     await shot(tester, '21_dark_trends');
   });
+  testWidgets('23 pairing in a vehicle', (tester) async {
+    await open(tester, '/devices/add');
+    await pairingVehicleStep(tester);
+    await shot(tester, '23_pairing_vehicle');
+  });
+  testWidgets('24 tracker moved', (tester) async {
+    await open(tester, '/devices/1?tab=4');
+    await reveal(tester, find.byKey(const Key('moveTracker')));
+    await tapAndSettle(tester, find.byKey(const Key('moveTracker')));
+    await shot(tester, '24_move_tracker');
+  });
+
+  // Desktop browser
+  final pages = {
+    'map': '/',
+    'devices': '/devices',
+    'live': '/devices/1',
+    'analysis': '/devices/1?tab=2',
+    'maintenance': '/devices/1/maintenance',
+    'costs': '/devices/1/costs',
+    'settings': '/devices/1?tab=4',
+    'account': '/account',
+    'admin': '/account/admin',
+  };
+  for (final (index, MapEntry(key: name, value: location)) in pages.entries.indexed) {
+    testWidgets('desktop $name', (tester) async {
+      await open(tester, location, size: desktop);
+      await shot(tester, 'd${(index + 1).toString().padLeft(2, '0')}_$name');
+    });
+  }
+  testWidgets('desktop deadline editor', (tester) async {
+    await open(tester, '/devices/1/maintenance', size: desktop);
+    await tapAndSettle(tester, find.byKey(const Key('deadline3')));
+    await shot(tester, 'd10_deadline_editor');
+  });
+  testWidgets('desktop pairing', (tester) async {
+    await open(tester, '/devices/add', size: desktop);
+    await pairingVehicleStep(tester);
+    await shot(tester, 'd11_pairing_vehicle');
+  });
+  testWidgets('desktop dark live', (tester) async {
+    await open(tester, '/devices/1', size: desktop, dark: true);
+    await shot(tester, 'd12_dark_live');
+  });
+  testWidgets('desktop dark settings', (tester) async {
+    await open(tester, '/devices/1?tab=4', size: desktop, dark: true);
+    await shot(tester, 'd13_dark_settings');
+  });
+}
+
+/// Label checked: the step of the vehicle
+Future<void> pairingVehicleStep(WidgetTester tester) async {
+  await tester.enterText(find.byKey(const Key('imei')), '863820040182648');
+  await tester.enterText(find.byKey(const Key('pairing')), '6MDF-SV3C');
+  await tapAndSettle(tester, find.text(it.verify));
 }

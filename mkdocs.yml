@@ -68,6 +68,7 @@ plugins:
             Funzioni: Features
             Telefono e veicoli: Phone and vehicles
             Dispositivi: Devices
+            Nuovo tracker: New tracker
             Catalogo: Catalog
             Scheda di alimentazione: Power board
             Portachiavi del proprietario: Owner key fob
@@ -102,6 +103,7 @@ nav:
       - Funzioni: app/features.md
       - Telefono e veicoli: app/phone-vehicles.md
   - Dispositivi:
+      - Nuovo tracker: devices/new-device.md
       - Catalogo: devices/index.md
       - LilyGO T-Call A7670 V1.0: devices/lilygo-t-call-a7670-v1-0.md
       - Scheda di alimentazione: devices/carrier-board.md

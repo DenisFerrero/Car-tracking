@@ -53,7 +53,7 @@ class MaintenanceScreen extends ConsumerWidget {
               final odometer = data['odometerKm'] as int?;
               final items = (data['items'] as List).cast<Map<String, dynamic>>();
               final log = (data['log'] as List).cast<Map<String, dynamic>>();
-              return ListView(padding: const EdgeInsets.only(bottom: 96), children: [
+              return ListView(padding: readable(context, const EdgeInsets.only(bottom: 96)), children: [
                 Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 4), child: Text(l.maintenanceHint)),
                 Card(
                   margin: const EdgeInsets.all(8),
@@ -263,7 +263,9 @@ class _DeadlineEditorState extends State<DeadlineEditor> {
     return AlertDialog(
       title: Text(widget.item == null ? l.addDeadline : l.editDeadline),
       content: SingleChildScrollView(
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        // The floating label of the first field stays inside the scroll area
+        padding: const EdgeInsets.only(top: 8),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, spacing: 12, children: [
           DropdownButtonFormField<String>(
             key: const Key('deadlineKind'),
             initialValue: _kind,
@@ -273,23 +275,24 @@ class _DeadlineEditorState extends State<DeadlineEditor> {
           ),
           // Custom deadline: the description is its name
           _field('deadlineTitle', _title, _kind == 'other' ? l.deadlineTitleRequired : l.deadlineTitle, number: false),
-          const SizedBox(height: 8),
-          Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
-            Text(_date == null ? l.deadlineNoDate : formatDay(_date!)),
-            TextButton.icon(
-              key: const Key('deadlineDate'),
-              icon: const Icon(Icons.event),
-              label: Text(l.deadlineDate),
-              onPressed: () async {
-                final now = DateTime.now();
-                final picked = await showDatePicker(
-                  context: context,
-                  initialDate: _date ?? now,
-                  firstDate: DateTime(now.year - 5),
-                  lastDate: DateTime(now.year + 10),
-                );
-                if (picked != null) setState(() => _date = picked);
-              },
+          // The button shows the date: it fits narrow dialogs next to the clear button
+          Row(children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                key: const Key('deadlineDate'),
+                icon: const Icon(Icons.event),
+                label: Text(_date == null ? l.deadlineNoDate : '${l.deadlineDate}: ${formatDay(_date!)}', overflow: TextOverflow.ellipsis),
+                onPressed: () async {
+                  final now = DateTime.now();
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _date ?? now,
+                    firstDate: DateTime(now.year - 5),
+                    lastDate: DateTime(now.year + 10),
+                  );
+                  if (picked != null) setState(() => _date = picked);
+                },
+              ),
             ),
             if (_date != null)
               IconButton(key: const Key('deadlineClearDate'), icon: const Icon(Icons.clear), onPressed: () => setState(() => _date = null)),
@@ -300,11 +303,7 @@ class _DeadlineEditorState extends State<DeadlineEditor> {
           _field('deadlineRemindDays', _remindDays, l.deadlineRemindDays),
           _field('deadlineRemindKm', _remindKm, l.deadlineRemindKm),
           _field('deadlineNote', _note, l.deadlineNote, number: false),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ),
+          if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
         ]),
       ),
       actions: [

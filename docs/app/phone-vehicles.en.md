@@ -53,6 +53,9 @@ color. A vehicle is a device of the user fed by the phone of the owner while sha
 - The positions of the vehicle are kept for `RETENTION_DAYS` days like the trackers': they're
   data of the car, not of the person.
 - Deleting the vehicle deletes history, costs, deadlines, areas and shares.
+- A vehicle can receive a tracker later: the pairing asks for the vehicle and its data stay.
+  The same way a tracker moves to another vehicle and the previous one stays, archived if you
+  like ([New tracker](../devices/new-device.md#moving-the-tracker-to-another-vehicle)).
 
 !!! tip "Several people in the same car"
     The vehicle can be shared read-only, but only the owner can feed it from their phone. For a

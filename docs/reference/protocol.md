@@ -58,6 +58,9 @@ comandi (solo in avanti).
 
 1. **Registrazione**: a ogni accensione il tracker invia un HELLO cifrato con la propria chiave;
    il server deriva la chiave dall'IMEI, verifica il tag e risponde con un ACK con l'id.
+   L'id è quello del veicolo in cui il tracker è installato: quando viene spostato o rimosso
+   il server chiude la connessione (codice 4000) e il firmware adotta il nuovo id dall'ACK
+   successivo.
 2. **Telemetria**: GPS letto ogni 5 secondi con **campionamento adattivo** (tolleranza 10 m):
    ogni campione nelle curve, uno ogni 30 secondi in rettilineo; invio a lotti (`BATCH_SIZE` 3,
    o dopo 30 secondi).

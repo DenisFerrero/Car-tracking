@@ -42,8 +42,10 @@ firmware/secrets.h:
    programma la scheda.
 3. Stampa l'etichetta (`--label`, SVG con QR code, IMEI e codice) e applicala al tracker.
 4. L'utente apre **Dispositivi → Aggiungi**: la procedura guidata legge il QR (o IMEI e codice
-   a mano), chiede nome e colore e attende il primo collegamento. Il codice dimostra il
-   possesso fisico: conoscere solo l'IMEI non basta.
+   a mano), chiede il veicolo (nuovo, con nome e colore, o uno senza tracker che ha già) e
+   attende il primo collegamento. Il codice dimostra il possesso fisico: conoscere solo l'IMEI
+   non basta. La procedura completa, dall'hardware all'auto, è in
+   [Nuovo tracker](../devices/new-device.md).
 
 Al primo avvio il firmware salva in NVS la chiave e le impostazioni di rete (server, WiFi, APN,
 PIN): le immagini senza credenziali le riprendono da lì.

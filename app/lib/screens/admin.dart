@@ -50,7 +50,7 @@ class AdminScreen extends ConsumerWidget {
         icon: const Icon(Icons.person_add),
         label: Text(l.invite),
       ),
-      body: ListView(padding: const EdgeInsets.only(bottom: 96), children: [
+      body: ListView(padding: readable(context, const EdgeInsets.only(bottom: 96)), children: [
         ...ref.watch(_backupProvider).maybeWhen(data: (backup) => [_BackupCard(backup: backup)], orElse: () => const <Widget>[]),
         Padding(padding: const EdgeInsets.fromLTRB(16, 16, 16, 4), child: Text(l.users)),
         ...users.when(

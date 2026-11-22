@@ -160,7 +160,7 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
     final average = _profile['average'] as Map<String, dynamic>?;
     final values = (_profile['rates'] as Map<String, dynamic>).map((kind, list) => MapEntry(kind, (list as List).cast<Map<String, dynamic>>()));
 
-    return ListView(padding: const EdgeInsets.all(16), children: [
+    return ListView(padding: readable(context, const EdgeInsets.all(16)), children: [
       Card(
         key: const Key('costPerKm'),
         margin: EdgeInsets.zero,

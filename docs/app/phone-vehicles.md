@@ -54,6 +54,9 @@ proprietario quando condivide da lì.
 - Le posizioni del veicolo si conservano `RETENTION_DAYS` giorni come quelle dei tracker:
   sono dati dell'auto, non della persona.
 - Eliminare il veicolo cancella storico, costi, scadenze, aree e condivisioni.
+- Un veicolo può ricevere un tracker in seguito: nell'abbinamento si sceglie il veicolo e i
+  suoi dati restano. Allo stesso modo un tracker si sposta su un altro veicolo e quello di
+  prima resta, eventualmente archiviato ([Nuovo tracker](../devices/new-device.md#spostare-il-tracker-su-un-altro-veicolo)).
 
 !!! tip "Più persone sulla stessa auto"
     Il veicolo può essere condiviso in sola visione, ma solo il proprietario può alimentarlo

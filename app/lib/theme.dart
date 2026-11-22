@@ -31,7 +31,7 @@ ThemeData buildTheme(Brightness brightness) {
   final base = ThemeData(colorScheme: scheme, useMaterial3: true, fontFamily: 'Barlow');
   final text = base.textTheme;
   // Labels of buttons, tabs and navigation: spaced like a road sign
-  const label = TextStyle(fontWeight: FontWeight.w600, letterSpacing: 0.6);
+  const label = TextStyle(fontFamily: 'Barlow', fontWeight: FontWeight.w600, letterSpacing: 0.6);
   final bar = dark ? petrolDeep : petrol;
   return base.copyWith(
     scaffoldBackgroundColor: scheme.surface,

@@ -1,7 +1,7 @@
 # Car Tracking: TimescaleDB + backend (API, realtime, tracker gateway, web app).
-# Exposure, choose one profile:
-#   docker compose --profile traefik up -d   public server, TLS certificates from Let's Encrypt
-#   docker compose --profile tunnel up -d    Cloudflare Tunnel, no open port on the server
+# Exposure: docker compose --profile traefik up -d   TLS certificates from Let's Encrypt.
+#   Only port 443 must be reachable from Internet (forwarded by the router): the certificate
+#   comes from the TLS-ALPN challenge on 443, port 80 only redirects to HTTPS.
 # First administrator: docker compose exec backend node scripts/create-admin.ts <email> "<name>"
 # Backups: service "backup" (daily dump in ./volumes/backups), copy off the server with the
 # profile "offsite" (restic). See backup/ and the documentation.
@@ -42,7 +42,7 @@ services:
       CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:?CRYPTO_MASTER_KEY is required}
       PUBLIC_URL: https://${DOMAIN:?DOMAIN is required}
       APP_NAME: ${APP_NAME:-Car Tracking}
-      # Traefik / cloudflared on the docker networks
+      # Traefik on the docker network
       TRUST_PROXY: uniquelocal
       LOG_LEVEL: ${LOG_LEVEL:-info}
       RETENTION_DAYS: ${RETENTION_DAYS:-365}
@@ -80,13 +80,13 @@ services:
       - traefik.docker.network=car-tracking_edge
       - traefik.http.routers.car-tracking.rule=Host(`${DOMAIN}`)
       - traefik.http.routers.car-tracking.entrypoints=websecure
-      - traefik.http.routers.car-tracking.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.routers.car-tracking.tls.certresolver=letsencrypt
       - traefik.http.routers.car-tracking.middlewares=ct-ratelimit@file,ct-inflight@file,ct-compress@file
       - traefik.http.routers.car-tracking.service=car-tracking
       # Trackers: own router, limited new connections, no compression
       - traefik.http.routers.car-tracking-tracker.rule=Host(`${DOMAIN}`) && Path(`/tracker`)
       - traefik.http.routers.car-tracking-tracker.entrypoints=websecure
-      - traefik.http.routers.car-tracking-tracker.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.routers.car-tracking-tracker.tls.certresolver=letsencrypt
       - traefik.http.routers.car-tracking-tracker.middlewares=ct-tracker-ratelimit@file
       - traefik.http.routers.car-tracking-tracker.service=car-tracking
       - traefik.http.services.car-tracking.loadbalancer.server.port=4000
@@ -185,21 +185,15 @@ services:
       - --entrypoints.websecure.http2.maxconcurrentstreams=100
       - --entrypoints.websecure.http.tls.options=modern@file
       - --providers.file.filename=/etc/traefik/dynamic.yml
-      # HTTP challenge: the server must be reachable on port 80/443 from Internet
+      # TLS-ALPN challenge: only port 443 must be reachable from Internet
       - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
-      # DNS challenge (TRAEFIK_CERTRESOLVER=letsencrypt-dns): certificates for servers not
-      # reachable from Internet (e.g. NetBird only). Provider token in CF_DNS_API_TOKEN.
-      - --certificatesresolvers.letsencrypt-dns.acme.email=${ACME_EMAIL}
-      - --certificatesresolvers.letsencrypt-dns.acme.storage=/letsencrypt/acme.json
-      - --certificatesresolvers.letsencrypt-dns.acme.dnschallenge.provider=${ACME_DNS_PROVIDER:-cloudflare}
       - --log.level=WARN
       - --accesslog=false
       - --api.dashboard=false
-    environment:
-      CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN:-}
     ports:
+      # Redirect to HTTPS only: it can stay closed on the router
       - "80:80"
       - "443:443"
     volumes:
@@ -208,19 +202,6 @@ services:
       - ./volumes/letsencrypt:/letsencrypt
     networks:
       - edge
-    restart: unless-stopped
-
-  cloudflared:
-    profiles: [tunnel]
-    image: cloudflare/cloudflared:2025.11.1
-    # Public hostname of the tunnel (Cloudflare dashboard) -> http://backend:4000
-    command: tunnel --no-autoupdate run
-    environment:
-      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
-    networks:
-      - edge
-    depends_on:
-      - backend
     restart: unless-stopped
 
 networks:

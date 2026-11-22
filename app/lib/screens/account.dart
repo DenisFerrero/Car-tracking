@@ -87,7 +87,7 @@ class AccountScreen extends ConsumerWidget {
           final passkeys = (data['passkeys'] as List).cast<Map<String, dynamic>>();
           final sessions = (data['sessions'] as List).cast<Map<String, dynamic>>();
           final recoveryLeft = data['recoveryCodesLeft'] as int;
-          return ListView(children: [
+          return ListView(padding: readable(context), children: [
             ListTile(
               leading: const CircleAvatar(child: Icon(Icons.person)),
               title: Text(session.user?.name ?? ''),

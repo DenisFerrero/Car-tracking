@@ -1727,26 +1727,152 @@ abstract class AppLocalizations {
   /// No description provided for @removeTracker.
   ///
   /// In it, this message translates to:
-  /// **'Rimuovi il tracker'**
+  /// **'Elimina il veicolo'**
   String get removeTracker;
 
   /// No description provided for @removeTrackerSub.
   ///
   /// In it, this message translates to:
-  /// **'Auto venduta o tracker spostato'**
+  /// **'Con il suo storico; il tracker torna libero'**
   String get removeTrackerSub;
 
   /// No description provided for @removeTrackerTitle.
   ///
   /// In it, this message translates to:
-  /// **'Rimuovere il tracker?'**
+  /// **'Eliminare il veicolo?'**
   String get removeTrackerTitle;
 
   /// No description provided for @removeTrackerBody.
   ///
   /// In it, this message translates to:
-  /// **'Storico, aree, condivisioni e notifiche vengono cancellati. Potrà essere aggiunto di nuovo con il codice dell\'etichetta.'**
+  /// **'Storico, km, scadenze, costi, aree, condivisioni e notifiche vengono cancellati. Il tracker torna libero e si potrà abbinare di nuovo con il codice dell\'etichetta. Per tenere lo storico usa «Rimuovi il tracker dal veicolo».'**
   String get removeTrackerBody;
+
+  /// No description provided for @errVehicleHasTracker.
+  ///
+  /// In it, this message translates to:
+  /// **'Il veicolo ha già un tracker'**
+  String get errVehicleHasTracker;
+
+  /// No description provided for @pairInHint.
+  ///
+  /// In it, this message translates to:
+  /// **'In quale veicolo lo installi? In un veicolo che hai già restano il suo storico, i km e le scadenze.'**
+  String get pairInHint;
+
+  /// No description provided for @pairNewVehicle.
+  ///
+  /// In it, this message translates to:
+  /// **'Nuovo veicolo'**
+  String get pairNewVehicle;
+
+  /// No description provided for @trackerSection.
+  ///
+  /// In it, this message translates to:
+  /// **'Tracker'**
+  String get trackerSection;
+
+  /// No description provided for @moveTracker.
+  ///
+  /// In it, this message translates to:
+  /// **'Sposta su un altro veicolo'**
+  String get moveTracker;
+
+  /// No description provided for @moveTrackerSub.
+  ///
+  /// In it, this message translates to:
+  /// **'Questo veicolo resta con il suo storico'**
+  String get moveTrackerSub;
+
+  /// No description provided for @moveTrackerTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Spostare il tracker?'**
+  String get moveTrackerTitle;
+
+  /// No description provided for @moveTarget.
+  ///
+  /// In it, this message translates to:
+  /// **'Veicolo di destinazione'**
+  String get moveTarget;
+
+  /// No description provided for @archivePrevious.
+  ///
+  /// In it, this message translates to:
+  /// **'Archivia questo veicolo'**
+  String get archivePrevious;
+
+  /// No description provided for @move.
+  ///
+  /// In it, this message translates to:
+  /// **'Sposta'**
+  String get move;
+
+  /// No description provided for @trackerMoved.
+  ///
+  /// In it, this message translates to:
+  /// **'Tracker spostato su {name}'**
+  String trackerMoved(String name);
+
+  /// No description provided for @detachTracker.
+  ///
+  /// In it, this message translates to:
+  /// **'Rimuovi il tracker dal veicolo'**
+  String get detachTracker;
+
+  /// No description provided for @detachTrackerSub.
+  ///
+  /// In it, this message translates to:
+  /// **'Il veicolo resta, il tracker si può abbinare di nuovo'**
+  String get detachTrackerSub;
+
+  /// No description provided for @detachTrackerTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Rimuovere il tracker?'**
+  String get detachTrackerTitle;
+
+  /// No description provided for @detachTrackerBody.
+  ///
+  /// In it, this message translates to:
+  /// **'Il veicolo resta con storico, km, scadenze e condivisioni, senza tracker. Il tracker si potrà abbinare di nuovo con il codice dell\'etichetta.'**
+  String get detachTrackerBody;
+
+  /// No description provided for @trackerDetached.
+  ///
+  /// In it, this message translates to:
+  /// **'Tracker rimosso'**
+  String get trackerDetached;
+
+  /// No description provided for @archived.
+  ///
+  /// In it, this message translates to:
+  /// **'Archiviato'**
+  String get archived;
+
+  /// No description provided for @archiveSub.
+  ///
+  /// In it, this message translates to:
+  /// **'Nascosto dalla mappa; storico e scadenze restano'**
+  String get archiveSub;
+
+  /// No description provided for @installations.
+  ///
+  /// In it, this message translates to:
+  /// **'Tracker installati'**
+  String get installations;
+
+  /// No description provided for @installedRange.
+  ///
+  /// In it, this message translates to:
+  /// **'dal {from} al {to}'**
+  String installedRange(String from, String to);
+
+  /// No description provided for @installedSince.
+  ///
+  /// In it, this message translates to:
+  /// **'dal {from}'**
+  String installedSince(String from);
 
   /// No description provided for @areasHint.
   ///
@@ -1865,7 +1991,7 @@ abstract class AppLocalizations {
   /// No description provided for @stepName.
   ///
   /// In it, this message translates to:
-  /// **'Nome e colore'**
+  /// **'Veicolo'**
   String get stepName;
 
   /// No description provided for @stepPower.

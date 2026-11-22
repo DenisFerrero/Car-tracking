@@ -145,7 +145,7 @@ export async function buildApp (ctx: Context, gateway: Gateway): Promise<Fastify
 	registerAuthRoutes(app, ctx);
 	registerAccountRoutes(app, ctx);
 	registerAdminRoutes(app, ctx);
-	registerDeviceRoutes(app, ctx, imei => gateway.isConnected(imei));
+	registerDeviceRoutes(app, ctx, gateway);
 	registerPhoneRoutes(app, ctx);
 	registerFriendRoutes(app, ctx);
 	registerFirmwareRoutes(app, ctx);

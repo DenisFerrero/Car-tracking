@@ -148,7 +148,15 @@ class _LiveTabState extends ConsumerState<LiveTab> with AutomaticKeepAliveClient
           child: Icon(_follow ? Icons.gps_fixed : Icons.gps_not_fixed),
         ),
       ),
-      Positioned(left: 8, right: 8, bottom: 8, child: _panel(context, p)),
+      Positioned(
+        left: 8,
+        right: 8,
+        bottom: 8,
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 720), child: _panel(context, p)),
+        ),
+      ),
     ]);
   }
 

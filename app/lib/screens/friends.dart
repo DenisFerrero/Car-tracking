@@ -154,7 +154,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             OutlinedButton(onPressed: () => ref.invalidate(friendsProvider), child: Text(l.retry)),
           ]),
         ),
-        data: (data) => ListView(padding: const EdgeInsets.all(16), children: [
+        data: (data) => ListView(padding: readable(context, const EdgeInsets.all(16)), children: [
           Text(l.friendsHint, style: theme.textTheme.bodySmall),
           const SizedBox(height: 16),
           Card(

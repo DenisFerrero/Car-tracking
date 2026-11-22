@@ -102,6 +102,21 @@ enum DeviceState { moving, parked, offline }
 /// A device seen by the user: owned (all the data) or shared with them (view only:
 /// position, state, name, owner and end of the share). A tracker, or a phone that shares
 /// its own position.
+/// Period of a tracker in a vehicle
+class Installation {
+  Installation({required this.imei, required this.installedAt, this.removedAt});
+
+  factory Installation.fromJson(Map<String, dynamic> json) => Installation(
+        imei: json['imei'] as String,
+        installedAt: DateTime.parse(json['installedAt'] as String).toLocal(),
+        removedAt: _date(json['removedAt']),
+      );
+
+  final String imei;
+  final DateTime installedAt;
+  final DateTime? removedAt;
+}
+
 class Device {
   Device({
     required this.id,
@@ -125,6 +140,8 @@ class Device {
     this.pausedUntil,
     this.stopAlertHours,
     this.batteryAlert,
+    this.archived = false,
+    this.installations = const [],
   });
 
   factory Device.fromJson(Map<String, dynamic> json) => Device(
@@ -151,6 +168,10 @@ class Device {
         pausedUntil: _date(json['pausedUntil']),
         stopAlertHours: json['stopAlertHours'] as int?,
         batteryAlert: json['batteryAlert'] as int?,
+        archived: json['archived'] == true,
+        installations: [
+          for (final item in (json['installations'] as List? ?? const []).cast<Map<String, dynamic>>()) Installation.fromJson(item),
+        ],
       );
 
   final int id;
@@ -181,6 +202,12 @@ class Device {
   /// battery (%) of a phone shared with them; null = off
   int? stopAlertHours;
   int? batteryAlert;
+
+  /// Vehicle kept for its history, hidden from the map
+  final bool archived;
+
+  /// Trackers installed in this vehicle, latest first (detail of the owner)
+  final List<Installation> installations;
 
   bool get isOwner => role == 'owner';
   bool get isPaused => pausedUntil != null && pausedUntil!.isAfter(DateTime.now());

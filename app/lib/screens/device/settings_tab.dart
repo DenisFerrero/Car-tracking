@@ -245,6 +245,43 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     });
   }
 
+  /// To another vehicle of the user without a tracker, or to a new one
+  Future<void> _move() async {
+    final l = context.l10n;
+    final vehicles = [for (final d in await ref.read(devicesProvider.future)) if (d.isVehicle && d.isOwner) d];
+    if (!mounted) return;
+    final choice = await showDialog<({int? vehicleId, String name, bool archive})>(
+      context: context,
+      builder: (context) => _MoveDialog(vehicles: vehicles),
+    );
+    if (choice == null) return;
+    await _guard(() async {
+      final result = await api.post('/api/devices/${device.id}/tracker/move', {
+        if (choice.vehicleId != null) 'vehicleId': choice.vehicleId else 'vehicle': {'name': choice.name},
+        'archive': choice.archive,
+      }) as Map<String, dynamic>;
+      ref.invalidate(devicesProvider);
+      ref.invalidate(deviceProvider(device.id));
+      if (mounted) context.go('/devices/${result['id']}');
+    }, l.trackerMoved(choice.vehicleId == null ? choice.name : vehicles.firstWhere((v) => v.id == choice.vehicleId).name));
+  }
+
+  Future<void> _detach() async {
+    final l = context.l10n;
+    if (!await _confirm(l.detachTrackerTitle, l.detachTrackerBody)) return;
+    await _guard(() async {
+      await api.delete('/api/devices/${device.id}/tracker');
+      ref.invalidate(devicesProvider);
+      ref.invalidate(deviceProvider(device.id));
+    }, l.trackerDetached);
+  }
+
+  Future<void> _archive(bool archived) => _guard(() async {
+        await api.patch('/api/devices/${device.id}', {'archived': archived});
+        ref.invalidate(devicesProvider);
+        ref.invalidate(deviceProvider(device.id));
+      });
+
   Future<bool> _confirm(String title, String body, {String? action}) async {
     final l = context.l10n;
     return await showDialog<bool>(
@@ -265,7 +302,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final shares = ref.watch(sharesProvider(device.id));
-    return ListView(padding: const EdgeInsets.symmetric(vertical: 8), children: [
+    return ListView(padding: readable(context, const EdgeInsets.symmetric(vertical: 8)), children: [
       _header(context, l.device),
       ListTile(
         leading: CircleAvatar(
@@ -320,6 +357,42 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
         },
       ),
       ],
+      if (!device.isPhone) ...[
+        _header(context, l.trackerSection),
+        if (device.isTracker) ...[
+          ListTile(
+            key: const Key('moveTracker'),
+            leading: const Icon(Icons.swap_horiz),
+            title: Text(l.moveTracker),
+            subtitle: Text(l.moveTrackerSub),
+            onTap: _move,
+          ),
+          ListTile(
+            key: const Key('detachTracker'),
+            leading: const Icon(Icons.link_off),
+            title: Text(l.detachTracker),
+            subtitle: Text(l.detachTrackerSub),
+            onTap: _detach,
+          ),
+        ] else
+          SwitchListTile(
+            key: const Key('archive'),
+            secondary: const Icon(Icons.inventory_2_outlined),
+            title: Text(l.archived),
+            subtitle: Text(l.archiveSub),
+            value: device.archived,
+            onChanged: _archive,
+          ),
+        for (final item in device.installations)
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.history),
+            title: Text('${l.installations}: ${item.imei}'),
+            subtitle: Text(item.removedAt == null
+                ? l.installedSince(formatDay(item.installedAt))
+                : l.installedRange(formatDay(item.installedAt), formatDay(item.removedAt!))),
+          ),
+      ],
       _header(context, l.stopAlert),
       ListTile(
         key: const Key('stopAlert'),
@@ -366,4 +439,69 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
         child: Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Theme.of(context).colorScheme.primary)),
       );
+}
+
+/// Target of the tracker: a vehicle without a tracker or a new one; this vehicle archived
+class _MoveDialog extends StatefulWidget {
+  const _MoveDialog({required this.vehicles});
+
+  final List<Device> vehicles;
+
+  @override
+  State<_MoveDialog> createState() => _MoveDialogState();
+}
+
+class _MoveDialogState extends State<_MoveDialog> {
+  late int? _target = widget.vehicles.firstOrNull?.id;
+  final _name = TextEditingController();
+  bool _archive = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final ready = _target != null || _name.text.trim().isNotEmpty;
+    return AlertDialog(
+      title: Text(l.moveTrackerTitle),
+      content: SingleChildScrollView(
+        padding: const EdgeInsets.only(top: 8),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, spacing: 12, children: [
+          DropdownButtonFormField<int?>(
+            key: const Key('moveTarget'),
+            initialValue: _target,
+            isExpanded: true,
+            decoration: InputDecoration(labelText: l.moveTarget),
+            items: [
+              for (final vehicle in widget.vehicles) DropdownMenuItem(value: vehicle.id, child: Text(vehicle.name)),
+              DropdownMenuItem(value: null, child: Text(l.pairNewVehicle)),
+            ],
+            onChanged: (value) => setState(() => _target = value),
+          ),
+          if (_target == null)
+            TextField(
+              key: const Key('moveName'),
+              controller: _name,
+              maxLength: 60,
+              decoration: InputDecoration(labelText: l.vehicleName),
+              onChanged: (_) => setState(() {}),
+            ),
+          CheckboxListTile(
+            key: const Key('moveArchive'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(l.archivePrevious),
+            subtitle: Text(l.archiveSub),
+            value: _archive,
+            onChanged: (value) => setState(() => _archive = value!),
+          ),
+        ]),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l.cancel)),
+        FilledButton(
+          key: const Key('moveConfirm'),
+          onPressed: ready ? () => Navigator.pop(context, (vehicleId: _target, name: _name.text.trim(), archive: _archive)) : null,
+          child: Text(l.move),
+        ),
+      ],
+    );
+  }
 }

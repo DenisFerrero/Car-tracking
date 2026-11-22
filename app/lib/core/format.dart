@@ -173,6 +173,7 @@ String errorText(AppLocalizations l, Object error) {
     'too_many_areas' => l.errTooManyAreas,
     'too_many_phones' => l.errTooManyPhones,
     'too_many_vehicles' => l.errTooManyVehicles,
+    'vehicle_has_tracker' => l.errVehicleHasTracker,
     'not_a_tracker' => l.errNotATracker,
     'deadline_untitled' => l.deadlineNeedsTitle,
     'too_many_rates' => l.errTooManyRates,
@@ -207,3 +208,11 @@ void showMessage(BuildContext context, String message) {
 /// Decimal number in the language of the app: 12,40 in Italian
 String formatDecimal(double value, int digits) =>
     NumberFormat.decimalPatternDigits(locale: Intl.getCurrentLocale(), decimalDigits: digits).format(value);
+
+/// Lists on wide screens (browser on a desktop): side margins keep the rows readable
+EdgeInsets readable(BuildContext context, [EdgeInsets base = EdgeInsets.zero]) {
+  final width = MediaQuery.sizeOf(context).width;
+  // From 840 px the navigation rail takes 80 px
+  final side = ((width - (width >= 840 ? 80 : 0) - 880) / 2).clamp(0.0, double.infinity);
+  return base + EdgeInsets.symmetric(horizontal: side);
+}

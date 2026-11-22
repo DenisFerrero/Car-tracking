@@ -68,3 +68,7 @@ supports. When adding or changing a board:
    diagram, ignition input, firmware settings, known limits. Add it to the `nav`.
 5. Accessories (power boards, sensors, key fobs) get the same treatment and a row in the
    accessories table.
+
+`docs/devices/new-device.md` (+ `.en.md`) is the end-to-end procedure for a new tracker
+(hardware, provisioning, firmware, pairing, installation, moving between vehicles): update it
+when any of these steps changes (provisioning script, pairing wizard, tracker settings).

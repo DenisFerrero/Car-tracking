@@ -25,7 +25,7 @@ const deviceColors = [
 
 /// Guided procedure to add a tracker:
 /// 1. label: QR code or IMEI + pairing code (proof of physical possession)
-/// 2. name and color
+/// 2. vehicle: a new one (name and color) or a vehicle of the user without a tracker
 /// 3. power on: the app waits for the first contact of the tracker in realtime
 /// 4. done
 class AddDeviceScreen extends ConsumerStatefulWidget {
@@ -45,6 +45,9 @@ class _AddDeviceScreenState extends ConsumerState<AddDeviceScreen> {
   bool _scanning = false;
   bool _registered = false;
   int? _deviceId;
+
+  /// Vehicle of the user to install the tracker in, null = new vehicle
+  int? _vehicleId;
   StreamSubscription<Map<String, dynamic>>? _events;
   Timer? _poll;
 
@@ -90,14 +93,13 @@ class _AddDeviceScreenState extends ConsumerState<AddDeviceScreen> {
   }
 
   Future<void> _claim() async {
-    if (_name.text.trim().isEmpty) return;
+    if (_vehicleId == null && _name.text.trim().isEmpty) return;
     setState(() => _busy = true);
     try {
       final result = await ref.read(apiProvider).post('/api/devices/claim', {
         'imei': _imei.text.trim(),
         'code': _code.text.trim(),
-        'name': _name.text.trim(),
-        'color': colorToHex(_color),
+        if (_vehicleId == null) ...{'name': _name.text.trim(), 'color': colorToHex(_color)} else 'vehicleId': _vehicleId,
       }) as Map<String, dynamic>;
       _deviceId = result['id'] as int;
       _registered = result['registered'] == true;
@@ -245,28 +247,50 @@ class _AddDeviceScreenState extends ConsumerState<AddDeviceScreen> {
 
   Widget _nameStep() {
     final l = context.l10n;
+    // Vehicles of the user without a tracker: the tracker can go in one of them
+    final vehicles = [for (final d in ref.watch(devicesProvider).value ?? const <Device>[]) if (d.isVehicle && d.isOwner) d];
+    Widget choice(Key key, int? id, IconData icon, Color? color, String title) => ListTile(
+          key: key,
+          contentPadding: EdgeInsets.zero,
+          leading: CircleAvatar(backgroundColor: color, child: Icon(icon, color: color == null ? null : Colors.white)),
+          title: Text(title),
+          trailing: Icon(_vehicleId == id ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+              color: _vehicleId == id ? Theme.of(context).colorScheme.primary : null),
+          onTap: () => setState(() => _vehicleId = id),
+        );
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      TextField(
-        key: const Key('name'),
-        controller: _name,
-        maxLength: 60,
-        decoration: InputDecoration(labelText: l.nameLabel, border: const OutlineInputBorder()),
-      ),
-      const SizedBox(height: 8),
-      Text(l.mapColor),
-      const SizedBox(height: 8),
-      Wrap(spacing: 8, runSpacing: 8, children: [
-        for (final color in deviceColors)
-          InkWell(
-            onTap: () => setState(() => _color = color),
-            customBorder: const CircleBorder(),
-            child: CircleAvatar(
-              backgroundColor: color,
-              child: _color == color ? const Icon(Icons.check, color: Colors.white) : null,
+      if (vehicles.isNotEmpty) ...[
+        Text(l.pairInHint),
+        const SizedBox(height: 8),
+        choice(const Key('pairNew'), null, Icons.add, null, l.pairNewVehicle),
+        for (final vehicle in vehicles)
+          choice(Key('pairIn_${vehicle.id}'), vehicle.id, Icons.directions_car_filled, vehicle.color,
+              vehicle.archived ? '${vehicle.name} · ${l.archived}' : vehicle.name),
+        const SizedBox(height: 16),
+      ],
+      if (_vehicleId == null) ...[
+        TextField(
+          key: const Key('name'),
+          controller: _name,
+          maxLength: 60,
+          decoration: InputDecoration(labelText: l.nameLabel, border: const OutlineInputBorder()),
+        ),
+        const SizedBox(height: 8),
+        Text(l.mapColor),
+        const SizedBox(height: 8),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          for (final color in deviceColors)
+            InkWell(
+              onTap: () => setState(() => _color = color),
+              customBorder: const CircleBorder(),
+              child: CircleAvatar(
+                backgroundColor: color,
+                child: _color == color ? const Icon(Icons.check, color: Colors.white) : null,
+              ),
             ),
-          ),
-      ]),
-      const SizedBox(height: 16),
+        ]),
+        const SizedBox(height: 16),
+      ],
       // Wraps on narrow phones
       OverflowBar(alignment: MainAxisAlignment.end, spacing: 8, overflowAlignment: OverflowBarAlignment.end, children: [
         TextButton(onPressed: _busy ? null : () => setState(() => _step = 0), child: Text(l.back)),

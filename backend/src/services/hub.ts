@@ -176,6 +176,18 @@ export class Hub {
 	}
 
 	/** After a change of the devices of a user (claim, share, revocation, expiry) */
+	/** Vehicles whose tracker was installed, moved or removed: their users reload them */
+	async devicesChanged (ids: number[]): Promise<void> {
+		const users = await this.#sql<{ user_id: number }[]>`SELECT DISTINCT user_id FROM device_users WHERE device_id = ANY (${ids})`;
+		for (const { user_id: userId } of users) {
+			await this.refreshUser(userId);
+			for (const connection of this.#connections) {
+				if (connection.user.id !== userId) continue;
+				for (const id of ids) if (connection.devices.has(id)) this.#send(connection, { type: "access", deviceId: id, revoked: false });
+			}
+		}
+	}
+
 	async refreshUser (userId: number): Promise<void> {
 		const own = [...this.#connections].filter(connection => connection.user.id === userId);
 		if (own.length === 0) return;

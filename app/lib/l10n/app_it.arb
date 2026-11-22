@@ -583,10 +583,55 @@
   "revokeBody": "Non vedrà più il dispositivo e le sue aree vengono cancellate.",
   "shareRevoked": "Condivisione revocata",
   "dangerZone": "Zona pericolosa",
-  "removeTracker": "Rimuovi il tracker",
-  "removeTrackerSub": "Auto venduta o tracker spostato",
-  "removeTrackerTitle": "Rimuovere il tracker?",
-  "removeTrackerBody": "Storico, aree, condivisioni e notifiche vengono cancellati. Potrà essere aggiunto di nuovo con il codice dell'etichetta.",
+  "removeTracker": "Elimina il veicolo",
+  "removeTrackerSub": "Con il suo storico; il tracker torna libero",
+  "removeTrackerTitle": "Eliminare il veicolo?",
+  "removeTrackerBody": "Storico, km, scadenze, costi, aree, condivisioni e notifiche vengono cancellati. Il tracker torna libero e si potrà abbinare di nuovo con il codice dell'etichetta. Per tenere lo storico usa «Rimuovi il tracker dal veicolo».",
+  "errVehicleHasTracker": "Il veicolo ha già un tracker",
+  "pairInHint": "In quale veicolo lo installi? In un veicolo che hai già restano il suo storico, i km e le scadenze.",
+  "pairNewVehicle": "Nuovo veicolo",
+  "trackerSection": "Tracker",
+  "moveTracker": "Sposta su un altro veicolo",
+  "moveTrackerSub": "Questo veicolo resta con il suo storico",
+  "moveTrackerTitle": "Spostare il tracker?",
+  "moveTarget": "Veicolo di destinazione",
+  "archivePrevious": "Archivia questo veicolo",
+  "move": "Sposta",
+  "trackerMoved": "Tracker spostato su {name}",
+  "@trackerMoved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "detachTracker": "Rimuovi il tracker dal veicolo",
+  "detachTrackerSub": "Il veicolo resta, il tracker si può abbinare di nuovo",
+  "detachTrackerTitle": "Rimuovere il tracker?",
+  "detachTrackerBody": "Il veicolo resta con storico, km, scadenze e condivisioni, senza tracker. Il tracker si potrà abbinare di nuovo con il codice dell'etichetta.",
+  "trackerDetached": "Tracker rimosso",
+  "archived": "Archiviato",
+  "archiveSub": "Nascosto dalla mappa; storico e scadenze restano",
+  "installations": "Tracker installati",
+  "installedRange": "dal {from} al {to}",
+  "@installedRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "installedSince": "dal {from}",
+  "@installedSince": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      }
+    }
+  },
   "areasHint": "Ricevi una notifica quando il dispositivo entra (o esce) da un'area: per esempio quando sta per arrivare a destinazione.",
   "noAreas": "Nessuna area",
   "addArea": "Aggiungi un'area",
@@ -630,7 +675,7 @@
   "scanTitle": "Inquadra il QR dell'etichetta",
   "stepLabel": "Etichetta del tracker",
   "stepLabelSub": "QR code o IMEI e codice di abbinamento",
-  "stepName": "Nome e colore",
+  "stepName": "Veicolo",
   "stepPower": "Accensione",
   "stepPowerSub": "Primo collegamento del tracker",
   "stepDone": "Fatto",

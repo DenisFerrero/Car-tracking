@@ -146,7 +146,9 @@ class _MapOverviewScreenState extends ConsumerState<MapOverviewScreen> {
             OutlinedButton(onPressed: () => ref.invalidate(devicesProvider), child: Text(l.retry)),
           ]),
         ),
-        data: (list) {
+        data: (all) {
+          // Archived vehicles: only in the list of the devices
+          final list = [for (final d in all) if (!d.archived) d];
           if (list.isEmpty) {
             return Center(
               child: Column(mainAxisSize: MainAxisSize.min, children: [

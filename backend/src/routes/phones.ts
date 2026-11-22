@@ -5,7 +5,7 @@ import { hashToken, randomToken } from "../auth/secrets.ts";
 import { badRequest, parse, unauthorized } from "../http/errors.ts";
 import { requireDevice, viewerPosition } from "../services/access.ts";
 import { idParams } from "./devices.ts";
-import { FUEL_TYPES } from "../services/costs.ts";
+import { createVehicle, vehicleBody } from "../services/trackers.ts";
 
 // Phones: without a tracker, the app shares the position of the phone. The phone is a
 // device of its user (kind 'phone'), shared with friends and watched with arrival areas
@@ -23,7 +23,7 @@ import { FUEL_TYPES } from "../services/costs.ts";
 // person. Only the owner of the phone and of the vehicle can do it.
 
 export const MAX_PHONES = 5;
-export const MAX_VEHICLES = 10;
+export { MAX_VEHICLES } from "../services/trackers.ts";
 const MAX_BATCH = 100;
 /** Moving above this speed (km/h), parked below */
 const MOVING_SPEED = 5;
@@ -72,25 +72,9 @@ export function registerPhoneRoutes (app: FastifyInstance, ctx: Context): void {
 	});
 
 	app.post("/api/vehicles", async (request) => {
-		const body = parse(z.strictObject({
-			name: z.string().trim().min(1).max(60),
-			color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default("#FFB300"),
-			model: z.string().trim().max(80).default(""),
-			fuelType: z.enum(FUEL_TYPES).nullable().default(null)
-		}), request.body);
+		const body = parse(vehicleBody, request.body);
 		const userId = request.auth!.user.id;
-		const id = await sql.begin(async tx => {
-			await tx`SELECT 1 FROM users WHERE id = ${userId} FOR UPDATE`;
-			const [count] = await tx<{ count: number }[]>`
-				SELECT count(*)::int AS count FROM device_users du JOIN devices d ON d.id = du.device_id
-				WHERE du.user_id = ${userId} AND du.role = 'owner' AND d.kind = 'vehicle'`;
-			if (count!.count >= MAX_VEHICLES) throw badRequest(`At most ${MAX_VEHICLES} vehicles`, "too_many_vehicles");
-			const [device] = await tx<{ id: number }[]>`
-				INSERT INTO devices (kind, name, color, model, vehicle_model, fuel_type)
-				VALUES ('vehicle', ${body.name}, ${body.color}, 'vehicle', ${body.model}, ${body.fuelType}) RETURNING id`;
-			await tx`INSERT INTO device_users (device_id, user_id, role) VALUES (${device!.id}, ${userId}, 'owner')`;
-			return device!.id;
-		});
+		const id = await sql.begin(tx => createVehicle(tx, userId, body));
 		await ctx.hub.refreshUser(userId);
 		return { id };
 	});

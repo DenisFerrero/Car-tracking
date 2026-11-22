@@ -9,18 +9,23 @@ import type { Access, PositionRow } from "../services/access.ts";
 import { releaseDevice } from "../services/accounts.ts";
 import type { CommandType } from "../services/commands.ts";
 import { KINDS, deviceName } from "../services/notifier.ts";
+import { createVehicle, detachTracker, installations, moveTracker, ownVehicle, pairInVehicle, vehicleBody } from "../services/trackers.ts";
 
 // Devices of the users. A tracker is added with the guided procedure of the app:
 //  1. check: IMEI + pairing code of the label (or its QR code)
 //  2. claim: the tracker becomes of the user, with name and color
 //  3. the app waits for the first contact of the tracker (realtime event "registered")
 // The pairing code proves the physical possession: knowing an IMEI is not enough.
+// The tracker is paired in a new vehicle or in a vehicle of the user without a tracker,
+// and can later move to another vehicle or be removed: the vehicle keeps its history
+// (src/services/trackers.ts).
 //
 // The owner can share the position with friends (src/routes/friends.ts), until revoked or
 // until a date: the viewers see position, speed and state, nothing else. Phones
 // (src/routes/phones.ts) are devices too, without commands and alarms.
 
 export const idParams = z.strictObject({ id: z.coerce.number().int().positive().max(2 ** 31 - 1) });
+const vehicleId = z.number().int().positive().max(2 ** 31 - 1);
 const userId = z.coerce.number().int().positive().max(2 ** 31 - 1);
 const shareParams = idParams.extend({ userId });
 const imei = z.string().trim().regex(IMEI_PATTERN, "15 digits");
@@ -63,9 +68,17 @@ interface DeviceRow {
 	paused_until: Date | null;
 	battery_alert: number | null;
 	stop_alert_hours: number | null;
+	archived_at: Date | null;
 }
 
-export function registerDeviceRoutes (app: FastifyInstance, ctx: Context, isConnected: (imei: string) => boolean): void {
+/** The connections of the trackers (src/tracker/gateway.ts) */
+export interface Trackers {
+	isConnected (imei: string): boolean;
+	disconnect (imei: string): void;
+}
+
+export function registerDeviceRoutes (app: FastifyInstance, ctx: Context, trackers: Trackers): void {
+	const isConnected = (imei: string) => trackers.isConnected(imei);
 	const { sql } = ctx;
 	// Pairing codes have 40 bits: a strict limit makes guessing impossible
 	const CLAIM_LIMIT = { rateLimit: { max: ctx.config.AUTH_RATE_LIMIT, timeWindow: "15 minutes" } };
@@ -110,6 +123,7 @@ export function registerDeviceRoutes (app: FastifyInstance, ctx: Context, isConn
 			revision: device.revision,
 			firmware: device.firmware,
 			registeredAt: device.registered_at,
+			archived: device.archived_at !== null,
 			lastPosition: position ?? null
 		};
 	};
@@ -134,7 +148,9 @@ export function registerDeviceRoutes (app: FastifyInstance, ctx: Context, isConn
 		const [device] = await selectDevices(request.auth!.user.id, id);
 		const positions = await latestPositions([id]);
 		const detail = present(device!, positions.get(id));
-		return access.role === "owner" && access.kind === "tracker" ? { ...detail, ...(await ctx.commands.state(id)) } : detail;
+		if (access.role !== "owner" || access.kind === "phone") return detail;
+		const history = { installations: await installations(sql, id) };
+		return access.kind === "tracker" ? { ...detail, ...history, ...(await ctx.commands.state(id)) } : { ...detail, ...history };
 	});
 
 	// --- Guided procedure
@@ -157,7 +173,9 @@ export function registerDeviceRoutes (app: FastifyInstance, ctx: Context, isConn
 	});
 
 	app.post("/api/devices/claim", { config: CLAIM_LIMIT }, async (request) => {
-		const body = parse(z.strictObject({ imei, code: z.string().max(20), name, color: color.default("#1E88E5") }), request.body);
+		// A new vehicle (name and color) or a vehicle of the user without a tracker
+		const body = parse(z.strictObject({ imei, code: z.string().max(20), name: name.optional(), color: color.default("#1E88E5"), vehicleId: vehicleId.optional() })
+			.refine(value => (value.name === undefined) !== (value.vehicleId === undefined), "name of a new vehicle or vehicleId"), request.body);
 		if (!ctx.secrets.verifyPairingCode(body.imei, body.code)) {
 			throw badRequest("Wrong IMEI or pairing code", "invalid_pairing");
 		}
@@ -165,16 +183,27 @@ export function registerDeviceRoutes (app: FastifyInstance, ctx: Context, isConn
 		const deviceId = await sql.begin(async tx => {
 			// The device may not exist yet: the procedure can start before the first power on
 			const [device] = await tx<{ id: number }[]>`
-				INSERT INTO devices (imei, name, color) VALUES (${body.imei}, ${body.name}, ${body.color})
+				INSERT INTO devices (imei, name, color) VALUES (${body.imei}, ${body.name ?? ""}, ${body.color})
 				ON CONFLICT (imei) DO UPDATE SET imei = excluded.imei RETURNING id`;
 			const [owner] = await tx`SELECT 1 FROM device_users WHERE device_id = ${device!.id} AND role = 'owner' FOR UPDATE`;
 			if (owner) throw conflict("The tracker belongs to another account", "already_claimed");
-			await tx`UPDATE devices SET name = ${body.name}, color = ${body.color} WHERE id = ${device!.id}`;
+			if (body.vehicleId !== undefined) {
+				await ownVehicle(tx, userId, body.vehicleId);
+				await pairInVehicle(tx, device!.id, body.vehicleId);
+				return body.vehicleId;
+			}
+			await tx`UPDATE devices SET name = ${body.name!}, color = ${body.color} WHERE id = ${device!.id}`;
 			await tx`
 				INSERT INTO device_users (device_id, user_id, role) VALUES (${device!.id}, ${userId}, 'owner')
 				ON CONFLICT (device_id, user_id) DO UPDATE SET role = 'owner', expires_at = NULL`;
+			await tx`INSERT INTO tracker_installations (imei, vehicle_id) VALUES (${body.imei}, ${device!.id})`;
 			return device!.id;
 		});
+		if (body.vehicleId !== undefined) {
+			// Connected already: it gets the id of the vehicle with its next ACK
+			trackers.disconnect(body.imei);
+			await ctx.hub.devicesChanged([deviceId]);
+		}
 		await ctx.hub.refreshUser(userId);
 		request.log.info({ deviceId, userId }, "Device claimed");
 		const [device] = await sql<{ registered_at: Date | null }[]>`SELECT registered_at FROM devices WHERE id = ${deviceId}`;
@@ -184,10 +213,13 @@ export function registerDeviceRoutes (app: FastifyInstance, ctx: Context, isConn
 	// --- Settings of the owner
 	app.patch("/api/devices/:id", async (request) => {
 		const { id } = parse(idParams, request.params);
-		const body = parse(z.strictObject({ name: name.optional(), color: color.optional() }), request.body);
-		await requireDevice(sql, request.auth!.user, id, "owner");
+		const body = parse(z.strictObject({ name: name.optional(), color: color.optional(), archived: z.boolean().optional() }), request.body);
+		const access = await requireDevice(sql, request.auth!.user, id, "owner");
+		// Archived: vehicles without a tracker kept for their history, hidden from the map
+		if (body.archived !== undefined && access.kind !== "vehicle") throw badRequest("Only vehicles without a tracker", "not_archivable");
 		if (body.name !== undefined) await sql`UPDATE devices SET name = ${body.name} WHERE id = ${id}`;
 		if (body.color !== undefined) await sql`UPDATE devices SET color = ${body.color} WHERE id = ${id}`;
+		if (body.archived !== undefined) await sql`UPDATE devices SET archived_at = ${body.archived ? new Date() : null} WHERE id = ${id}`;
 		const message = { type: "device", deviceId: id, ...body };
 		ctx.hub.toDevice(id, message, message);
 		return { ok: true };
@@ -202,6 +234,36 @@ export function registerDeviceRoutes (app: FastifyInstance, ctx: Context, isConn
 		const access = await requireDevice(sql, request.auth!.user, id, "owner");
 		const users = await releaseDevice(sql, id, access.kind);
 		for (const userId of users) await ctx.hub.refreshUser(userId);
+		return { ok: true };
+	});
+
+	// --- Tracker of a vehicle: moved to another vehicle, or removed
+	app.post("/api/devices/:id/tracker/move", async (request) => {
+		const { id } = parse(idParams, request.params);
+		const body = parse(z.strictObject({ vehicleId: vehicleId.optional(), vehicle: vehicleBody.optional(), archive: z.boolean().default(false) })
+			.refine(value => (value.vehicleId === undefined) !== (value.vehicle === undefined), "vehicleId or a new vehicle"), request.body);
+		const userId = request.auth!.user.id;
+		await requireTracker(sql, request.auth!.user, id);
+		const { target, imei } = await sql.begin(async tx => {
+			const target = body.vehicleId ?? await createVehicle(tx, userId, body.vehicle!);
+			await ownVehicle(tx, userId, target);
+			const imei = await moveTracker(tx, id, target);
+			if (body.archive) await tx`UPDATE devices SET archived_at = now() WHERE id = ${id}`;
+			return { target, imei };
+		});
+		trackers.disconnect(imei);
+		await ctx.hub.devicesChanged([id, target]);
+		request.log.info({ from: id, to: target }, "Tracker moved");
+		return { id: target };
+	});
+
+	/** The vehicle stays with its history, the tracker can be paired again with its code */
+	app.delete("/api/devices/:id/tracker", async (request) => {
+		const { id } = parse(idParams, request.params);
+		await requireTracker(sql, request.auth!.user, id);
+		const imei = await sql.begin(tx => detachTracker(tx, id));
+		trackers.disconnect(imei);
+		await ctx.hub.devicesChanged([id]);
 		return { ok: true };
 	});
 

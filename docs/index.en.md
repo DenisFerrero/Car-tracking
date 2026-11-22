@@ -9,7 +9,7 @@ OpenStreetMap maps, no Google token.
 [ESP32 tracker] --wss /tracker (encrypted binary frames)--+
 [Android phone] --HTTPS (positions of the phone)----------+
                                                           v
-[Android app / Browser] --HTTPS + WebSocket--> [Traefik or Cloudflare Tunnel] --> [Node.js backend] --> [TimescaleDB]
+[Android app / Browser] --HTTPS + WebSocket--> [Traefik, port 443] --> [Node.js backend] --> [TimescaleDB]
                                                                                   REST API, realtime,
                                                                                   tracker gateway,
                                                                                   web app, FCM push

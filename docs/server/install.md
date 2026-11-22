@@ -1,8 +1,7 @@
 # Installazione del server
 
 Requisiti: un server Linux con Docker e Docker Compose (amd64 o arm64, anche un Raspberry Pi
-4/5), un dominio e, per i tracker, la porta 443 raggiungibile da Internet (o un Cloudflare
-Tunnel).
+4/5), un dominio e, per i tracker, la porta 443 raggiungibile da Internet, inoltrata dal router al server.
 
 ## 1. Variabili d'ambiente
 
@@ -50,8 +49,6 @@ openssl rand -hex 32      # 64 caratteri esadecimali
 | `CRYPTO_MASTER_KEY` | `openssl rand -hex 32`. **Non cambiarla mai**: da essa derivano le chiavi dei tracker e cifra i segreti TOTP |
 | `RESTIC_PASSWORD` | `openssl rand -hex 32` (solo con il profilo `offsite`). Senza di essa la copia fuori dal server non si legge |
 | `ACME_EMAIL` | Un tuo indirizzo: Let's Encrypt lo usa per gli avvisi di scadenza |
-| `CF_DNS_API_TOKEN` | Solo con `letsencrypt-dns` e Cloudflare: *My Profile → API Tokens → Create Token → Edit zone DNS*, limitato alla zona del dominio |
-| `CLOUDFLARE_TUNNEL_TOKEN` | Solo con il profilo `tunnel`: *Zero Trust → Networks → Tunnels → Create a tunnel* (tipo Cloudflared), il token è nel comando di installazione mostrato (`--token ...`) |
 | `ANDROID_CERT_SHA256` | Impronta del certificato che firma l'APK: `keytool -list -v -keystore car-tracking-release.jks -alias car-tracking`, riga `SHA256:` (es. `AB:CD:...`). Il keystore si crea come descritto in [Release e pipeline](../development/releases.md#firma-dellapk-obbligatori); per più certificati separa con la virgola |
 | `GITHUB_REPO` | `proprietario/nome` del repository con le release (es. `mionome/car-tracking`) |
 | `GITHUB_TOKEN` | Facoltativo: *Settings → Developer settings → Fine-grained tokens*, accesso *Public repositories (read-only)*, nessun permesso aggiuntivo; con un repository privato *Contents: read* su quel repository |
@@ -62,28 +59,25 @@ I segreti della pipeline di GitHub (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE
 `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`) non vanno nel `.env`: vedi
 [Release e pipeline](../development/releases.md#segreti-e-variabili).
 
-## 2. Esposizione
+## 2. Esposizione: una sola porta sul router
 
 Il backend deve essere raggiungibile in HTTPS su un dominio vero: lo richiedono le passkey
 (WebAuthn) e il tracker, che si collega in `wss://<dominio>/tracker`.
 
-- **Traefik** (`--profile traefik`): server con le porte 80/443 aperte, certificati
-  Let's Encrypt automatici (TLS 1.2+, `traefik/dynamic.yml`). Con
-  `TRAEFIK_CERTRESOLVER=letsencrypt-dns` il certificato si ottiene con la sfida DNS
-  (`ACME_DNS_PROVIDER`, ad esempio Cloudflare con `CF_DNS_API_TOKEN`): serve se la porta 80
-  non è raggiungibile da Internet.
-- **Cloudflare Tunnel** (`--profile tunnel`): nessuna porta aperta. Nel pannello Cloudflare
-  crea il tunnel, metti il token in `CLOUDFLARE_TUNNEL_TOKEN` e aggiungi la *public hostname*
-  `DOMAIN` → `http://backend:4000`. Il tracker verifica le CA di `firmware/certificates.h`,
-  che includono quelle usate da Cloudflare.
-- **VPN** (NetBird o simili): va bene per l'app e il browser, ma il tracker non può entrare
-  nella VPN, quindi almeno `/tracker` deve restare pubblico. Soluzione tipica: Traefik con
-  sfida DNS e porta 443 aperta.
+1. Il dominio (record DNS `A`/`AAAA`) punta all'IP pubblico di casa; con un IP dinamico usa
+   un servizio DNS dinamico.
+2. Sul router inoltra **solo la porta TCP 443** all'IP del server. La porta 80 serve solo al
+   reindirizzamento verso HTTPS e può restare chiusa.
+3. Traefik (`--profile traefik`) ottiene il certificato Let's Encrypt con la sfida
+   **TLS-ALPN** sulla 443 (TLS 1.2+, `traefik/dynamic.yml`) e lo rinnova da solo.
+
+Esposta c'è solo la 443: il tracker si autentica con la sua chiave a ogni frame, l'app con
+passkey o password + TOTP; Traefik e il backend limitano le richieste per indirizzo.
 
 ## 3. Avvio
 
 ```sh
-docker compose --profile traefik up -d --build     # oppure --profile tunnel
+docker compose --profile traefik up -d --build
 docker compose exec backend node scripts/create-admin.ts admin@mydomain.com "Nome"
 ```
 

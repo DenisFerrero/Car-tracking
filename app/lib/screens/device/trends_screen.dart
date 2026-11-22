@@ -58,7 +58,7 @@ class _TrendsScreenState extends ConsumerState<TrendsScreen> {
     final business = rows.fold<double>(0, (sum, row) => sum + _num(row['businessKm']));
     final personal = rows.fold<double>(0, (sum, row) => sum + _num(row['personalKm']));
 
-    return ListView(padding: const EdgeInsets.all(8), children: [
+    return ListView(padding: readable(context, const EdgeInsets.all(8)), children: [
       Padding(
         padding: const EdgeInsets.all(8),
         child: SegmentedButton<bool>(

@@ -79,7 +79,7 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
     final l = context.l10n;
     final vehicles = [
       for (final device in ref.watch(devicesProvider).value ?? const <Device>[])
-        if (device.isVehicle && device.isOwner) device,
+        if (device.isVehicle && device.isOwner && !device.archived) device,
     ];
     final current = vehicles.any((vehicle) => vehicle.id == _phone.vehicleId) ? _phone.vehicleId : null;
     Widget option(Key key, IconData icon, Color? color, String title, String subtitle, int? id) => ListTile(

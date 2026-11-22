@@ -44,7 +44,7 @@ class ExtraScreen extends ConsumerWidget {
               final items = (data['items'] as List).cast<Map<String, dynamic>>();
               return RefreshIndicator(
                 onRefresh: () async => ref.invalidate(extraProvider(deviceId)),
-                child: ListView(padding: const EdgeInsets.all(16), children: [
+                child: ListView(padding: readable(context, const EdgeInsets.all(16)), children: [
                   Text(l.extraIntro, style: Theme.of(context).textTheme.bodySmall),
                   if (items.isEmpty)
                     Padding(

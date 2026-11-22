@@ -56,6 +56,9 @@ ACKs and commands (forward only).
 
 1. **Registration**: at every start the tracker sends a HELLO encrypted with its key; the
    server derives the key from the IMEI, checks the tag and answers with an ACK with the id.
+   The id is the one of the vehicle the tracker is installed in: when it's moved or removed
+   the server closes the connection (code 4000) and the firmware adopts the new id from the
+   next ACK.
 2. **Telemetry**: GPS read every 5 seconds with **adaptive sampling** (10 m tolerance): every
    sample in bends, one every 30 seconds on straight roads; batched upload (`BATCH_SIZE` 3, or
    after 30 seconds).

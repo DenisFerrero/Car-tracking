@@ -147,6 +147,11 @@ export class Gateway implements Downlink {
 		return this.#trackers.has(imei);
 	}
 
+	/** Tracker moved to another vehicle: it connects again and gets the new id in the ACK */
+	disconnect (imei: string): void {
+		this.#trackers.get(imei)?.socket.close(4000, "moved");
+	}
+
 	get connectedTrackers (): number {
 		return this.#trackers.size;
 	}

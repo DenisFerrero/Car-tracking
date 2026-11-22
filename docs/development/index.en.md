@@ -71,8 +71,9 @@ arduino-cli compile --fqbn esp32:esp32:esp32 firmware --library <LilyGo-Modem-Se
 
 ## Screenshots to check the interface
 
-`app/screenshots/screens_test.dart` opens the main pages with the test data (real fonts, phone
-size, light and dark theme) and saves them as images in `app/screenshots/out/` (not in git);
+`app/screenshots/screens_test.dart` opens the main pages with the test data (real fonts, Android
+phone size and a 1280×800 desktop browser with the navigation rail, light and dark theme;
+the `d*` files are the desktop ones) and saves them as images in `app/screenshots/out/` (not in git);
 maps show fake tiles, no network:
 
 ```sh

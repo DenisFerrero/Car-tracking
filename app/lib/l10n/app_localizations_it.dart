@@ -931,17 +931,89 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dangerZone => 'Zona pericolosa';
 
   @override
-  String get removeTracker => 'Rimuovi il tracker';
+  String get removeTracker => 'Elimina il veicolo';
 
   @override
-  String get removeTrackerSub => 'Auto venduta o tracker spostato';
+  String get removeTrackerSub => 'Con il suo storico; il tracker torna libero';
 
   @override
-  String get removeTrackerTitle => 'Rimuovere il tracker?';
+  String get removeTrackerTitle => 'Eliminare il veicolo?';
 
   @override
   String get removeTrackerBody =>
-      'Storico, aree, condivisioni e notifiche vengono cancellati. Potrà essere aggiunto di nuovo con il codice dell\'etichetta.';
+      'Storico, km, scadenze, costi, aree, condivisioni e notifiche vengono cancellati. Il tracker torna libero e si potrà abbinare di nuovo con il codice dell\'etichetta. Per tenere lo storico usa «Rimuovi il tracker dal veicolo».';
+
+  @override
+  String get errVehicleHasTracker => 'Il veicolo ha già un tracker';
+
+  @override
+  String get pairInHint =>
+      'In quale veicolo lo installi? In un veicolo che hai già restano il suo storico, i km e le scadenze.';
+
+  @override
+  String get pairNewVehicle => 'Nuovo veicolo';
+
+  @override
+  String get trackerSection => 'Tracker';
+
+  @override
+  String get moveTracker => 'Sposta su un altro veicolo';
+
+  @override
+  String get moveTrackerSub => 'Questo veicolo resta con il suo storico';
+
+  @override
+  String get moveTrackerTitle => 'Spostare il tracker?';
+
+  @override
+  String get moveTarget => 'Veicolo di destinazione';
+
+  @override
+  String get archivePrevious => 'Archivia questo veicolo';
+
+  @override
+  String get move => 'Sposta';
+
+  @override
+  String trackerMoved(String name) {
+    return 'Tracker spostato su $name';
+  }
+
+  @override
+  String get detachTracker => 'Rimuovi il tracker dal veicolo';
+
+  @override
+  String get detachTrackerSub =>
+      'Il veicolo resta, il tracker si può abbinare di nuovo';
+
+  @override
+  String get detachTrackerTitle => 'Rimuovere il tracker?';
+
+  @override
+  String get detachTrackerBody =>
+      'Il veicolo resta con storico, km, scadenze e condivisioni, senza tracker. Il tracker si potrà abbinare di nuovo con il codice dell\'etichetta.';
+
+  @override
+  String get trackerDetached => 'Tracker rimosso';
+
+  @override
+  String get archived => 'Archiviato';
+
+  @override
+  String get archiveSub => 'Nascosto dalla mappa; storico e scadenze restano';
+
+  @override
+  String get installations => 'Tracker installati';
+
+  @override
+  String installedRange(String from, String to) {
+    return 'dal $from al $to';
+  }
+
+  @override
+  String installedSince(String from) {
+    return 'dal $from';
+  }
 
   @override
   String get areasHint =>
@@ -1008,7 +1080,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get stepLabelSub => 'QR code o IMEI e codice di abbinamento';
 
   @override
-  String get stepName => 'Nome e colore';
+  String get stepName => 'Veicolo';
 
   @override
   String get stepPower => 'Accensione';

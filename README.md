@@ -12,7 +12,7 @@ The documentation is in Italian and English.*
 [Tracker ESP32] --wss /tracker (frame binari cifrati)--+
 [Telefono Android] --HTTPS (posizioni del telefono)-----+
                                                         v
-[App Android / Browser] --HTTPS + WebSocket--> [Traefik o Cloudflare Tunnel] --> [backend Node.js] --> [TimescaleDB]
+[App Android / Browser] --HTTPS + WebSocket--> [Traefik, porta 443] --> [backend Node.js] --> [TimescaleDB]
 ```
 
 ## Documentazione
@@ -22,7 +22,7 @@ La documentazione completa è pubblicata su GitHub Pages dalla cartella [`docs/`
 
 | Sezione | Contenuto |
 | :--- | :--- |
-| [Installazione del server](docs/server/install.md) | Variabili d'ambiente, esposizione (Traefik, Cloudflare Tunnel), avvio, utenti |
+| [Installazione del server](docs/server/install.md) | Variabili d'ambiente, esposizione con una sola porta (Traefik), avvio, utenti |
 | [Aggiornamenti](docs/server/updates.md) | Immagine delle release su GHCR, aggiornamento automatico con Watchtower, ritorno alla versione precedente |
 | [Backup](docs/server/backup.md) | Backup giornalieri, copia cifrata fuori dal server, ripristino |
 | [App](docs/app/index.md) | Installazione Android, store alternativi, aggiornamenti, [funzioni](docs/app/features.md) |

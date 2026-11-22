@@ -66,7 +66,8 @@ arduino-cli compile --fqbn esp32:esp32:esp32 firmware --library <LilyGo-Modem-Se
 ## Schermate per il controllo dell'interfaccia
 
 `app/screenshots/screens_test.dart` apre le pagine principali con i dati dei test (font
-reali, dimensioni di un telefono, tema chiaro e scuro) e le salva come immagini in
+reali, dimensioni di un telefono Android e di un browser desktop a 1280×800 con la barra di
+navigazione laterale, tema chiaro e scuro; i file `d*` sono quelli desktop) e le salva come immagini in
 `app/screenshots/out/` (non in git); le mappe mostrano tasselli finti, senza rete:
 
 ```sh

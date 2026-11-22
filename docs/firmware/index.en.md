@@ -43,8 +43,10 @@ firmware/secrets.h:
    board.
 3. Print the label (`--label`, SVG with QR code, IMEI and code) and stick it on the tracker.
 4. The user opens **Devices → Add**: the guided procedure reads the QR (or IMEI and code by
-   hand), asks for name and color and waits for the first connection. The code proves
-   physical possession: knowing just the IMEI isn't enough.
+   hand), asks for the vehicle (a new one, with name and color, or one of theirs without a
+   tracker) and waits for the first connection. The code proves physical possession: knowing
+   just the IMEI isn't enough. The full procedure, from the hardware to the car, is in
+   [New tracker](../devices/new-device.md).
 
 At the first start the firmware saves the key and the network settings (server, WiFi, APN,
 PIN) in NVS: images without credentials take them from there.

@@ -36,6 +36,7 @@ class NotificationsScreen extends ConsumerWidget {
                   Padding(padding: const EdgeInsets.all(32), child: Text(l.noNotifications, textAlign: TextAlign.center)),
                 ])
               : ListView.separated(
+                  padding: readable(context),
                   itemCount: result.items.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {

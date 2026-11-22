@@ -926,17 +926,89 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dangerZone => 'Danger zone';
 
   @override
-  String get removeTracker => 'Remove the tracker';
+  String get removeTracker => 'Delete the vehicle';
 
   @override
-  String get removeTrackerSub => 'Car sold or tracker moved';
+  String get removeTrackerSub => 'With its history; the tracker becomes free';
 
   @override
-  String get removeTrackerTitle => 'Remove the tracker?';
+  String get removeTrackerTitle => 'Delete the vehicle?';
 
   @override
   String get removeTrackerBody =>
-      'History, areas, shares and notifications are deleted. It can be added again with the code on the label.';
+      'History, km, deadlines, costs, areas, shares and notifications are deleted. The tracker becomes free and can be paired again with the code on the label. To keep the history use «Remove the tracker from the vehicle».';
+
+  @override
+  String get errVehicleHasTracker => 'The vehicle has a tracker already';
+
+  @override
+  String get pairInHint =>
+      'Which vehicle do you install it in? In a vehicle you already have, its history, km and deadlines stay.';
+
+  @override
+  String get pairNewVehicle => 'New vehicle';
+
+  @override
+  String get trackerSection => 'Tracker';
+
+  @override
+  String get moveTracker => 'Move to another vehicle';
+
+  @override
+  String get moveTrackerSub => 'This vehicle keeps its history';
+
+  @override
+  String get moveTrackerTitle => 'Move the tracker?';
+
+  @override
+  String get moveTarget => 'Target vehicle';
+
+  @override
+  String get archivePrevious => 'Archive this vehicle';
+
+  @override
+  String get move => 'Move';
+
+  @override
+  String trackerMoved(String name) {
+    return 'Tracker moved to $name';
+  }
+
+  @override
+  String get detachTracker => 'Remove the tracker from the vehicle';
+
+  @override
+  String get detachTrackerSub =>
+      'The vehicle stays, the tracker can be paired again';
+
+  @override
+  String get detachTrackerTitle => 'Remove the tracker?';
+
+  @override
+  String get detachTrackerBody =>
+      'The vehicle stays with history, km, deadlines and shares, without a tracker. The tracker can be paired again with the code on the label.';
+
+  @override
+  String get trackerDetached => 'Tracker removed';
+
+  @override
+  String get archived => 'Archived';
+
+  @override
+  String get archiveSub => 'Hidden from the map; history and deadlines stay';
+
+  @override
+  String get installations => 'Installed trackers';
+
+  @override
+  String installedRange(String from, String to) {
+    return 'from $from to $to';
+  }
+
+  @override
+  String installedSince(String from) {
+    return 'since $from';
+  }
 
   @override
   String get areasHint =>
@@ -1003,7 +1075,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stepLabelSub => 'QR code or IMEI and pairing code';
 
   @override
-  String get stepName => 'Name and color';
+  String get stepName => 'Vehicle';
 
   @override
   String get stepPower => 'Power on';
