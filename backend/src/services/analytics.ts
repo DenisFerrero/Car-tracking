@@ -1,6 +1,7 @@
 // Analysis of a track, plain functions (tested in analytics.test.ts)
 
 import { hasCosts, sumCosts, tripCost } from "./costs.ts";
+import type { DeviceKind } from "./access.ts";
 import type { TripCost, VehicleProfile } from "./costs.ts";
 
 export interface TrackPoint {
@@ -102,9 +103,9 @@ export function splitTrips (points: TrackPoint[]): Trip[] {
 	return trips;
 }
 
-/** Trips of a tracker, or of a phone (no engine: stops longer than 5 minutes) */
-export function tripsOfKind<T extends TrackPoint> (kind: "tracker" | "phone", points: T[]): Trip[] {
-	return splitTrips(kind === "phone" ? phoneTrack(points) : points);
+/** Trips of a tracker, or of a phone and a vehicle fed by it (no engine: stops longer than 5 minutes) */
+export function tripsOfKind<T extends TrackPoint> (kind: DeviceKind, points: T[]): Trip[] {
+	return splitTrips(kind === "tracker" ? points : phoneTrack(points));
 }
 
 // A phone stopped for longer than this ends a trip (traffic lights and queues don't)

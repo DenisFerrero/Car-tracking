@@ -8,7 +8,8 @@ import type { AuthUser } from "../http/session.ts";
 // administrators manage the users, not their data: no access to the devices of others.
 
 export type Role = "owner" | "viewer";
-export type DeviceKind = "tracker" | "phone";
+/** Tracker with the firmware, phone of a person, vehicle fed by the phone of its owner */
+export type DeviceKind = "tracker" | "phone" | "vehicle";
 
 export interface Access {
 	role: Role;
@@ -50,6 +51,13 @@ export async function requireDevice (sql: Sql, user: AuthUser, deviceId: number,
 export async function requireTracker (sql: Sql, user: AuthUser, deviceId: number): Promise<Access> {
 	const access = await requireDevice(sql, user, deviceId, "owner");
 	if (access.kind !== "tracker") throw badRequest("Only for trackers", "not_a_tracker");
+	return access;
+}
+
+/** Deadlines and odometer: cars, with a tracker or fed by a phone */
+export async function requireVehicle (sql: Sql, user: AuthUser, deviceId: number): Promise<Access> {
+	const access = await requireDevice(sql, user, deviceId, "owner");
+	if (access.kind === "phone") throw badRequest("Only for vehicles", "not_a_vehicle");
 	return access;
 }
 

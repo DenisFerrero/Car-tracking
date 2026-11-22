@@ -10,6 +10,7 @@ import '../../core/format.dart';
 import '../../core/live.dart';
 import '../../core/models.dart';
 import '../../core/providers.dart';
+import '../../theme.dart';
 import '../../widgets/base_map.dart';
 
 /// Realtime map. For the owner, opening it asks the tracker for live tracking (one
@@ -165,7 +166,7 @@ class _LiveTabState extends ConsumerState<LiveTab> with AutomaticKeepAliveClient
             label: Text(l.walkTo),
             onPressed: () => _walkTo(p!.point!),
           );
-    return Card(
+    return AccentCard(
       elevation: 6,
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -190,7 +191,7 @@ class _LiveTabState extends ConsumerState<LiveTab> with AutomaticKeepAliveClient
                     l.phonePausedUntil(formatTime(device.pausedUntil!))
                   else
                     device.connected
-                        ? (device.isPhone ? l.sharingActive : (device.isLive ? l.liveUntil(formatTime(device.liveUntil!)) : l.connected))
+                        ? (device.isPhone ? l.sharingActive : device.isVehicle ? l.vehicleDriving : (device.isLive ? l.liveUntil(formatTime(device.liveUntil!)) : l.connected))
                         : l.notConnected(formatAgo(l, device.lastSeenAt)),
                   if (device.battery != null) l.battery(device.battery!),
                 ].join(' · '),
@@ -209,14 +210,14 @@ class _LiveTabState extends ConsumerState<LiveTab> with AutomaticKeepAliveClient
                     if (p.stale) p.fromCell ? l.cellEstimate('${p.cellAccuracy ?? '?'}') : l.noFix,
                   ].join(' · '),
           ),
-          if (p != null && device.isPhone && device.isOwner) ...[
+          if (p != null && !device.isTracker && device.isOwner) ...[
             const SizedBox(height: 8),
             Wrap(spacing: 8, runSpacing: 4, children: [
               if (p.accuracy != null) _chip(Icons.gps_fixed, l.accuracyMeters('${p.accuracy}'), null),
               if (p.altitude != null) _chip(Icons.terrain, '${p.altitude} m', null),
             ]),
           ],
-          if (p != null && device.isOwner && !device.isPhone) ...[
+          if (p != null && device.isOwner && device.isTracker) ...[
             const SizedBox(height: 8),
             Wrap(spacing: 8, runSpacing: 4, children: [
               _chip(Icons.signal_cellular_alt, p.signal == null ? signal.label : '${p.signal} dBm', signal.color),
@@ -227,11 +228,11 @@ class _LiveTabState extends ConsumerState<LiveTab> with AutomaticKeepAliveClient
               for (final event in eventLabels(l, p.events)) _chip(Icons.warning_amber, event, Colors.red),
             ]),
           ],
-          if (walk != null && !(device.isOwner && !device.isPhone)) ...[
+          if (walk != null && !(device.isOwner && device.isTracker)) ...[
             const SizedBox(height: 8),
             walk,
           ],
-          if (device.isOwner && !device.isPhone) ...[
+          if (device.isOwner && device.isTracker) ...[
             const Divider(height: 20),
             Wrap(spacing: 8, runSpacing: 8, children: [
               ?walk,

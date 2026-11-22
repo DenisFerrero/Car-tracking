@@ -39,6 +39,9 @@ abstract class PhoneService {
 
   /// No positions for [duration], null: sharing again
   void pause(Duration? duration);
+
+  /// Positions of this vehicle of the user from now on, null: of the person
+  void drive(int? vehicleId);
 }
 
 /// Pause chosen from the notification or from the app
@@ -75,6 +78,10 @@ class PhoneTracker extends ChangeNotifier {
 
   String get _deviceKey => 'phone.$_userId.device';
   String get _sharingKey => 'phone.$_userId.sharing';
+  String get _vehicleKey => 'phone.$_userId.vehicle';
+
+  /// Shared from this vehicle of the user, null: the position of the person
+  int? vehicleId;
 
   Future<void> _onSession() async {
     final user = _session.loggedIn ? _session.user?.id : null;
@@ -92,6 +99,7 @@ class PhoneTracker extends ChangeNotifier {
     }
     final prefs = await SharedPreferences.getInstance();
     deviceId = prefs.getInt(_deviceKey);
+    vehicleId = prefs.getInt(_vehicleKey);
     if (await _service.running()) {
       if (config?.userId == user && config?.deviceId == deviceId) {
         sharing = true;
@@ -131,7 +139,7 @@ class PhoneTracker extends ChangeNotifier {
     final id = deviceId!;
     token ??= (await _api.post('/api/phones/$id/token', {}) as Map<String, dynamic>)['uploadToken'] as String;
     final l = lookupAppLocalizations(Locale(_session.language));
-    final config = PhoneConfig(server: _api.baseUrl, userId: _userId!, deviceId: id, token: token);
+    final config = PhoneConfig(server: _api.baseUrl, userId: _userId!, deviceId: id, token: token, vehicleId: vehicleId);
     sharing = await _service.start(config, labels: {
       'title': l.phoneNotificationTitle,
       'text': l.phoneNotificationText,
@@ -145,6 +153,20 @@ class PhoneTracker extends ChangeNotifier {
 
   /// One hour without positions (null: sharing again now)
   void pause(Duration? duration) => _service.pause(duration);
+
+  /// Shares from the vehicle [id] (null: as a person), also while sharing; kept for the
+  /// next times
+  Future<void> drive(int? id) async {
+    vehicleId = id;
+    final prefs = await SharedPreferences.getInstance();
+    if (id == null) {
+      await prefs.remove(_vehicleKey);
+    } else {
+      await prefs.setInt(_vehicleKey, id);
+    }
+    if (sharing) _service.drive(id);
+    notifyListeners();
+  }
 
   /// Creates the phone at the first use, then starts the service. Returns the reason of
   /// a refused permission.

@@ -83,7 +83,7 @@
 // GNSS_SOURCE_EXTERNAL: NMEA module on a UART, for the modems without GNSS (A7670G)
 #define GNSS_SOURCE GNSS_SOURCE_MODEM
 // External module only: baud rate, optional power switch (-1 = always powered; with the
-// P-MOSFET of hardware/README.md: BOARD_GNSS_POWER_PIN, active LOW). The UART pins come
+// P-MOSFET of docs/devices/carrier-board.md: BOARD_GNSS_POWER_PIN, active LOW). The UART pins come
 // from the board (BOARD_GNSS_RX_PIN / BOARD_GNSS_TX_PIN), GNSS_RX_PIN / GNSS_TX_PIN
 // override them.
 #define GNSS_BAUD 9600
@@ -132,7 +132,7 @@
 #define OWNER_TAG 0
 #define OWNER_TAG_SCAN_MS 4000
 
-// --- Optional hardware, see hardware/README.md (disabled: 0) ---
+// --- Optional hardware, see docs/devices/carrier-board.md (disabled: 0) ---
 // Vehicle battery voltage through a divider on an ADC1 pin (GPIO 32-39),
 // BOARD_PIN_VEHICLE_VOLTAGE or PIN_VEHICLE_VOLTAGE
 #define VEHICLE_VOLTAGE_SENSE 0

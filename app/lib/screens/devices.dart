@@ -5,14 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../core/format.dart';
 import '../core/models.dart';
 import '../core/providers.dart';
+import 'vehicle_dialog.dart';
 
-/// Tracker with its label, or this phone (Android app only)
-Future<void> chooseNewDevice(BuildContext context) async {
+/// Tracker with its label, vehicle without a tracker, or this phone (Android app only)
+Future<void> chooseNewDevice(BuildContext context, WidgetRef ref) async {
   final l = context.l10n;
-  if (!ProviderScope.containerOf(context, listen: false).read(phoneTrackerProvider).supported) {
-    context.go('/devices/add');
-    return;
-  }
+  final phone = ref.read(phoneTrackerProvider).supported;
   final route = await showModalBottomSheet<String>(
     context: context,
     builder: (context) => SafeArea(
@@ -25,15 +23,26 @@ Future<void> chooseNewDevice(BuildContext context) async {
           onTap: () => Navigator.pop(context, '/devices/add'),
         ),
         ListTile(
-          leading: const Icon(Icons.smartphone),
-          title: Text(l.phoneOption),
-          subtitle: Text(l.phoneOptionSub),
-          onTap: () => Navigator.pop(context, '/devices/phone'),
+          key: const Key('addVehicle'),
+          leading: const Icon(Icons.directions_car_filled),
+          title: Text(l.vehicleOption),
+          subtitle: Text(l.vehicleOptionSub),
+          onTap: () => Navigator.pop(context, 'vehicle'),
         ),
+        if (phone)
+          ListTile(
+            leading: const Icon(Icons.smartphone),
+            title: Text(l.phoneOption),
+            subtitle: Text(l.phoneOptionSub),
+            onTap: () => Navigator.pop(context, '/devices/phone'),
+          ),
       ]),
     ),
   );
-  if (route != null && context.mounted) context.go(route);
+  if (route == null || !context.mounted) return;
+  if (route != 'vehicle') return context.go(route);
+  final id = await createVehicle(context, ref);
+  if (id != null && context.mounted) context.go('/devices/$id?tab=2');
 }
 
 class DevicesScreen extends ConsumerWidget {
@@ -46,7 +55,7 @@ class DevicesScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l.devicesTitle)),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => chooseNewDevice(context),
+        onPressed: () => chooseNewDevice(context, ref),
         icon: const Icon(Icons.add),
         label: Text(l.add),
       ),
@@ -88,7 +97,7 @@ class DeviceTile extends StatelessWidget {
         smallSize: 12,
         child: CircleAvatar(
           backgroundColor: device.color,
-          child: Icon(device.isPhone ? Icons.smartphone : (device.isOwner ? Icons.directions_car : Icons.visibility), color: Colors.white),
+          child: Icon(device.isOwner || !device.isTracker ? deviceIcon(device) : Icons.visibility, color: Colors.white),
         ),
       ),
       title: Text(device.name),

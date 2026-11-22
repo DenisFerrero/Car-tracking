@@ -7,6 +7,8 @@ import 'package:latlong2/latlong.dart';
 import '../core/format.dart';
 import '../core/models.dart';
 import '../core/providers.dart';
+import '../theme.dart';
+import 'vehicle_dialog.dart' show deviceIcon;
 import '../widgets/base_map.dart';
 import 'devices.dart' show chooseNewDevice;
 
@@ -94,7 +96,7 @@ class _MapOverviewScreenState extends ConsumerState<MapOverviewScreen> {
         child: ListView(shrinkWrap: true, children: [
           for (final device in devices)
             ListTile(
-              leading: CircleAvatar(backgroundColor: device.color, child: Icon(device.isPhone ? Icons.smartphone : Icons.directions_car, color: Colors.white)),
+              leading: CircleAvatar(backgroundColor: device.color, child: Icon(deviceIcon(device), color: Colors.white)),
               title: Text(device.name),
               onTap: () {
                 Navigator.pop(context);
@@ -153,7 +155,7 @@ class _MapOverviewScreenState extends ConsumerState<MapOverviewScreen> {
                 Text(l.noDevicesShort),
                 const SizedBox(height: 12),
                 FilledButton.icon(
-                  onPressed: () => chooseNewDevice(context),
+                  onPressed: () => chooseNewDevice(context, ref),
                   icon: const Icon(Icons.add),
                   label: Text(l.add),
                 ),
@@ -257,7 +259,10 @@ class _FilterBar extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
         child: Material(
           elevation: 3,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(4),
+          clipBehavior: Clip.antiAlias,
+          child: Container(
+          decoration: const BoxDecoration(border: Border(left: BorderSide(color: amber, width: 4))),
           child: TextField(
             key: const Key('searchDevices'),
             controller: search,
@@ -268,6 +273,7 @@ class _FilterBar extends StatelessWidget {
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 14),
             ),
+          ),
           ),
         ),
       ),
@@ -320,7 +326,7 @@ class _DeviceCard extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: device.color,
-          child: Icon(device.isPhone ? Icons.smartphone : Icons.directions_car, color: Colors.white),
+          child: Icon(deviceIcon(device), color: Colors.white),
         ),
         title: Text(device.name),
         subtitle: Text(p == null

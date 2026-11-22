@@ -1,0 +1,116 @@
+# Documentation site (GitHub Pages): docs/, Italian (page.md) and English (page.en.md).
+#   pip install -r docs/requirements.txt && mkdocs serve
+# Published by .github/workflows/docs.yml; the repository comes from the environment, never
+# written here (the repository can change name).
+site_name: Car Tracking
+site_description: GPS tracker per auto, piattaforma multi-utente e app Android / web
+site_url: !ENV [DOCS_SITE_URL, ""]
+repo_url: !ENV [DOCS_REPO_URL, ""]
+edit_uri: ""
+docs_dir: docs
+strict: true
+validation:
+  anchors: warn
+  unrecognized_links: warn
+
+theme:
+  name: material
+  language: it
+  font: false
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Tema scuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Tema chiaro
+  icon:
+    logo: material/car-connected
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+
+extra_css:
+  - assets/extra.css
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: it
+          default: true
+          name: Italiano
+          build: true
+        - locale: en
+          name: English
+          build: true
+          site_description: GPS tracker for cars, multi-user platform and Android / web app
+          nav_translations:
+            Panoramica: Overview
+            Server: Server
+            Installazione: Installation
+            Aggiornamenti: Updates
+            Backup: Backups
+            App: App
+            Funzioni: Features
+            Telefono e veicoli: Phone and vehicles
+            Dispositivi: Devices
+            Catalogo: Catalog
+            Scheda di alimentazione: Power board
+            Portachiavi del proprietario: Owner key fob
+            Firmware: Firmware
+            Riferimento: Reference
+            Protocollo: Protocol
+            Sicurezza: Security
+            Consumo dati SIM: SIM data usage
+            Sviluppo: Development
+            Ambiente e test: Environment and tests
+            Release e pipeline: Releases and pipeline
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+
+nav:
+  - Panoramica: index.md
+  - Server:
+      - Installazione: server/install.md
+      - Aggiornamenti: server/updates.md
+      - Backup: server/backup.md
+  - App:
+      - App: app/index.md
+      - Funzioni: app/features.md
+      - Telefono e veicoli: app/phone-vehicles.md
+  - Dispositivi:
+      - Catalogo: devices/index.md
+      - LilyGO T-Call A7670 V1.0: devices/lilygo-t-call-a7670-v1-0.md
+      - Scheda di alimentazione: devices/carrier-board.md
+      - Portachiavi del proprietario: devices/owner-beacon.md
+  - Firmware: firmware/index.md
+  - Riferimento:
+      - Protocollo: reference/protocol.md
+      - Sicurezza: reference/security.md
+      - Consumo dati SIM: reference/data-usage.md
+  - Sviluppo:
+      - Ambiente e test: development/index.md
+      - Release e pipeline: development/releases.md

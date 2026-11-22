@@ -26,12 +26,12 @@ class AnalysisTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trips = ref.watch(analysisProvider(('trips', period)));
-    // Phones: only the trips
+    // Phones: only the trips; vehicles fed by a phone: also the statistics (no modem data)
     final empty = AsyncValue.data(const <String, dynamic>{});
     final stats = device.isPhone ? empty : ref.watch(analysisProvider(('stats', period)));
-    final distribution = device.isPhone ? empty : ref.watch(analysisProvider(('distribution', period)));
-    final coverage = device.isPhone ? empty : ref.watch(analysisProvider(('coverage', period)));
-    final traffic = device.isPhone ? empty : ref.watch(analysisProvider(('traffic', period)));
+    final distribution = device.isTracker ? ref.watch(analysisProvider(('distribution', period))) : empty;
+    final coverage = device.isTracker ? ref.watch(analysisProvider(('coverage', period))) : empty;
+    final traffic = device.isTracker ? ref.watch(analysisProvider(('traffic', period))) : empty;
 
     Widget section(AsyncValue<Map<String, dynamic>> value, List<Widget> Function(Map<String, dynamic>) builder) =>
         value.when(
@@ -72,7 +72,7 @@ class AnalysisTab extends ConsumerWidget {
                   label: Text(context.l10n.maintenance),
                   onPressed: () => context.push('/devices/${device.id}/maintenance'),
                 ),
-              if (!device.isPhone)
+              if (device.isTracker)
                 ActionChip(
                   key: const Key('openExtra'),
                   avatar: const Icon(Icons.data_object, size: 18),
@@ -83,8 +83,8 @@ class AnalysisTab extends ConsumerWidget {
           ),
           _ExportBar(period: period),
           section(trips, (data) => _trips(context, ref, data)),
-          if (!device.isPhone) ...[
-            section(stats, (data) => _series(context, data)),
+          if (!device.isPhone) section(stats, (data) => _series(context, data)),
+          if (device.isTracker) ...[
             section(distribution, (data) => _quality(context, data)),
             section(coverage, (data) => [_coverage(context, data)]),
             section(traffic, (data) => _traffic(context, data)),

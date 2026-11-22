@@ -1,4 +1,5 @@
 import type { Context } from "../context.ts";
+import type { DeviceKind } from "./access.ts";
 import type { Sql } from "../db.ts";
 import { computeDay, today } from "./daily.ts";
 
@@ -42,7 +43,7 @@ export function batteryHealth (days: { day: string; restVoltage: number | null }
 // --- Odometer
 
 /** Current odometer of a device, null until the owner enters a reading */
-export async function odometer (sql: Sql, timeZone: string, device: { id: number; kind: "tracker" | "phone" }): Promise<number | null> {
+export async function odometer (sql: Sql, timeZone: string, device: { id: number; kind: DeviceKind }): Promise<number | null> {
 	const [row] = await sql<{ base: number | null; day: string | null; km: number }[]>`
 		SELECT d.odometer_base AS base, to_char(d.odometer_day, 'YYYY-MM-DD') AS day,
 			COALESCE((SELECT sum(distance_km) FROM daily_stats s WHERE s.device_id = d.id AND s.day >= d.odometer_day
@@ -55,7 +56,7 @@ export async function odometer (sql: Sql, timeZone: string, device: { id: number
 }
 
 /** New reading: the km already driven today are subtracted, they are counted again */
-export async function setOdometer (sql: Sql, timeZone: string, device: { id: number; kind: "tracker" | "phone" }, km: number): Promise<void> {
+export async function setOdometer (sql: Sql, timeZone: string, device: { id: number; kind: DeviceKind }, km: number): Promise<void> {
 	const current = await today(sql, timeZone);
 	const driven = (await computeDay(sql, timeZone, device, current)).distanceKm;
 	await sql`UPDATE devices SET odometer_base = ${km - driven}, odometer_day = ${current} WHERE id = ${device.id}`;
@@ -92,7 +93,7 @@ export function deadlineState (item: Pick<DeadlineRow, "due_date" | "due_km" | "
 export async function checkVehicles (ctx: Context): Promise<void> {
 	const { sql, config } = ctx;
 	const current = await today(sql, config.TIMEZONE);
-	const items = await sql<(DeadlineRow & { device_kind: "tracker" | "phone" })[]>`
+	const items = await sql<(DeadlineRow & { device_kind: DeviceKind })[]>`
 		SELECT m.id, m.device_id, m.kind, m.title, to_char(m.due_date, 'YYYY-MM-DD') AS due_date, m.due_km, m.remind_days,
 			m.remind_km, m.notified_stage, d.kind AS device_kind
 		FROM maintenance m JOIN devices d ON d.id = m.device_id`;

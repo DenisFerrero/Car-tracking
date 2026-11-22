@@ -97,10 +97,11 @@ void main() {
       await tapAndSettle(tester, find.text('Golf'));
       expect(find.byType(DeviceScreen), findsOneWidget);
 
-      // Browser: straight to the trackers (the phone sharing is in the Android app)
+      // Browser: tracker or vehicle (the phone sharing is in the Android app)
       app.go(tester, '/devices');
       await settle(tester);
       await tapAndSettle(tester, find.text(it.add));
+      await tapAndSettle(tester, find.text(it.addTrackerOption));
       expect(find.byType(AddDeviceScreen), findsOneWidget);
     });
 

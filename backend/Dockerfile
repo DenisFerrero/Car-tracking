@@ -2,12 +2,14 @@
 #   docker build -f backend/Dockerfile .
 
 # --- Flutter web app
-FROM ghcr.io/cirruslabs/flutter:stable AS web
+# Same Flutter as the CI; the web output is the same on every architecture
+FROM ghcr.io/cirruslabs/flutter:3.44.0 AS web
+ARG APP_VERSION=0.0.0
 WORKDIR /src/app
 COPY app/pubspec.yaml app/pubspec.lock ./
 RUN flutter pub get
 COPY app/ ./
-RUN flutter build web --release --no-web-resources-cdn --pwa-strategy=none
+RUN flutter build web --release --no-web-resources-cdn --pwa-strategy=none --dart-define=APP_VERSION=$APP_VERSION
 
 # --- Backend dependencies (native argon2 for linux)
 FROM node:24-slim AS deps

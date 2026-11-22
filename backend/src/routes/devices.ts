@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import type { DeviceKind } from "../services/access.ts";
 import { z } from "zod";
 import type { Context } from "../context.ts";
 import { IMEI_PATTERN } from "../crypto/device.ts";
@@ -45,7 +46,7 @@ export const shareEnd = z.iso.datetime({ offset: true }).nullable().transform((v
 
 interface DeviceRow {
 	id: number;
-	kind: "tracker" | "phone";
+	kind: DeviceKind;
 	imei: string | null;
 	name: string;
 	color: string;

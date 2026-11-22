@@ -4,7 +4,10 @@
 #   docker compose --profile tunnel up -d    Cloudflare Tunnel, no open port on the server
 # First administrator: docker compose exec backend node scripts/create-admin.ts <email> "<name>"
 # Backups: service "backup" (daily dump in ./volumes/backups), copy off the server with the
-# profile "offsite" (restic). See backup/ and the README.
+# profile "offsite" (restic). See backup/ and the documentation.
+# Updates from the releases: BACKEND_IMAGE=ghcr.io/<owner>/<repository>:<major> in .env, then
+#   docker compose pull backend && docker compose up -d     (by hand)
+#   docker compose --profile autoupdate up -d               (Watchtower, every night)
 
 name: car-tracking
 
@@ -29,10 +32,11 @@ services:
       retries: 5
 
   backend:
+    # Built here by default; from the registry with BACKEND_IMAGE (release images)
     build:
       context: .
       dockerfile: backend/Dockerfile
-    image: car-tracking-backend
+    image: ${BACKEND_IMAGE:-car-tracking-backend}
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-car_tracking}:${POSTGRES_PASSWORD}@timescaledb:5432/${POSTGRES_DB:-car_tracking}
       CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:?CRYPTO_MASTER_KEY is required}
@@ -70,6 +74,8 @@ services:
         condition: service_healthy
     restart: unless-stopped
     labels:
+      # The only container Watchtower updates: database and backups stay as they are
+      - com.centurylinklabs.watchtower.enable=true
       - traefik.enable=true
       - traefik.docker.network=car-tracking_edge
       - traefik.http.routers.car-tracking.rule=Host(`${DOMAIN}`)
@@ -112,6 +118,25 @@ services:
       test: ["CMD-SHELL", "find /backups/last-success -mmin -1560 | grep -q ."]
       interval: 30m
       start_period: 10m
+
+  # Nightly update of the backend from BACKEND_IMAGE, after the backup (BACKUP_TIME 03:30):
+  # pulls the tag, recreates the container (the migrations run at its start), removes the
+  # old image. Only the containers with the label above.
+  watchtower:
+    profiles: [autoupdate]
+    image: nickfedor/watchtower:1.24.0
+    environment:
+      TZ: ${TIMEZONE:-Europe/Rome}
+      WATCHTOWER_LABEL_ENABLE: "true"
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_INCLUDE_RESTARTING: "true"
+      # Seconds minutes hours day month weekday
+      WATCHTOWER_SCHEDULE: ${WATCHTOWER_SCHEDULE:-0 0 4 * * *}
+      # Optional report of the updates (shoutrrr URL: telegram://, ntfy://, smtp://...)
+      WATCHTOWER_NOTIFICATION_URL: ${WATCHTOWER_NOTIFICATION_URL:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
 
   # Encrypted copy of the dumps off the server (restic): RESTIC_REPOSITORY, RESTIC_PASSWORD
   offsite:

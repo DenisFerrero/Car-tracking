@@ -261,6 +261,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get errTooManyPhones => 'Massimo 5 telefoni per account';
 
   @override
+  String get errTooManyVehicles => 'Massimo 10 veicoli per account';
+
+  @override
   String get errNotATracker => 'Disponibile solo per i tracker';
 
   @override
@@ -1325,6 +1328,50 @@ class AppLocalizationsIt extends AppLocalizations {
       'Condividi la posizione del telefono, senza hardware';
 
   @override
+  String get vehicleOption => 'Veicolo senza tracker';
+
+  @override
+  String get vehicleOptionSub =>
+      'La posizione arriva dal tuo telefono quando sei a bordo';
+
+  @override
+  String get addVehicleTitle => 'Nuovo veicolo';
+
+  @override
+  String get addVehicle => 'Aggiungi veicolo';
+
+  @override
+  String get vehicleIntro =>
+      'Quando condividi dal veicolo, il telefono registra i viaggi dell\'auto: costi, chilometri, scadenze e aree come con un tracker, senza comandi né allarmi.';
+
+  @override
+  String get vehicleName => 'Nome del veicolo';
+
+  @override
+  String get vehicleKind => 'Veicolo, posizione dal telefono';
+
+  @override
+  String get vehicleDriving => 'In viaggio con il telefono';
+
+  @override
+  String get shareAs => 'Condividi come';
+
+  @override
+  String get shareAsPerson => 'Me stesso';
+
+  @override
+  String get shareAsPersonSub => 'La tua posizione, vista dagli amici';
+
+  @override
+  String get shareAsVehicleSub =>
+      'Viaggi e costi del veicolo; la tua posizione personale resta ferma';
+
+  @override
+  String shareAsChanged(String name) {
+    return 'Ora condividi come $name';
+  }
+
+  @override
   String get phoneTitle => 'Posizione del telefono';
 
   @override
@@ -1635,6 +1682,19 @@ class AppLocalizationsIt extends AppLocalizations {
       'Storico, aree, condivisioni e notifiche vengono cancellati.';
 
   @override
+  String get removeVehicle => 'Elimina il veicolo';
+
+  @override
+  String get removeVehicleSub => 'Con viaggi, costi e scadenze';
+
+  @override
+  String get removeVehicleTitle => 'Eliminare il veicolo?';
+
+  @override
+  String get removeVehicleBody =>
+      'Storico, costi, scadenze, aree e condivisioni vengono cancellati.';
+
+  @override
   String get friends => 'Amici';
 
   @override
@@ -1758,7 +1818,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get filterOffline => 'Non raggiungibili';
 
   @override
-  String get filterTrackers => 'Tracker';
+  String get filterTrackers => 'Veicoli';
 
   @override
   String get filterPhones => 'Telefoni';

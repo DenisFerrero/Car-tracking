@@ -106,6 +106,12 @@ class _PhoneTaskHandler extends TaskHandler {
       final seconds = data['pause'];
       uploader.pause(seconds is int ? Duration(seconds: seconds) : null);
     }
+    // From the app: {'vehicle': id or null}, also after a restart of the service
+    if (data is Map && data.containsKey('vehicle')) {
+      final id = data['vehicle'];
+      uploader.drive(id is int ? id : null);
+      FlutterForegroundTask.saveData(key: _configKey, value: jsonEncode(uploader.config.withVehicle(uploader.vehicleId).toJson()));
+    }
   }
 
   @override
@@ -208,4 +214,7 @@ class ForegroundPhoneService implements PhoneService {
 
   @override
   void pause(Duration? duration) => FlutterForegroundTask.sendDataToTask({'pause': duration?.inSeconds});
+
+  @override
+  void drive(int? vehicleId) => FlutterForegroundTask.sendDataToTask({'vehicle': vehicleId});
 }

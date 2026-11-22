@@ -1,10 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart';
 
 import 'core/session.dart';
 import 'l10n/app_localizations.dart';
 import 'router.dart';
+import 'theme.dart';
+
+/// License of the bundled typeface, in the licenses page of the app
+void registerFontLicense() => LicenseRegistry.addLicense(() async* {
+      yield LicenseEntryWithLineBreaks(['Barlow'], await rootBundle.loadString('assets/fonts/OFL.txt'));
+    });
 
 class CarTrackingApp extends StatefulWidget {
   const CarTrackingApp({super.key, required this.session});
@@ -17,10 +25,11 @@ class CarTrackingApp extends StatefulWidget {
 
 class _CarTrackingAppState extends State<CarTrackingApp> {
   late final router = buildRouter(widget.session);
+  static final _light = buildTheme(Brightness.light);
+  static final _dark = buildTheme(Brightness.dark);
 
   @override
   Widget build(BuildContext context) {
-    const seed = Color(0xFF1E88E5);
     // The language follows the account (or the device before the login)
     return ListenableBuilder(
       listenable: widget.session,
@@ -30,8 +39,8 @@ class _CarTrackingAppState extends State<CarTrackingApp> {
         return MaterialApp.router(
           title: widget.session.config?.appName ?? 'Car Tracking',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(colorSchemeSeed: seed, useMaterial3: true),
-          darkTheme: ThemeData(colorSchemeSeed: seed, brightness: Brightness.dark, useMaterial3: true),
+          theme: _light,
+          darkTheme: _dark,
           locale: Locale(language),
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: const [

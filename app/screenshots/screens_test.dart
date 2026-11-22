@@ -23,6 +23,12 @@ Future<void> loadFonts() async {
     roboto.addFont(font('Roboto-$weight.ttf'));
   }
   await roboto.load();
+  // The font of the theme, bundled with the app
+  final barlow = FontLoader('Barlow');
+  for (final weight in ['Regular', 'Medium', 'SemiBold', 'Bold']) {
+    barlow.addFont(File('assets/fonts/Barlow-$weight.ttf').readAsBytes().then((b) => ByteData.view(b.buffer)));
+  }
+  await barlow.load();
   await (FontLoader('MaterialIcons')..addFont(font('MaterialIcons-Regular.otf'))).load();
 }
 

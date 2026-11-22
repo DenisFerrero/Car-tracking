@@ -3,7 +3,7 @@
 
 // Vehicle battery voltage (VEHICLE_VOLTAGE_SENSE) and external power detection of the
 // backup battery charger (POWER_GOOD_SENSE). Both disabled by default: they need the
-// hardware described in hardware/README.md.
+// hardware described in docs/devices/carrier-board.md.
 
 #include <Arduino.h>
 

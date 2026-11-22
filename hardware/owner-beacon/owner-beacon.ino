@@ -3,7 +3,7 @@
 // alarms while it receives a valid code with a counter never seen before.
 //
 // Board: Seeed XIAO nRF52840 (core "Seeed nRF52 Boards", not the mbed one), Adafruit
-// Bluefruit library included in the core. See hardware/README.md, "Portachiavi".
+// Bluefruit library included in the core. See docs/devices/owner-beacon.md.
 
 #include <bluefruit.h>
 #include <Adafruit_LittleFS.h>

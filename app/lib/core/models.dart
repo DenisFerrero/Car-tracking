@@ -193,13 +193,24 @@ class Device {
     if (event.containsKey('pausedUntil')) pausedUntil = _date(event['pausedUntil']);
   }
   bool get isPhone => kind == 'phone';
+
+  /// Car without a tracker: positions from the phone of the owner while driving
+  bool get isVehicle => kind == 'vehicle';
+
+  /// With the firmware: commands, alarms, modem, SIM, updates
+  bool get isTracker => kind == 'tracker';
   bool get isLive => liveUntil != null && liveUntil!.isAfter(DateTime.now());
 
   /// Moving: a recent point while driving. Unreachable: a tracker silent for longer than
-  /// the threshold of the server, a phone that stopped sharing.
+  /// the threshold of the server, a phone that stopped sharing. A vehicle fed by a phone is
+  /// never unreachable: without the phone on board it's parked.
   DeviceState stateAt(DateTime now, Duration offlineAfter) {
     final seen = lastSeenAt;
-    final offline = isPhone ? !connected : seen == null || now.difference(seen) > offlineAfter;
+    final offline = switch (kind) {
+      'vehicle' => false,
+      'phone' => !connected,
+      _ => seen == null || now.difference(seen) > offlineAfter,
+    };
     if (offline) return DeviceState.offline;
     final p = lastPosition;
     if (p != null && p.status == TrackStatus.moving && now.difference(p.time) < const Duration(minutes: 10)) {

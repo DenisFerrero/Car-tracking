@@ -1,0 +1,53 @@
+/* Colors of the app ("night road"): petrol bars, amber accents, squared shapes */
+:root,
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: #0f3d3e;
+  --md-primary-fg-color--light: #1d5b5c;
+  --md-primary-fg-color--dark: #0a2a2b;
+  --md-accent-fg-color: #c98a00;
+  --md-typeset-a-color: #0f6466;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #0a2a2b;
+  --md-primary-fg-color--light: #0f3d3e;
+  --md-primary-fg-color--dark: #061b1c;
+  --md-accent-fg-color: #ffb300;
+  --md-typeset-a-color: #7fc8c4;
+  --md-default-bg-color: #101818;
+}
+
+.md-header,
+.md-tabs {
+  border-bottom: 3px solid #ffb300;
+}
+
+.md-typeset h1 {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.md-typeset h2 {
+  border-left: 4px solid #ffb300;
+  padding-left: 0.5em;
+}
+
+.md-typeset .admonition,
+.md-typeset details,
+.md-typeset table:not([class]),
+.md-typeset pre > code {
+  border-radius: 4px;
+}
+
+/* Status of a board in the catalog */
+.status {
+  display: inline-block;
+  padding: 0 0.5em;
+  border-radius: 3px;
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.status.supported { background: #2e7d32; color: #fff; }
+.status.experimental { background: #ffb300; color: #231a00; }
+.status.planned { background: #546e7a; color: #fff; }

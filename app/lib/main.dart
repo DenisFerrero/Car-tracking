@@ -32,6 +32,7 @@ Future<void> main() async {
   }
   session.load();
 
+  registerFontLicense();
   runApp(ProviderScope(
     retry: retryNetwork,
     overrides: [

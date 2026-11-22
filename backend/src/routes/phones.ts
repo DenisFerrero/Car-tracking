@@ -5,6 +5,7 @@ import { hashToken, randomToken } from "../auth/secrets.ts";
 import { badRequest, parse, unauthorized } from "../http/errors.ts";
 import { requireDevice, viewerPosition } from "../services/access.ts";
 import { idParams } from "./devices.ts";
+import { FUEL_TYPES } from "../services/costs.ts";
 
 // Phones: without a tracker, the app shares the position of the phone. The phone is a
 // device of its user (kind 'phone'), shared with friends and watched with arrival areas
@@ -15,8 +16,14 @@ import { idParams } from "./devices.ts";
 // of the user: the token gives access only to the positions of that phone, a new token
 // (sharing started again) replaces the old one and deleting the phone revokes it.
 // Replayed batches are skipped by the primary key (device_id, time).
+//
+// Vehicles: the cars of a user without a tracker (kind 'vehicle'). While driving the phone
+// shares "from the vehicle": its fixes carry the id of the vehicle and become the positions
+// of the car (trips, costs, odometer, deadlines, areas, shares of the car), not of the
+// person. Only the owner of the phone and of the vehicle can do it.
 
 export const MAX_PHONES = 5;
+export const MAX_VEHICLES = 10;
 const MAX_BATCH = 100;
 /** Moving above this speed (km/h), parked below */
 const MOVING_SPEED = 5;
@@ -34,7 +41,9 @@ const fix = z.strictObject({
 	lon: z.number().min(-180).max(180),
 	accuracy: z.number().min(0).max(100000).transform(Math.round),
 	speed: z.number().min(0).max(400).transform(Math.round).nullable().default(null),
-	altitude: z.number().min(-1000).max(10000).transform(Math.round).nullable().default(null)
+	altitude: z.number().min(-1000).max(10000).transform(Math.round).nullable().default(null),
+	/** Shared from this vehicle of the owner, absent = position of the person */
+	vehicleId: z.number().int().positive().optional()
 });
 
 export function registerPhoneRoutes (app: FastifyInstance, ctx: Context): void {
@@ -60,6 +69,30 @@ export function registerPhoneRoutes (app: FastifyInstance, ctx: Context): void {
 		});
 		await ctx.hub.refreshUser(userId);
 		return { id, uploadToken: await newUploadToken(id) };
+	});
+
+	app.post("/api/vehicles", async (request) => {
+		const body = parse(z.strictObject({
+			name: z.string().trim().min(1).max(60),
+			color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).default("#FFB300"),
+			model: z.string().trim().max(80).default(""),
+			fuelType: z.enum(FUEL_TYPES).nullable().default(null)
+		}), request.body);
+		const userId = request.auth!.user.id;
+		const id = await sql.begin(async tx => {
+			await tx`SELECT 1 FROM users WHERE id = ${userId} FOR UPDATE`;
+			const [count] = await tx<{ count: number }[]>`
+				SELECT count(*)::int AS count FROM device_users du JOIN devices d ON d.id = du.device_id
+				WHERE du.user_id = ${userId} AND du.role = 'owner' AND d.kind = 'vehicle'`;
+			if (count!.count >= MAX_VEHICLES) throw badRequest(`At most ${MAX_VEHICLES} vehicles`, "too_many_vehicles");
+			const [device] = await tx<{ id: number }[]>`
+				INSERT INTO devices (kind, name, color, model, vehicle_model, fuel_type)
+				VALUES ('vehicle', ${body.name}, ${body.color}, 'vehicle', ${body.model}, ${body.fuelType}) RETURNING id`;
+			await tx`INSERT INTO device_users (device_id, user_id, role) VALUES (${device!.id}, ${userId}, 'owner')`;
+			return device!.id;
+		});
+		await ctx.hub.refreshUser(userId);
+		return { id };
 	});
 
 	/** Low battery for the friends who see the phone, each one with their threshold */
@@ -116,13 +149,23 @@ export function registerPhoneRoutes (app: FastifyInstance, ctx: Context): void {
 			if (battery !== null) await alertBattery(id, battery);
 		}
 
+		// Vehicles named by the fixes: owned by the owner of the phone, the others are skipped
+		const named = [...new Set(body.positions.flatMap(point => point.vehicleId === undefined ? [] : [point.vehicleId]))];
+		const vehicles = new Set(named.length === 0 ? [] : (await sql<{ id: number }[]>`
+			SELECT v.device_id AS id FROM device_users v JOIN devices d ON d.id = v.device_id
+			JOIN device_users p ON p.user_id = v.user_id AND p.device_id = ${id} AND p.role = 'owner'
+			WHERE v.device_id = ANY (${named}) AND v.role = 'owner' AND d.kind = 'vehicle'`).map(row => row.id));
+
 		const now = Date.now();
-		const oldest = now - Math.min(ctx.config.PHONE_RETENTION_DAYS, ctx.config.RETENTION_DAYS) * 86400e3;
+		// Positions of the person: the shorter retention of the phones
+		const oldest = (vehicle: boolean) => now - (vehicle ? ctx.config.RETENTION_DAYS
+			: Math.min(ctx.config.PHONE_RETENTION_DAYS, ctx.config.RETENTION_DAYS)) * 86400e3;
 		const rows = body.positions
-			.filter(point => point.time.getTime() > oldest && point.time.getTime() < now + FUTURE_TOLERANCE_MS)
+			.filter(point => point.vehicleId === undefined || vehicles.has(point.vehicleId))
+			.filter(point => point.time.getTime() > oldest(point.vehicleId !== undefined) && point.time.getTime() < now + FUTURE_TOLERANCE_MS)
 			.map(point => ({
 				time: point.time,
-				device_id: id,
+				device_id: point.vehicleId ?? id,
 				lat: point.lat,
 				lon: point.lon,
 				accuracy: point.accuracy,
@@ -134,16 +177,22 @@ export function registerPhoneRoutes (app: FastifyInstance, ctx: Context): void {
 			}));
 		if (rows.length === 0) return { accepted: 0 };
 
-		const inserted = await sql<{ time: Date }[]>`
-			INSERT INTO positions ${sql(rows)} ON CONFLICT (device_id, time) DO NOTHING RETURNING time`;
-		const fresh = new Set(inserted.map(row => row.time.getTime()));
-		await sql`UPDATE devices SET last_seen_at = now(), registered_at = COALESCE(registered_at, now()) WHERE id = ${id}`;
+		const inserted = await sql<{ time: Date; device_id: number }[]>`
+			INSERT INTO positions ${sql(rows)} ON CONFLICT (device_id, time) DO NOTHING RETURNING time, device_id`;
+		const fresh = new Set(inserted.map(row => `${row.device_id}/${row.time.getTime()}`));
+		const targets = [...new Set(rows.map(row => row.device_id))];
+		await sql`UPDATE devices SET last_seen_at = now(), registered_at = COALESCE(registered_at, now()) WHERE id = ANY (${targets})`;
 
-		const added = rows.filter(row => fresh.has(row.time.getTime())).sort((a, b) => a.time.getTime() - b.time.getTime());
-		for (const row of added) {
-			ctx.hub.toDevice(id, { type: "position", deviceId: id, position: row }, { type: "position", deviceId: id, position: viewerPosition(row) });
+		let accepted = 0;
+		for (const target of targets) {
+			const added = rows.filter(row => row.device_id === target && fresh.has(`${target}/${row.time.getTime()}`))
+				.sort((a, b) => a.time.getTime() - b.time.getTime());
+			for (const row of added) {
+				ctx.hub.toDevice(target, { type: "position", deviceId: target, position: row }, { type: "position", deviceId: target, position: viewerPosition(row) });
+			}
+			await ctx.geofences.evaluate(target, added.filter(row => row.accuracy <= AREA_ACCURACY));
+			accepted += added.length;
 		}
-		await ctx.geofences.evaluate(id, added.filter(row => row.accuracy <= AREA_ACCURACY));
-		return { accepted: added.length };
+		return { accepted };
 	});
 }

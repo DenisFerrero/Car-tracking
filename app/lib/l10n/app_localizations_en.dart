@@ -260,6 +260,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errTooManyPhones => 'At most 5 phones per account';
 
   @override
+  String get errTooManyVehicles => 'At most 10 vehicles per account';
+
+  @override
   String get errNotATracker => 'Only for trackers';
 
   @override
@@ -1320,6 +1323,50 @@ class AppLocalizationsEn extends AppLocalizations {
       'Share the position of the phone, without hardware';
 
   @override
+  String get vehicleOption => 'Vehicle without a tracker';
+
+  @override
+  String get vehicleOptionSub =>
+      'The position comes from your phone while you\'re on board';
+
+  @override
+  String get addVehicleTitle => 'New vehicle';
+
+  @override
+  String get addVehicle => 'Add vehicle';
+
+  @override
+  String get vehicleIntro =>
+      'When you share from the vehicle, the phone records the trips of the car: costs, kilometers, deadlines and areas like with a tracker, without commands or alarms.';
+
+  @override
+  String get vehicleName => 'Name of the vehicle';
+
+  @override
+  String get vehicleKind => 'Vehicle, position from the phone';
+
+  @override
+  String get vehicleDriving => 'Driving with the phone';
+
+  @override
+  String get shareAs => 'Share as';
+
+  @override
+  String get shareAsPerson => 'Myself';
+
+  @override
+  String get shareAsPersonSub => 'Your position, seen by your friends';
+
+  @override
+  String get shareAsVehicleSub =>
+      'Trips and costs of the vehicle; your personal position stays still';
+
+  @override
+  String shareAsChanged(String name) {
+    return 'Now sharing as $name';
+  }
+
+  @override
   String get phoneTitle => 'Phone position';
 
   @override
@@ -1628,6 +1675,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'History, areas, shares and notifications are deleted.';
 
   @override
+  String get removeVehicle => 'Delete the vehicle';
+
+  @override
+  String get removeVehicleSub => 'With trips, costs and deadlines';
+
+  @override
+  String get removeVehicleTitle => 'Delete the vehicle?';
+
+  @override
+  String get removeVehicleBody =>
+      'History, costs, deadlines, areas and shares are deleted.';
+
+  @override
   String get friends => 'Friends';
 
   @override
@@ -1751,7 +1811,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterOffline => 'Unreachable';
 
   @override
-  String get filterTrackers => 'Trackers';
+  String get filterTrackers => 'Vehicles';
 
   @override
   String get filterPhones => 'Phones';

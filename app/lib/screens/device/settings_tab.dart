@@ -6,6 +6,7 @@ import '../../core/api.dart';
 import '../../core/format.dart';
 import '../../core/models.dart';
 import '../../core/providers.dart';
+import '../vehicle_dialog.dart' show deviceIcon;
 import '../../l10n/app_localizations.dart';
 import '../add_device.dart' show deviceColors;
 import 'alerts.dart';
@@ -124,8 +125,8 @@ class SettingsTab extends ConsumerStatefulWidget {
 }
 
 class _SettingsTabState extends ConsumerState<SettingsTab> {
-  // Alarms are of the trackers: phones have none
-  late Future<Map<String, dynamic>>? _kinds = device.isPhone ? null : _loadKinds();
+  // Alarms are of the trackers: phones and vehicles fed by a phone have none
+  late Future<Map<String, dynamic>>? _kinds = device.isTracker ? _loadKinds() : null;
 
   Device get device => widget.device;
   ApiClient get api => ref.read(apiProvider);
@@ -227,13 +228,18 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
   Future<void> _release() async {
     final l = context.l10n;
-    final phone = device.isPhone;
-    if (!await _confirm(phone ? l.removePhoneTitle : l.removeTrackerTitle, phone ? l.removePhoneBody : l.removeTrackerBody)) return;
+    final (title, body) = switch (device.kind) {
+      'phone' => (l.removePhoneTitle, l.removePhoneBody),
+      'vehicle' => (l.removeVehicleTitle, l.removeVehicleBody),
+      _ => (l.removeTrackerTitle, l.removeTrackerBody),
+    };
+    if (!await _confirm(title, body)) return;
     await _guard(() async {
       await api.delete('/api/devices/${device.id}');
-      // This phone: it stops sending
+      // This phone: it stops sending; from this vehicle: the person again
       final tracker = ref.read(phoneTrackerProvider);
       if (tracker.deviceId == device.id) await tracker.forget();
+      if (tracker.vehicleId == device.id) await tracker.drive(null);
       ref.invalidate(devicesProvider);
       if (mounted) context.go('/devices');
     });
@@ -264,10 +270,10 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       ListTile(
         leading: CircleAvatar(
           backgroundColor: device.color,
-          child: Icon(device.isPhone ? Icons.smartphone : Icons.directions_car, color: Colors.white),
+          child: Icon(deviceIcon(device), color: Colors.white),
         ),
         title: Text(device.name),
-        subtitle: Text(l.tapToRename),
+        subtitle: Text(device.isVehicle ? '${l.vehicleKind} · ${l.tapToRename}' : l.tapToRename),
         onTap: _rename,
       ),
       Padding(
@@ -285,7 +291,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
             ),
         ]),
       ),
-      if (!device.isPhone) ...[
+      if (device.isTracker) ...[
       ListTile(leading: const Icon(Icons.qr_code), title: Text(l.imei), subtitle: SelectableText(device.imei)),
       ListTile(
         leading: const Icon(Icons.memory),
@@ -348,8 +354,9 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       _header(context, l.dangerZone),
       ListTile(
         leading: const Icon(Icons.delete_forever, color: Colors.red),
-        title: Text(device.isPhone ? l.removePhone : l.removeTracker, style: const TextStyle(color: Colors.red)),
-        subtitle: Text(device.isPhone ? l.removePhoneSub : l.removeTrackerSub),
+        title: Text(switch (device.kind) { 'phone' => l.removePhone, 'vehicle' => l.removeVehicle, _ => l.removeTracker },
+            style: const TextStyle(color: Colors.red)),
+        subtitle: Text(switch (device.kind) { 'phone' => l.removePhoneSub, 'vehicle' => l.removeVehicleSub, _ => l.removeTrackerSub }),
         onTap: _release,
       ),
     ]);

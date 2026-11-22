@@ -1,5 +1,5 @@
 // Build test with every optional feature enabled, included through CT_CONFIG_OVERRIDE:
-// see README.md, "Compilazione"
+// see docs/development/index.md, "Tests"
 #undef CONNECTION_MODE
 #define CONNECTION_MODE 3
 #ifndef SIM_APN

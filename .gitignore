@@ -22,3 +22,6 @@ firmware/build/
 # Runtime data of the broker
 mosquitto/data
 mosquitto/log
+
+# Documentation site (mkdocs build)
+/site/

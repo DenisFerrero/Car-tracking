@@ -7,28 +7,33 @@ import 'package:http/http.dart' as http;
 typedef Fix = ({DateTime time, double lat, double lon, double accuracy, double? speed, double? altitude});
 
 /// Where the background service sends the positions: the server, the phone (a device of
-/// [userId]) and its upload token (POST /api/phones, /api/phones/:id/token)
+/// [userId]) and its upload token (POST /api/phones, /api/phones/:id/token); [vehicleId]:
+/// shared from that vehicle of the user, null = position of the person
 class PhoneConfig {
-  const PhoneConfig({required this.server, required this.userId, required this.deviceId, required this.token});
+  const PhoneConfig({required this.server, required this.userId, required this.deviceId, required this.token, this.vehicleId});
 
   final String server;
   final int userId;
   final int deviceId;
   final String token;
+  final int? vehicleId;
 
-  Map<String, Object> toJson() => {'server': server, 'userId': userId, 'deviceId': deviceId, 'token': token};
+  Map<String, Object> toJson() =>
+      {'server': server, 'userId': userId, 'deviceId': deviceId, 'token': token, 'vehicleId': ?vehicleId};
+
+  PhoneConfig withVehicle(int? id) => PhoneConfig(server: server, userId: userId, deviceId: deviceId, token: token, vehicleId: id);
 
   static PhoneConfig? fromJson(Object? json) {
     if (json is! Map) return null;
-    final server = json['server'], userId = json['userId'], deviceId = json['deviceId'], token = json['token'];
+    final server = json['server'], userId = json['userId'], deviceId = json['deviceId'], token = json['token'], vehicle = json['vehicleId'];
     if (server is! String || userId is! int || deviceId is! int || token is! String) return null;
-    return PhoneConfig(server: server, userId: userId, deviceId: deviceId, token: token);
+    return PhoneConfig(server: server, userId: userId, deviceId: deviceId, token: token, vehicleId: vehicle is int ? vehicle : null);
   }
 }
 
 /// State of the sharing, sent by the background service to the app
 class PhoneStatus {
-  const PhoneStatus({this.lastFix, this.queued = 0, this.gone = false, this.pausedUntil});
+  const PhoneStatus({this.lastFix, this.queued = 0, this.gone = false, this.pausedUntil, this.vehicleId});
 
   final Fix? lastFix;
   final int queued;
@@ -39,9 +44,13 @@ class PhoneStatus {
   /// Paused from the notification or the app: no positions until then
   final DateTime? pausedUntil;
 
+  /// Shared from this vehicle, null = position of the person
+  final int? vehicleId;
+
   Map<String, Object?> toJson() => {
         'queued': queued,
         'gone': gone,
+        'vehicleId': ?vehicleId,
         if (pausedUntil case final until?) 'pausedUntil': until.millisecondsSinceEpoch,
         if (lastFix case final fix?) 'fix': {'time': fix.time.millisecondsSinceEpoch, 'lat': fix.lat, 'lon': fix.lon, 'accuracy': fix.accuracy},
       };
@@ -51,6 +60,7 @@ class PhoneStatus {
     final paused = json['pausedUntil'];
     return PhoneStatus(
       queued: json['queued'] as int? ?? 0,
+      vehicleId: json['vehicleId'] as int?,
       gone: json['gone'] == true,
       pausedUntil: paused is int ? DateTime.fromMillisecondsSinceEpoch(paused) : null,
       lastFix: fix is Map
@@ -72,7 +82,9 @@ class PhoneStatus {
 /// When the phone stands still the last fix is sent again every [keepAlive]: the
 /// friends see that the position is current. The battery level of the phone goes with the
 /// positions when it changes. During a [pause] the fixes are dropped and the friends see
-/// the end of the pause. Runs in the background service, without the app.
+/// the end of the pause. From the vehicle ([drive]) the fixes become positions of that car:
+/// each queued fix keeps the choice made when it was taken. Runs in the background
+/// service, without the app.
 class PhoneUploader {
   PhoneUploader(
     this.config,
@@ -82,7 +94,8 @@ class PhoneUploader {
     this.keepAlive = const Duration(minutes: 5),
     this.onStatus,
     this.battery,
-  }) : _http = client ?? http.Client();
+  }) : _http = client ?? http.Client(),
+        vehicleId = config.vehicleId;
 
   static const maxQueue = 2000;
   static const _batch = 100;
@@ -101,7 +114,10 @@ class PhoneUploader {
   DateTime? lastSent;
   bool gone = false;
   DateTime? pausedUntil;
+  int? vehicleId;
   final queue = <Fix>[];
+  // Vehicle of each queued fix (null: the person)
+  final _vehicles = <int?>[];
 
   StreamSubscription<Fix>? _subscription;
   Timer? _upload;
@@ -113,7 +129,7 @@ class PhoneUploader {
   int _pauseSent = 0;
   int? _batterySent;
 
-  PhoneStatus get status => PhoneStatus(lastFix: lastFix, queued: queue.length, gone: gone, pausedUntil: pausedUntil);
+  PhoneStatus get status => PhoneStatus(lastFix: lastFix, queued: queue.length, gone: gone, pausedUntil: pausedUntil, vehicleId: vehicleId);
 
   bool get paused => pausedUntil != null && pausedUntil!.isAfter(DateTime.now());
 
@@ -140,11 +156,21 @@ class PhoneUploader {
     flush();
   }
 
+  /// From now on the positions of [id] (a vehicle of the user), null: of the person
+  void drive(int? id) {
+    vehicleId = id;
+    onStatus?.call(status);
+  }
+
   void _onFix(Fix fix) {
     if (paused) return;
     lastFix = fix;
     queue.add(fix);
-    if (queue.length > maxQueue) queue.removeRange(0, queue.length - maxQueue);
+    _vehicles.add(vehicleId);
+    if (queue.length > maxQueue) {
+      queue.removeRange(0, queue.length - maxQueue);
+      _vehicles.removeRange(0, _vehicles.length - maxQueue);
+    }
     final since = lastSent == null ? null : DateTime.now().difference(lastSent!);
     if (since == null || since >= uploadEvery) {
       flush();
@@ -165,6 +191,7 @@ class PhoneUploader {
     if (_sending || (queue.isEmpty && _pauseVersion == _pauseSent) || gone) return;
     _sending = true;
     final batch = queue.take(_batch).toList();
+    final vehicles = _vehicles.take(_batch).toList();
     final pauseVersion = _pauseVersion;
     var sent = false;
     try {
@@ -176,8 +203,9 @@ class PhoneUploader {
           if (level != null && level != _batterySent) 'battery': level,
           if (pauseVersion != _pauseSent) 'pausedUntil': pausedUntil?.toUtc().toIso8601String(),
           'positions': [
-            for (final fix in batch)
+            for (final (i, fix) in batch.indexed)
               {
+                'vehicleId': ?vehicles[i],
                 'time': fix.time.toUtc().toIso8601String(),
                 'lat': fix.lat,
                 'lon': fix.lon,
@@ -192,10 +220,12 @@ class PhoneUploader {
         // Phone deleted or a new token elsewhere: nothing more to send
         gone = true;
         queue.clear();
+        _vehicles.clear();
         stop();
       } else if (response.statusCode < 300 || response.statusCode == 400) {
         // 400: invalid batch, never accepted: dropped instead of blocking the queue
         queue.removeRange(0, batch.length);
+        _vehicles.removeRange(0, batch.length);
         lastSent = DateTime.now();
         sent = true;
         _batterySent = level ?? _batterySent;

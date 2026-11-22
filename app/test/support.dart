@@ -218,6 +218,21 @@ Map<String, dynamic> phoneDevice({int id = 3, bool owner = true, bool connected 
       'lastPosition': {...positionJson(status: 1, full: false), 'accuracy': 14, 'altitude': 230},
     };
 
+/// Vehicle without a tracker, fed by the phone of the owner
+Map<String, dynamic> vehicleDevice({int id = 4, bool connected = false}) => {
+      'id': id,
+      'kind': 'vehicle',
+      'imei': '',
+      'name': 'Punto',
+      'color': '#FFB300',
+      'role': 'owner',
+      'model': 'vehicle',
+      'registeredAt': iso(ago(const Duration(days: 1))),
+      'lastSeenAt': iso(ago(const Duration(hours: 2))),
+      'connected': connected,
+      'lastPosition': {...positionJson(status: 1, full: false, age: const Duration(hours: 2)), 'accuracy': 9, 'altitude': 230},
+    };
+
 /// Background service of the phone in the test isolate: the real uploader on the fake
 /// backend; the test grants or refuses the permissions and pushes the fixes
 class FakePhoneService implements PhoneService {
@@ -286,6 +301,12 @@ class FakePhoneService implements PhoneService {
 
   @override
   void pause(Duration? duration) => uploader?.pause(duration);
+
+  @override
+  void drive(int? vehicleId) {
+    uploader?.drive(vehicleId);
+    if (stored case final config?) stored = config.withVehicle(vehicleId);
+  }
 
   void emit({double lat = 45.07, double lon = 7.68, double accuracy = 8, double? speed = 30, DateTime? time}) =>
       fixes.add((time: time ?? DateTime.now(), lat: lat, lon: lon, accuracy: accuracy, speed: speed, altitude: 240));

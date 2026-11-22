@@ -4,7 +4,7 @@ import { runJobs } from "../server.ts";
 import { Harness, sleep, waitFor } from "../test/harness.ts";
 import type { User } from "../test/harness.ts";
 import { MAX_FRIENDS, MAX_PENDING, newFriendCode, normalizeFriendCode } from "./friends.ts";
-import { MAX_PHONES } from "./phones.ts";
+import { MAX_PHONES, MAX_VEHICLES } from "./phones.ts";
 
 const IMEI = "860000000000037";
 // Center of Milan and a point ~2 km away
@@ -338,6 +338,57 @@ describe("friends and phones", { skip: !process.env.TEST_DATABASE_URL && "TEST_D
 		assert.equal((await h.sql`SELECT 1 FROM users WHERE id = ${carla.id}`).length, 0);
 		assert.equal((await h.sql`SELECT 1 FROM positions WHERE device_id = ${phone}`).length, 0);
 		assert.deepEqual((await h.api("GET", "/api/friends", { token: bruno.token })).body.friends, []);
+	});
+
+	test("vehicles without a tracker: fed by the phone of the owner, deadlines, limits", async () => {
+		assert.equal((await h.api("POST", "/api/vehicles", { token: bruno.token, body: { name: "" } })).status, 400);
+		assert.equal((await h.api("POST", "/api/vehicles", { token: bruno.token, body: { name: "Panda", fuelType: "hydrogen" } })).status, 400);
+		const created = await h.api("POST", "/api/vehicles", { token: bruno.token, body: { name: "Panda", model: "Fiat Panda 1.2", fuelType: "diesel" } });
+		assert.equal(created.status, 200);
+		const vehicle: number = created.body.id;
+		const listed = (await h.api("GET", "/api/devices", { token: bruno.token })).body.find((device: { id: number }) => device.id === vehicle);
+		assert.equal(listed.kind, "vehicle");
+		assert.equal(listed.color, "#FFB300");
+		assert.equal(listed.connected, false);
+		const profile = (await h.api("GET", `/api/devices/${vehicle}/vehicle`, { token: bruno.token })).body;
+		assert.equal(profile.model, "Fiat Panda 1.2");
+		assert.equal(profile.fuelType, "diesel");
+
+		// Only the owner of the phone and of the vehicle shares from it
+		const [annaPhone] = await h.sql<{ id: number }[]>`
+			SELECT d.id FROM devices d JOIN device_users du ON du.device_id = d.id WHERE du.user_id = ${anna.id} AND d.kind = 'phone' LIMIT 1`;
+		const annaUpload = (await h.api("POST", `/api/phones/${annaPhone!.id}/token`, { token: anna.token })).body.uploadToken;
+		assert.deepEqual((await h.api("POST", "/api/phones/positions", { token: annaUpload, body: { positions: [fix(60, HOME, { vehicleId: vehicle })] } })).body, { accepted: 0 });
+		assert.equal((await h.api("POST", "/api/phones/positions", { token: annaUpload, body: { positions: [fix(60, HOME, { vehicleId: 0 })] } })).status, 400);
+
+		const live = await h.live(bruno.token);
+		const phone = (await h.api("POST", "/api/phones", { token: bruno.token, body: { name: "Bruno 2" } })).body;
+		const upload: string = phone.uploadToken;
+		const driven = [fix(600, HOME, { speed: 40, vehicleId: vehicle }), fix(300, AWAY, { speed: 45, vehicleId: vehicle }), fix(30, HOME)];
+		const sent = await h.api("POST", "/api/phones/positions", { token: upload, body: { positions: driven } });
+		assert.deepEqual(sent.body, { accepted: 3 });
+		assert.equal((await h.sql`SELECT 1 FROM positions WHERE device_id = ${vehicle}`).length, 2);
+		await waitFor(() => live.of("position").some(message => message.deviceId === vehicle));
+		live.close();
+		const after = (await h.api("GET", `/api/devices/${vehicle}`, { token: bruno.token })).body;
+		assert.equal(after.connected, true);
+		assert.equal(after.lastPosition.status, 0);
+		// Replayed: skipped
+		assert.deepEqual((await h.api("POST", "/api/phones/positions", { token: upload, body: { positions: [driven[1]] } })).body, { accepted: 0 });
+
+		// Car features: odometer and deadlines; no commands; not for the phone
+		assert.equal((await h.api("PUT", `/api/devices/${vehicle}/odometer`, { token: bruno.token, body: { km: 84000 } })).body.odometerKm, 84000);
+		assert.equal((await h.api("GET", `/api/devices/${vehicle}/maintenance`, { token: bruno.token })).status, 200);
+		assert.equal((await h.api("GET", `/api/devices/${phone.id}/maintenance`, { token: bruno.token })).body.error, "not_a_vehicle");
+		assert.equal((await h.api("GET", `/api/devices/${vehicle}/commands`, { token: bruno.token })).body.error, "not_a_tracker");
+
+		for (let i = 1; i < MAX_VEHICLES; i++) assert.equal((await h.api("POST", "/api/vehicles", { token: bruno.token, body: { name: `Car ${i}` } })).status, 200);
+		assert.equal((await h.api("POST", "/api/vehicles", { token: bruno.token, body: { name: "Too many" } })).body.error, "too_many_vehicles");
+
+		// Removed: gone with its history
+		assert.equal((await h.api("DELETE", `/api/devices/${vehicle}`, { token: bruno.token })).status, 200);
+		assert.equal((await h.sql`SELECT 1 FROM devices WHERE id = ${vehicle}`).length, 0);
+		assert.equal((await h.sql`SELECT 1 FROM positions WHERE device_id = ${vehicle}`).length, 0);
 	});
 
 	test("the last administrator can't delete the account; the administrator deletes users with their devices", async () => {

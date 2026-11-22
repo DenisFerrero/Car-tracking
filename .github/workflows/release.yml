@@ -4,6 +4,10 @@
 # for its trackers (src/services/releases.ts), new app version for the Android app.
 # The repository name is never written here (github.repository): it can change.
 #
+# The backend image (web app included) goes to the GitHub Container Registry as
+# ghcr.io/<owner>/<repository>:X.Y.Z, X.Y, X and latest, for amd64 and arm64 (Raspberry Pi):
+# a server with Watchtower (docker compose profile "autoupdate") updates itself.
+#
 # Secrets of the repository (Settings > Secrets and variables > Actions):
 #   ANDROID_KEYSTORE_BASE64   base64 of the release keystore (.jks), always the same one:
 #                             Android, Obtainium and the passkeys need a stable certificate
@@ -145,3 +149,50 @@ jobs:
           TAG: ${{ github.event.release.tag_name }}
           VERSION: ${{ needs.version.outputs.version }}
         run: gh release upload "$TAG" "car-tracking-$VERSION.apk" --repo "$GITHUB_REPOSITORY" --clobber
+
+  # One native build per architecture (no emulation), then one multi-architecture tag
+  image:
+    needs: [version, checks]
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build and push
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build -f backend/Dockerfile --build-arg "APP_VERSION=$VERSION"             --label "org.opencontainers.image.source=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"             --label "org.opencontainers.image.version=$VERSION"             -t "$IMAGE:$VERSION-$ARCH" .
+          docker push "$IMAGE:$VERSION-$ARCH"
+
+  manifest:
+    needs: [version, image]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Tags for both architectures
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          MAJOR="${VERSION%%.*}"
+          MINOR="${VERSION%.*}"
+          docker buildx imagetools create \
+            -t "$IMAGE:$VERSION" -t "$IMAGE:$MINOR" -t "$IMAGE:$MAJOR" -t "$IMAGE:latest" \
+            "$IMAGE:$VERSION-amd64" "$IMAGE:$VERSION-arm64"

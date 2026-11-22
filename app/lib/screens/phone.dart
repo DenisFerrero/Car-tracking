@@ -9,6 +9,7 @@ import '../core/phone_tracker.dart';
 import '../core/providers.dart';
 import '../l10n/app_localizations.dart';
 import 'add_device.dart' show deviceColors;
+import 'vehicle_dialog.dart';
 
 /// Text of a refused location permission
 String permissionText(AppLocalizations l, String reason) => switch (reason) {
@@ -66,6 +67,56 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _drive(int? id, String name) async {
+    await _phone.drive(id);
+    if (mounted && _phone.sharing) showMessage(context, context.l10n.shareAsChanged(name));
+  }
+
+  /// The person or one of the vehicles of the user: a vehicle gets the trips and the costs
+  Widget _shareAs(BuildContext context) {
+    final l = context.l10n;
+    final vehicles = [
+      for (final device in ref.watch(devicesProvider).value ?? const <Device>[])
+        if (device.isVehicle && device.isOwner) device,
+    ];
+    final current = vehicles.any((vehicle) => vehicle.id == _phone.vehicleId) ? _phone.vehicleId : null;
+    Widget option(Key key, IconData icon, Color? color, String title, String subtitle, int? id) => ListTile(
+          key: key,
+          leading: CircleAvatar(backgroundColor: color, child: Icon(icon, color: color == null ? null : Colors.white)),
+          title: Text(title),
+          subtitle: Text(subtitle),
+          selected: current == id,
+          trailing: current == id ? const Icon(Icons.check_circle) : null,
+          onTap: current == id ? null : () => _drive(id, title),
+        );
+    return Card(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Text(l.shareAs, style: Theme.of(context).textTheme.titleSmall),
+        ),
+        option(const Key('shareAsPerson'), Icons.person, null, l.shareAsPerson, l.shareAsPersonSub, null),
+        for (final vehicle in vehicles)
+          option(Key('shareAs_${vehicle.id}'), Icons.directions_car_filled, vehicle.color, vehicle.name, l.shareAsVehicleSub, vehicle.id),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            child: TextButton.icon(
+              key: const Key('phoneAddVehicle'),
+              icon: const Icon(Icons.add),
+              label: Text(l.addVehicle),
+              onPressed: () async {
+                final id = await createVehicle(context, ref);
+                if (id != null) await _phone.drive(id);
+              },
+            ),
+          ),
+        ),
+      ]),
+    );
   }
 
   @override
@@ -151,6 +202,8 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
                 ),
               ),
             ],
+            const SizedBox(height: 16),
+            _shareAs(context),
             ],
           ]);
         },

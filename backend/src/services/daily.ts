@@ -1,4 +1,5 @@
 import type { Context } from "../context.ts";
+import type { DeviceKind } from "./access.ts";
 import type { Sql } from "../db.ts";
 import { CONNECTION_COST, FRAME_OVERHEAD, tripsOfKind } from "./analytics.ts";
 import type { TrackPoint } from "./analytics.ts";
@@ -14,7 +15,7 @@ const RECOMPUTE_DAYS = 3;
 /** First summary of a device: at most this far back */
 const BACKFILL_DAYS = 400;
 /** Kept for years (small rows); phones (people) for a bit more than a year */
-const KEEP_DAYS = { tracker: 3 * 366, phone: 400 };
+const KEEP_DAYS = { tracker: 3 * 366, vehicle: 3 * 366, phone: 400 };
 /** Voltage of a battery at rest: parked for at least this long */
 const REST_AFTER_MS = 2 * 3600e3;
 
@@ -34,7 +35,7 @@ export interface DayStats {
 
 interface Device {
 	id: number;
-	kind: "tracker" | "phone";
+	kind: DeviceKind;
 }
 
 const round = (value: number, digits: number) => Math.round(value * 10 ** digits) / 10 ** digits;
@@ -131,7 +132,7 @@ export async function updateDailyStats (ctx: Context): Promise<void> {
 				${current}::date - 1, interval '1 day') day`;
 		for (const { day } of days) await storeDay(sql, device.id, await computeDay(sql, config.TIMEZONE, device, day));
 	}
-	for (const kind of ["tracker", "phone"] as const) {
+	for (const kind of ["tracker", "vehicle", "phone"] as const) {
 		await sql`
 			DELETE FROM daily_stats WHERE day < now()::date - ${KEEP_DAYS[kind]}::int
 				AND device_id IN (SELECT id FROM devices WHERE kind = ${kind})`;

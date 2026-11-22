@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import type { Context } from "../context.ts";
 import { badRequest, notFound, parse } from "../http/errors.ts";
-import { requireDevice, requireTracker } from "../services/access.ts";
+import { requireDevice, requireVehicle } from "../services/access.ts";
 import { FUEL_TYPES, FUEL_UNITS, RATE_KINDS, convertConsumption, rateOn, vehicleProfile } from "../services/costs.ts";
 import type { RateKind, VehicleProfile } from "../services/costs.ts";
 import { daysOf, today } from "../services/daily.ts";
@@ -216,11 +216,11 @@ export function registerVehicleRoutes (app: FastifyInstance, ctx: Context): void
 	});
 
 	// --- Odometer and deadlines of a car (trackers, owner)
-	const loadDeadline = async (request: { params: unknown; auth: { user: Parameters<typeof requireTracker>[1] } | null }) => {
+	const loadDeadline = async (request: { params: unknown; auth: { user: Parameters<typeof requireVehicle>[1] } | null }) => {
 		const { id } = parse(idParams, request.params);
 		const [row] = await sql<Row[]>`SELECT ${sql.unsafe(COLUMNS)} FROM maintenance WHERE id = ${id}`;
 		if (!row) throw notFound("Deadline not found");
-		const access = await requireTracker(sql, request.auth!.user, row.device_id).catch(() => {
+		const access = await requireVehicle(sql, request.auth!.user, row.device_id).catch(() => {
 			throw notFound("Deadline not found");
 		});
 		return { row, device: { id: row.device_id, kind: access.kind } };
@@ -228,7 +228,7 @@ export function registerVehicleRoutes (app: FastifyInstance, ctx: Context): void
 
 	app.get("/api/devices/:id/maintenance", async (request) => {
 		const { id } = parse(idParams, request.params);
-		const access = await requireTracker(sql, request.auth!.user, id);
+		const access = await requireVehicle(sql, request.auth!.user, id);
 		const odometerKm = await odometer(sql, tz, { id, kind: access.kind });
 		const current = await today(sql, tz);
 		const rows = await sql<Row[]>`SELECT ${sql.unsafe(COLUMNS)} FROM maintenance WHERE device_id = ${id}`;
@@ -244,7 +244,7 @@ export function registerVehicleRoutes (app: FastifyInstance, ctx: Context): void
 	app.put("/api/devices/:id/odometer", async (request) => {
 		const { id } = parse(idParams, request.params);
 		const { km } = parse(z.strictObject({ km: z.number().int().min(0).max(5_000_000) }), request.body);
-		const access = await requireTracker(sql, request.auth!.user, id);
+		const access = await requireVehicle(sql, request.auth!.user, id);
 		await setOdometer(sql, tz, { id, kind: access.kind }, km);
 		return { odometerKm: await odometer(sql, tz, { id, kind: access.kind }) };
 	});
@@ -252,7 +252,7 @@ export function registerVehicleRoutes (app: FastifyInstance, ctx: Context): void
 	app.post("/api/devices/:id/maintenance", async (request) => {
 		const { id } = parse(idParams, request.params);
 		const body = parse(newDeadline, request.body);
-		await requireTracker(sql, request.auth!.user, id);
+		await requireVehicle(sql, request.auth!.user, id);
 		const [count] = await sql<{ count: number }[]>`SELECT count(*)::int AS count FROM maintenance WHERE device_id = ${id}`;
 		if (count!.count >= MAX_DEADLINES) throw badRequest(`At most ${MAX_DEADLINES} deadlines`, "too_many_deadlines");
 		const [row] = await sql<Row[]>`

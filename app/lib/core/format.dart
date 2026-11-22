@@ -172,6 +172,7 @@ String errorText(AppLocalizations l, Object error) {
     'owner_cannot_leave' => l.errOwnerCannotLeave,
     'too_many_areas' => l.errTooManyAreas,
     'too_many_phones' => l.errTooManyPhones,
+    'too_many_vehicles' => l.errTooManyVehicles,
     'not_a_tracker' => l.errNotATracker,
     'deadline_untitled' => l.deadlineNeedsTitle,
     'too_many_rates' => l.errTooManyRates,

@@ -560,6 +560,12 @@ abstract class AppLocalizations {
   /// **'Massimo 5 telefoni per account'**
   String get errTooManyPhones;
 
+  /// No description provided for @errTooManyVehicles.
+  ///
+  /// In it, this message translates to:
+  /// **'Massimo 10 veicoli per account'**
+  String get errTooManyVehicles;
+
   /// No description provided for @errNotATracker.
   ///
   /// In it, this message translates to:
@@ -2420,6 +2426,84 @@ abstract class AppLocalizations {
   /// **'Condividi la posizione del telefono, senza hardware'**
   String get phoneOptionSub;
 
+  /// No description provided for @vehicleOption.
+  ///
+  /// In it, this message translates to:
+  /// **'Veicolo senza tracker'**
+  String get vehicleOption;
+
+  /// No description provided for @vehicleOptionSub.
+  ///
+  /// In it, this message translates to:
+  /// **'La posizione arriva dal tuo telefono quando sei a bordo'**
+  String get vehicleOptionSub;
+
+  /// No description provided for @addVehicleTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Nuovo veicolo'**
+  String get addVehicleTitle;
+
+  /// No description provided for @addVehicle.
+  ///
+  /// In it, this message translates to:
+  /// **'Aggiungi veicolo'**
+  String get addVehicle;
+
+  /// No description provided for @vehicleIntro.
+  ///
+  /// In it, this message translates to:
+  /// **'Quando condividi dal veicolo, il telefono registra i viaggi dell\'auto: costi, chilometri, scadenze e aree come con un tracker, senza comandi né allarmi.'**
+  String get vehicleIntro;
+
+  /// No description provided for @vehicleName.
+  ///
+  /// In it, this message translates to:
+  /// **'Nome del veicolo'**
+  String get vehicleName;
+
+  /// No description provided for @vehicleKind.
+  ///
+  /// In it, this message translates to:
+  /// **'Veicolo, posizione dal telefono'**
+  String get vehicleKind;
+
+  /// No description provided for @vehicleDriving.
+  ///
+  /// In it, this message translates to:
+  /// **'In viaggio con il telefono'**
+  String get vehicleDriving;
+
+  /// No description provided for @shareAs.
+  ///
+  /// In it, this message translates to:
+  /// **'Condividi come'**
+  String get shareAs;
+
+  /// No description provided for @shareAsPerson.
+  ///
+  /// In it, this message translates to:
+  /// **'Me stesso'**
+  String get shareAsPerson;
+
+  /// No description provided for @shareAsPersonSub.
+  ///
+  /// In it, this message translates to:
+  /// **'La tua posizione, vista dagli amici'**
+  String get shareAsPersonSub;
+
+  /// No description provided for @shareAsVehicleSub.
+  ///
+  /// In it, this message translates to:
+  /// **'Viaggi e costi del veicolo; la tua posizione personale resta ferma'**
+  String get shareAsVehicleSub;
+
+  /// No description provided for @shareAsChanged.
+  ///
+  /// In it, this message translates to:
+  /// **'Ora condividi come {name}'**
+  String shareAsChanged(String name);
+
   /// No description provided for @phoneTitle.
   ///
   /// In it, this message translates to:
@@ -2870,6 +2954,30 @@ abstract class AppLocalizations {
   /// **'Storico, aree, condivisioni e notifiche vengono cancellati.'**
   String get removePhoneBody;
 
+  /// No description provided for @removeVehicle.
+  ///
+  /// In it, this message translates to:
+  /// **'Elimina il veicolo'**
+  String get removeVehicle;
+
+  /// No description provided for @removeVehicleSub.
+  ///
+  /// In it, this message translates to:
+  /// **'Con viaggi, costi e scadenze'**
+  String get removeVehicleSub;
+
+  /// No description provided for @removeVehicleTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Eliminare il veicolo?'**
+  String get removeVehicleTitle;
+
+  /// No description provided for @removeVehicleBody.
+  ///
+  /// In it, this message translates to:
+  /// **'Storico, costi, scadenze, aree e condivisioni vengono cancellati.'**
+  String get removeVehicleBody;
+
   /// No description provided for @friends.
   ///
   /// In it, this message translates to:
@@ -3083,7 +3191,7 @@ abstract class AppLocalizations {
   /// No description provided for @filterTrackers.
   ///
   /// In it, this message translates to:
-  /// **'Tracker'**
+  /// **'Veicoli'**
   String get filterTrackers;
 
   /// No description provided for @filterPhones.

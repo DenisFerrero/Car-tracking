@@ -1,4 +1,5 @@
 import type { Context } from "../context.ts";
+import type { DeviceKind } from "./access.ts";
 import type { Sql } from "../db.ts";
 
 // Removal of devices and users with all their data: used by the owner (device removed),
@@ -9,7 +10,7 @@ import type { Sql } from "../db.ts";
  * deleted, a tracker stays without owner, ready to be paired again.
  * Returns the users who could see it.
  */
-export async function releaseDevice (sql: Sql, id: number, kind: "tracker" | "phone"): Promise<number[]> {
+export async function releaseDevice (sql: Sql, id: number, kind: DeviceKind): Promise<number[]> {
 	return sql.begin(async tx => {
 		const removed = await tx<{ user_id: number }[]>`DELETE FROM device_users WHERE device_id = ${id} RETURNING user_id`;
 		await tx`DELETE FROM positions WHERE device_id = ${id}`;
@@ -26,7 +27,8 @@ export async function releaseDevice (sql: Sql, id: number, kind: "tracker" | "ph
 		await tx`DELETE FROM vehicle_rates WHERE device_id = ${id}`;
 		await tx`DELETE FROM device_extra WHERE device_id = ${id}`;
 		await tx`UPDATE commands SET superseded = true WHERE device_id = ${id} AND result IS NULL`;
-		if (kind === "phone") await tx`DELETE FROM devices WHERE id = ${id}`;
+		// Only a tracker exists without its owner (it can be paired again)
+		if (kind !== "tracker") await tx`DELETE FROM devices WHERE id = ${id}`;
 		else {
 			await tx`
 				UPDATE devices SET name = '', color = '#1E88E5', battery = NULL, paused_until = NULL, odometer_base = NULL,
@@ -39,7 +41,7 @@ export async function releaseDevice (sql: Sql, id: number, kind: "tracker" | "ph
 
 /** A user and everything of theirs: the devices they own are released first */
 export async function deleteUser (ctx: Context, userId: number): Promise<void> {
-	const owned = await ctx.sql<{ id: number; kind: "tracker" | "phone" }[]>`
+	const owned = await ctx.sql<{ id: number; kind: DeviceKind }[]>`
 		SELECT d.id, d.kind FROM device_users du JOIN devices d ON d.id = du.device_id
 		WHERE du.user_id = ${userId} AND du.role = 'owner'`;
 	const viewers = new Set<number>();

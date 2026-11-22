@@ -209,7 +209,7 @@ describe("statistics, trip log, car", { skip: !process.env.TEST_DATABASE_URL && 
 		const notices = () => live.of("notification").filter(item => item.notification.kind === "maintenance");
 		assert.equal((await h.api("GET", path, { token: bruno.token })).body.error, "owner_only");
 		const phone = await h.api("POST", "/api/phones", { token: anna.token, body: { name: "Pixel" } });
-		assert.equal((await h.api("GET", `/api/devices/${phone.body.id}/maintenance`, { token: anna.token })).body.error, "not_a_tracker");
+		assert.equal((await h.api("GET", `/api/devices/${phone.body.id}/maintenance`, { token: anna.token })).body.error, "not_a_vehicle");
 
 		// Recurring by km without odometer: the date stays
 		const tyres = await h.api("POST", path, { token: anna.token, body: { kind: "tyres", dueDate: date(60), everyKm: 20000 } });

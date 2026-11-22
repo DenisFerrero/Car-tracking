@@ -7,6 +7,8 @@ import 'package:latlong2/latlong.dart';
 
 import '../core/models.dart';
 import '../core/providers.dart';
+import '../theme.dart';
+import '../screens/vehicle_dialog.dart' show deviceIcon;
 
 /// Map with the tiles configured on the server (OpenStreetMap by default)
 class BaseMap extends ConsumerWidget {
@@ -40,6 +42,7 @@ class BaseMap extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(sessionProvider).config;
     final points = fit ?? const <LatLng>[];
+    final filter = Theme.of(context).brightness == Brightness.dark ? darkMapFilter : lightMapFilter;
     return FlutterMap(
       mapController: controller,
       options: MapOptions(
@@ -58,6 +61,7 @@ class BaseMap extends ConsumerWidget {
           userAgentPackageName: 'com.cartracking.app',
           tileProvider: tileProvider(),
           maxNativeZoom: 19,
+          tileBuilder: (context, tile, _) => ColorFiltered(colorFilter: filter, child: tile),
         ),
         ...layers,
         RichAttributionWidget(
@@ -68,8 +72,8 @@ class BaseMap extends ConsumerWidget {
   }
 }
 
-/// Marker of a device: colored pin, arrow while driving, dashed when the position is
-/// old or estimated from the cell
+/// Marker of a device: diamond in its color (a road sign), arrow while driving, faded when
+/// the position is old or estimated from the cell
 class DeviceMarker extends StatelessWidget {
   const DeviceMarker({super.key, required this.device, this.position, this.onTap});
 
@@ -86,15 +90,24 @@ class DeviceMarker extends StatelessWidget {
       onTap: onTap,
       child: Tooltip(
         message: device.name,
-        child: Container(
-          decoration: BoxDecoration(
-            color: device.color.withValues(alpha: uncertain ? 0.55 : 1),
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3),
-            boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black38)],
+        child: Stack(alignment: Alignment.center, children: [
+          FractionallySizedBox(
+            widthFactor: 0.7,
+            heightFactor: 0.7,
+            child: Transform.rotate(
+              angle: math.pi / 4,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: device.color.withValues(alpha: uncertain ? 0.55 : 1),
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(color: Colors.white, width: 2.5),
+                  boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black45)],
+                ),
+              ),
+            ),
           ),
-          child: Icon(moving ? Icons.navigation : (device.isPhone ? Icons.smartphone : Icons.directions_car), color: Colors.white, size: 20),
-        ),
+          Icon(moving ? Icons.navigation : deviceIcon(device), color: Colors.white, size: 18),
+        ]),
       ),
     );
   }
@@ -153,9 +166,16 @@ class DeviceClusterLayer extends StatelessWidget {
             child: GestureDetector(
               key: Key('cluster${group.first.id}'),
               onTap: () => onCluster(group),
-              child: CircleAvatar(
-                backgroundColor: theme.colorScheme.primary,
-                child: Text('${group.length}', style: TextStyle(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold)),
+              child: Container(
+                alignment: Alignment.center,
+                margin: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: petrol,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: amber, width: 2.5),
+                  boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black45)],
+                ),
+                child: Text('${group.length}', style: theme.textTheme.titleMedium?.copyWith(color: amber, fontWeight: FontWeight.w700)),
               ),
             ),
           ),

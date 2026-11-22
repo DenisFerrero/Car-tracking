@@ -54,6 +54,138 @@ void main() {
     expect(Device.fromJson({...ownerDevice(), 'lastSeenAt': null}).stateAt(now, offline), DeviceState.offline);
     expect(Device.fromJson(phoneDevice()).stateAt(now, offline), DeviceState.parked);
     expect(Device.fromJson(phoneDevice(connected: false)).stateAt(now, offline), DeviceState.offline);
+    // A vehicle without the phone on board is parked, not unreachable
+    expect(Device.fromJson(vehicleDevice()).stateAt(now.add(const Duration(days: 3)), offline), DeviceState.parked);
+  });
+
+  group('vehicles', () {
+    testWidgets('new vehicle from the list: limit, created, its pages, removed', (tester) async {
+      var devices = [ownerDevice(), viewerDevice()];
+      final backend = fullBackend()
+        ..on('GET', '/api/devices', (_) => devices)
+        ..on('GET', '/api/devices/4', (_) => vehicleDevice(connected: true))
+        ..on('GET', '/api/devices/4/shares', (_) => [])
+        ..on('GET', '/api/devices/4/positions', (_) => {'positions': [], 'truncated': false})
+        ..on('POST', '/api/vehicles', (_) => Reply.error(400, 'too_many_vehicles'))
+        ..on('DELETE', '/api/devices/4', (_) {
+          devices = [ownerDevice(), viewerDevice()];
+          return {'ok': true};
+        });
+      final app = TestApp(backend);
+      await app.start(tester);
+      app.go(tester, '/devices');
+      await settle(tester);
+      // In the browser: tracker or vehicle, no phone
+      await tapAndSettle(tester, find.text(it.add));
+      expect(find.text(it.phoneOption), findsNothing);
+      await tapAndSettle(tester, find.byKey(const Key('addVehicle')));
+      await tapAndSettle(tester, find.byKey(const Key('vehicleCreate')));
+      expect(backend.calls('/api/vehicles'), isEmpty);
+      await tester.enterText(find.byKey(const Key('vehicleName')), ' Punto ');
+      await tester.enterText(find.byKey(const Key('newVehicleModel')), 'Fiat Punto 1.4');
+      await tapAndSettle(tester, find.byKey(const Key('newVehicleFuel')));
+      await tapAndSettle(tester, find.text(it.fuelLpg).last);
+      await tapAndSettle(tester, find.byKey(const Key('vehicleCreate')));
+      expect(find.text(it.errTooManyVehicles), findsOneWidget);
+
+      backend.on('POST', '/api/vehicles', (_) {
+        devices = [...devices, vehicleDevice(connected: true)];
+        return {'id': 4};
+      });
+      await tapAndSettle(tester, find.byKey(const Key('vehicleCreate')));
+      await settle(tester);
+      expect(backend.lastBody('/api/vehicles'), {'name': 'Punto', 'model': 'Fiat Punto 1.4', 'fuelType': 'lpg', 'color': '#FB8C00'});
+      expect(find.byType(DeviceScreen), findsOneWidget);
+      // Car pages without the modem ones
+      expect(find.byKey(const Key('openMaintenance')), findsOneWidget);
+      expect(find.byKey(const Key('openCosts')), findsOneWidget);
+      expect(find.byKey(const Key('openExtra')), findsNothing);
+
+      app.go(tester, '/devices/4?tab=0');
+      await settle(tester);
+      expect(find.textContaining(it.vehicleDriving), findsOneWidget);
+      expect(find.textContaining(it.accuracyMeters('9')), findsOneWidget);
+      expect(find.byKey(const Key('walkTo')), findsOneWidget);
+      expect(find.text(it.live30), findsNothing);
+
+      app.go(tester, '/devices/4?tab=4');
+      await settle(tester);
+      expect(find.text('${it.vehicleKind} · ${it.tapToRename}'), findsOneWidget);
+      expect(find.text(it.imei), findsNothing);
+      await app.phone.drive(4);
+      await reveal(tester, find.text(it.removeVehicle));
+      await tapAndSettle(tester, find.text(it.removeVehicle));
+      expect(find.text(it.removeVehicleBody), findsOneWidget);
+      await tapAndSettle(tester, find.text(it.confirm));
+      expect(backend.calls('/api/devices/4', 'DELETE'), hasLength(1));
+      expect(app.phone.vehicleId, isNull);
+    });
+
+    testWidgets('the phone shares as a vehicle or as the person', (tester) async {
+      var devices = [ownerDevice(), viewerDevice(), vehicleDevice()];
+      final backend = fullBackend()
+        ..on('GET', '/api/devices', (_) => devices)
+        ..on('POST', '/api/phones', (_) => {'id': 3, 'uploadToken': 'upload-1'})
+        ..on('POST', '/api/phones/positions', (_) => {'accepted': 1})
+        ..on('POST', '/api/vehicles', (_) {
+          devices = [...devices, {...vehicleDevice(id: 5), 'name': 'Furgone'}];
+          return {'id': 5};
+        });
+      final app = TestApp(backend, web: false);
+      final service = app.phoneService;
+      await app.start(tester);
+      app.go(tester, '/devices/phone');
+      await settle(tester);
+      Future<void> show(Finder finder) async {
+        await reveal(tester, finder);
+        await tester.ensureVisible(finder);
+        await tester.pumpAndSettle();
+      }
+
+      await show(find.byKey(const Key('shareAs_4')));
+      expect(find.byKey(const Key('shareAs_4')), findsOneWidget);
+      expect(tester.widget<ListTile>(find.byKey(const Key('shareAsPerson'))).selected, isTrue);
+
+      // Chosen before the start: the service starts from the vehicle
+      await tapAndSettle(tester, find.byKey(const Key('shareAs_4')));
+      expect(app.phone.vehicleId, 4);
+      await show(find.byKey(const Key('phoneStart')));
+      await tapAndSettle(tester, find.byKey(const Key('phoneStart')));
+      expect(service.stored!.toJson(), {'server': 'https://tracking.test', 'userId': 1, 'deviceId': 3, 'token': 'upload-1', 'vehicleId': 4});
+      service.emit();
+      await settle(tester);
+      expect((backend.lastBody('/api/phones/positions')['positions'] as List).single, containsPair('vehicleId', 4));
+
+      // Back to the person while sharing; offline fixes keep the choice made when taken
+      backend.offline = true;
+      service.emit(time: DateTime.now().subtract(const Duration(seconds: 30)));
+      await settle(tester);
+      await show(find.byKey(const Key('shareAsPerson')));
+      await tapAndSettle(tester, find.byKey(const Key('shareAsPerson')));
+      expect(find.text(it.shareAsChanged(it.shareAsPerson)), findsOneWidget);
+      expect(service.stored!.vehicleId, isNull);
+      backend.offline = false;
+      service.emit();
+      await settle(tester);
+      final positions = backend.lastBody('/api/phones/positions')['positions'] as List;
+      expect(positions, hasLength(2));
+      expect(positions.first, containsPair('vehicleId', 4));
+      expect((positions.last as Map).containsKey('vehicleId'), isFalse);
+      expect((await SharedPreferences.getInstance()).getInt('phone.1.vehicle'), isNull);
+
+      // A new vehicle from here is chosen at once
+      tester.state<ScaffoldMessengerState>(find.byType(ScaffoldMessenger)).clearSnackBars();
+      await settle(tester);
+      await show(find.byKey(const Key('phoneAddVehicle')));
+      await tapAndSettle(tester, find.byKey(const Key('phoneAddVehicle')));
+      await tester.enterText(find.byKey(const Key('vehicleName')), 'Furgone');
+      await tapAndSettle(tester, find.byKey(const Key('vehicleCreate')));
+      await settle(tester);
+      expect(app.phone.vehicleId, 5);
+      expect(tester.widget<ListTile>(find.byKey(const Key('shareAs_5'))).selected, isTrue);
+      expect((await SharedPreferences.getInstance()).getInt('phone.1.vehicle'), 5);
+      expect(PhoneStatus.fromJson(service.uploader!.status.toJson()).vehicleId, 5);
+    });
   });
 
   group('friends', () {
