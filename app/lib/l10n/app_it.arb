@@ -1,0 +1,1557 @@
+{
+  "@@locale": "it",
+  "appTitle": "Car Tracking",
+  "cancel": "Annulla",
+  "confirm": "Conferma",
+  "save": "Salva",
+  "ok": "OK",
+  "close": "Chiudi",
+  "copy": "Copia",
+  "done": "Fatto",
+  "delete": "Elimina",
+  "retry": "Riprova",
+  "continueLabel": "Continua",
+  "back": "Indietro",
+  "open": "Apri",
+  "verify": "Verifica",
+  "noData": "Nessun dato nel periodo",
+  "operationCancelled": "Operazione annullata",
+  "you": "tu",
+  "nameLabel": "Nome",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "notAvailable": "n/d",
+  "navMap": "Mappa",
+  "navDevices": "Dispositivi",
+  "navNotifications": "Notifiche",
+  "navAccount": "Account",
+  "never": "mai",
+  "now": "adesso",
+  "minutesAgo": "{n} min fa",
+  "@minutesAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursAgo": "{n} h fa",
+  "@hoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "daysAgo": "{n} g fa",
+  "@daysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{m} min",
+  "@durationMinutes": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHours": "{h} h {m} min",
+  "@durationHours": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "qualityExcellent": "Ottimo",
+  "qualityGood": "Buono",
+  "qualityPoor": "Scarso",
+  "qualityBad": "Pessimo",
+  "qualityWeak": "Debole",
+  "qualityNone": "Assente",
+  "statusMoving": "In movimento",
+  "statusEngineOff": "Motore spento",
+  "statusParked": "Parcheggiata",
+  "statusAlarm": "Allarme",
+  "eventMotion": "Movimento",
+  "eventTilt": "Inclinazione",
+  "eventPowerLost": "Alimentazione scollegata",
+  "eventLowBattery": "Batteria scarica",
+  "kindMotion": "Movimento ad auto parcheggiata",
+  "kindTilt": "Auto sollevata o inclinata",
+  "kindPowerLost": "Alimentazione scollegata",
+  "kindLowBattery": "Batteria dell'auto scarica",
+  "kindOffline": "Tracker non raggiungibile",
+  "kindOnline": "Tracker di nuovo raggiungibile",
+  "kindGeofenceEnter": "{device} è arrivato",
+  "@kindGeofenceEnter": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "kindGeofenceExit": "{device} è partito",
+  "@kindGeofenceExit": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationBodyAt": "{device}, ore {time}",
+  "@notificationBodyAt": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationBodyEnter": "Entrato in {area}, ore {time}",
+  "@notificationBodyEnter": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationBodyExit": "Uscito da {area}, ore {time}",
+  "@notificationBodyExit": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationsTitle": "Notifiche",
+  "markAllRead": "Segna tutte come lette",
+  "noNotifications": "Nessuna notifica",
+  "errNetwork": "Server non raggiungibile",
+  "errInvalidCredentials": "Email o password errate",
+  "errLocked": "Troppi tentativi: account bloccato temporaneamente",
+  "errInvalidCode": "Codice non valido",
+  "errEnrollExpired": "Configurazione scaduta: ricomincia",
+  "errStepUp": "Serve il codice dell'app di autenticazione",
+  "errInvalidPassword": "Password attuale errata",
+  "errEmailTaken": "Esiste già un account con questa email",
+  "errSelf": "Non puoi farlo sul tuo account",
+  "errInvalidPairing": "IMEI o codice di abbinamento errati",
+  "errAlreadyClaimed": "Il tracker appartiene a un altro account",
+  "errOwnerOnly": "Solo il proprietario può farlo",
+  "errShareSelf": "Il dispositivo è già tuo",
+  "errTooManyShares": "Troppe condivisioni per questo dispositivo",
+  "errOwnerCannotLeave": "Il proprietario rimuove il tracker invece di lasciarlo",
+  "errTooManyAreas": "Massimo 20 aree per dispositivo",
+  "errTooManyPhones": "Massimo 5 telefoni per account",
+  "errNotATracker": "Disponibile solo per i tracker",
+  "errFriendSelf": "È il tuo codice",
+  "errTooManyFriends": "Massimo 200 amici",
+  "errLiveTooLong": "Il live dura al massimo 2 ore",
+  "errPeriodTooLong": "Periodo massimo 93 giorni",
+  "errRateLimited": "Troppe richieste: riprova tra poco",
+  "errNotFound": "Non trovato",
+  "errValidation": "Dati non validi",
+  "errInvalidPasskey": "Passkey non valida",
+  "errChallengeExpired": "Richiesta scaduta: riprova",
+  "errUnauthorized": "Sessione scaduta: accedi di nuovo",
+  "errForbidden": "Operazione non consentita",
+  "errGeneric": "Errore {status}",
+  "@errGeneric": {
+    "placeholders": {
+      "status": {
+        "type": "int"
+      }
+    }
+  },
+  "serverAddress": "Indirizzo della tua piattaforma",
+  "serverLabel": "Server",
+  "serverUnreachable": "Server non raggiungibile o non compatibile",
+  "loginPasskey": "Accedi con passkey",
+  "loginPassword": "Accedi con password",
+  "or": "oppure",
+  "passkeyNotCompleted": "Accesso con passkey non completato",
+  "serverChange": "Server: {host} · cambia",
+  "@serverChange": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "mfaTitle": "Verifica in due passaggi",
+  "mfaTotpHint": "Inserisci il codice a 6 cifre dell'app di autenticazione",
+  "mfaRecoveryHint": "Inserisci uno dei codici di recupero salvati",
+  "useAuthenticator": "Usa l'app di autenticazione",
+  "useRecoveryCode": "Usa un codice di recupero",
+  "recoveryCodesLeft": "{n, plural, =1{Ti resta 1 codice di recupero} other{Ti restano {n} codici di recupero}}: generane di nuovi dal tuo account",
+  "@recoveryCodesLeft": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "inviteInvalid": "Invito non valido",
+  "goToLogin": "Vai all'accesso",
+  "resetTitle": "Ripristino accesso",
+  "welcome": "Benvenuto, {name}",
+  "@welcome": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteHint": "{email}\nScegli una password di almeno 12 caratteri, poi configurerai l'app di autenticazione.",
+  "@inviteHint": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "newPassword": "Nuova password",
+  "repeatPassword": "Ripeti password",
+  "passwordTooShort": "La password deve avere almeno 12 caratteri",
+  "passwordsDiffer": "Le password non coincidono",
+  "sessionExpired": "Sessione scaduta",
+  "loginAgain": "Accedi di nuovo",
+  "enrollTitle": "Configura la verifica in due passaggi",
+  "enrollHint": "Obbligatoria. Inquadra il codice con un'app di autenticazione (Aegis, Google Authenticator, 2FAS...) e inserisci il codice generato.",
+  "keyCopied": "Chiave copiata",
+  "copyKey": "Copia la chiave",
+  "activate": "Attiva",
+  "recoveryTitle": "Codici di recupero",
+  "recoveryHint": "Conservali in un posto sicuro: ognuno permette un accesso se perdi il telefono. Non verranno mostrati di nuovo.",
+  "codesCopied": "Codici copiati",
+  "codesSaved": "Ho salvato i codici",
+  "createPasskey": "Crea una passkey (impronta)",
+  "later": "Più tardi",
+  "passkeyCreated": "Passkey creata: potrai accedere con l'impronta",
+  "passkeyNotCreated": "Passkey non creata",
+  "defaultPasskeyBrowser": "Browser",
+  "defaultPasskeyPhone": "Telefono",
+  "devicesTitle": "Dispositivi",
+  "add": "Aggiungi",
+  "noDevices": "Nessun dispositivo. Aggiungi il tuo tracker con il codice sull'etichetta.",
+  "noDevicesShort": "Nessun dispositivo",
+  "addYourTracker": "Aggiungi il tuo tracker",
+  "waitingFirstContact": "In attesa del primo collegamento",
+  "noPosition": "Nessuna posizione",
+  "sharedBy": "condiviso da {name}",
+  "@sharedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "signalTooltip": "Segnale {quality}",
+  "@signalTooltip": {
+    "placeholders": {
+      "quality": {
+        "type": "String"
+      }
+    }
+  },
+  "satellitesTooltip": "Satelliti {quality}",
+  "@satellitesTooltip": {
+    "placeholders": {
+      "quality": {
+        "type": "String"
+      }
+    }
+  },
+  "fromCell": "posizione dalla cella",
+  "lastKnown": "ultima posizione nota",
+  "device": "Dispositivo",
+  "tabLive": "Live",
+  "tabHistory": "Storico",
+  "tabAnalysis": "Analisi",
+  "tabAreas": "Aree",
+  "tabSettings": "Impostazioni",
+  "last24h": "24 ore",
+  "periodLast24h": "Ultime 24 ore",
+  "periodLast7d": "Ultimi 7 giorni",
+  "periodLast30d": "Ultimi 30 giorni",
+  "periodLast90d": "Ultimi 90 giorni",
+  "periodCustom": "Intervallo personalizzato",
+  "accessRevoked": "La condivisione di {device} è terminata",
+  "@accessRevoked": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveShare": "Smetti di ricevere",
+  "leaveShareTitle": "Smettere di ricevere {device}?",
+  "@leaveShareTitle": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveShareBody": "Non lo vedrai più e le tue aree su questo dispositivo vengono cancellate.",
+  "followOn": "Segui il veicolo (attivo)",
+  "followOff": "Segui il veicolo",
+  "liveUntil": "Live fino alle {time}",
+  "@liveUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "connected": "Collegato",
+  "notConnected": "Non collegato · ultimo contatto {ago}",
+  "@notConnected": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "noPositionReceived": "Nessuna posizione ricevuta",
+  "cellEstimate": "stimata dalla cella (±{meters} m)",
+  "@cellEstimate": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "noFix": "senza fix GPS",
+  "commandSent": "Comando inviato",
+  "commandQueued": "Comando in coda: il tracker lo riceverà al prossimo collegamento",
+  "live30": "Live 30 min",
+  "stopLive": "Ferma live",
+  "locate": "Localizza",
+  "resumeAntitheft": "Riattiva antifurto (in pausa fino alle {time})",
+  "@resumeAntitheft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "pauseAntitheftTooltip": "Metti in pausa l'antifurto (officina, lavaggio...)",
+  "pause1h": "Pausa 1 ora",
+  "pause24h": "Pausa 24 ore",
+  "pause7d": "Pausa 7 giorni",
+  "pauseAntitheft": "Pausa antifurto",
+  "viewerNotice": "Condiviso da {owner} in sola visione{until}",
+  "@viewerNotice": {
+    "placeholders": {
+      "owner": {
+        "type": "String"
+      },
+      "until": {
+        "type": "String"
+      }
+    }
+  },
+  "viewerUntil": " fino al {date}",
+  "@viewerUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "noPositions": "Nessuna posizione nel periodo",
+  "truncated": "Troppi punti: mostrati i primi 50.000, riduci il periodo",
+  "pointsRange": "{n, plural, =1{1 punto} other{{n} punti}} dal {from} al {to}",
+  "@pointsRange": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "noFixShort": "senza fix",
+  "coloringPlain": "Percorso",
+  "coloringSpeed": "Velocità",
+  "coloringSignal": "Segnale",
+  "coloringSatellites": "Satelliti",
+  "legendNoFix": "4 sat / senza fix",
+  "kpiDistance": "Distanza",
+  "kpiDriving": "Alla guida",
+  "kpiMaxSpeed": "Velocità max",
+  "kpiTrips": "Viaggi",
+  "kmPerDay": "Km per giorno",
+  "drivingPerDay": "Tempo di guida per giorno",
+  "tripsList": "Viaggi ({n})",
+  "@tripsList": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "tripDetail": "{km} km · {duration} · media {avg} km/h · max {max} km/h",
+  "@tripDetail": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      },
+      "duration": {
+        "type": "String"
+      },
+      "avg": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "bucket2m": "2 minuti",
+  "bucket10m": "10 minuti",
+  "bucket1h": "ora",
+  "bucket6h": "6 ore",
+  "bucket1d": "giorno",
+  "chartSpeed": "Velocità",
+  "chartSpeedSub": "media e massima ogni {bucket}",
+  "@chartSpeedSub": {
+    "placeholders": {
+      "bucket": {
+        "type": "String"
+      }
+    }
+  },
+  "seriesMax": "Massima",
+  "seriesAvgMoving": "Media in movimento",
+  "chartSignal": "Segnale LTE",
+  "chartSignalSub": "sotto -105 dBm il collegamento diventa instabile",
+  "seriesAvg": "Medio",
+  "seriesMin": "Minimo",
+  "thresholdPoor": "scarso",
+  "chartSatellites": "Satelliti in uso",
+  "chartSatellitesSub": "sotto 6 la posizione è poco precisa",
+  "thresholdWeakFix": "fix debole",
+  "chartAltitude": "Altitudine",
+  "chartBattery": "Batteria dell'auto",
+  "chartBatterySub": "tensione minima e media: sotto 11,8 V a motore spento la batteria è scarica",
+  "chartTemperature": "Temperatura nell'abitacolo",
+  "chartPressure": "Pressione atmosferica",
+  "chartPoints": "Punti ricevuti",
+  "chartPointsSub": "in rosso quelli senza fix GPS",
+  "seriesPoints": "Punti",
+  "seriesNoFix": "Senza fix",
+  "chartFixQuality": "Qualità della posizione",
+  "fixGood": "Fix buono",
+  "fixWeak": "Fix debole (<6 sat)",
+  "chartSignalDistribution": "Distribuzione del segnale",
+  "weakSignalShare": "{p}% dei punti sotto -105 dBm",
+  "@weakSignalShare": {
+    "placeholders": {
+      "p": {
+        "type": "int"
+      }
+    }
+  },
+  "chartSatelliteDistribution": "Distribuzione dei satelliti",
+  "chartSpeedDistribution": "Distribuzione della velocità",
+  "chartSpeedDistributionSub": "punti in movimento per fascia di 10 km/h",
+  "chartCoverage": "Copertura della rete",
+  "chartCoverageSub": "segnale medio per zona: in rosso dove il tracker perde la rete",
+  "simMonth": "Dati SIM del mese",
+  "simUsed": "Usati {used} di {budget} · stima a fine mese {projected} ({p}%)",
+  "@simUsed": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "budget": {
+        "type": "String"
+      },
+      "projected": {
+        "type": "String"
+      },
+      "p": {
+        "type": "int"
+      }
+    }
+  },
+  "simEstimate": "Stima: frame cifrati + intestazioni TLS/WebSocket + connessioni",
+  "dataPerDay": "Dati per giorno",
+  "dataPerDaySub": "la linea è il consumo giornaliero che rispetta il piano",
+  "budget": "budget",
+  "deviceName": "Nome del dispositivo",
+  "tapToRename": "Tocca per rinominare",
+  "imei": "IMEI",
+  "modemFirmware": "Modem e firmware",
+  "firmwareVersion": "firmware {v}",
+  "@firmwareVersion": {
+    "placeholders": {
+      "v": {
+        "type": "String"
+      }
+    }
+  },
+  "neverConnected": "mai collegato",
+  "connectedSince": "collegato dal {date}",
+  "@connectedSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "alarmNotifications": "Notifiche di allarme",
+  "sharing": "Condivisione",
+  "sharingHint": "Chi riceve la condivisione vede solo posizione, velocità e stato, senza poter cambiare nulla.",
+  "shareWith": "Condividi con un amico",
+  "shareTitle": "Condividi in sola visione",
+  "shareFriend": "Amico",
+  "noFriendsToShare": "Puoi condividere solo con gli amici: aggiungine uno con il suo codice.",
+  "goToFriends": "Vai agli amici",
+  "shareDuration": "Durata",
+  "permanent": "Permanente",
+  "hoursShort": "{n} h",
+  "@hoursShort": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "daysShort": "{n} g",
+  "@daysShort": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "customEnd": "Data e ora",
+  "endsAt": "Fino al {date}",
+  "@endsAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "share": "Condividi",
+  "shared": "Dispositivo condiviso",
+  "noShares": "Non condiviso con nessuno",
+  "sharePermanent": "Permanente",
+  "shareUntil": "Fino al {date}",
+  "@shareUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "changeEnd": "Cambia scadenza",
+  "revoke": "Revoca",
+  "revokeTitle": "Revocare la condivisione a {name}?",
+  "@revokeTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "revokeBody": "Non vedrà più il dispositivo e le sue aree vengono cancellate.",
+  "shareRevoked": "Condivisione revocata",
+  "dangerZone": "Zona pericolosa",
+  "removeTracker": "Rimuovi il tracker",
+  "removeTrackerSub": "Auto venduta o tracker spostato",
+  "removeTrackerTitle": "Rimuovere il tracker?",
+  "removeTrackerBody": "Storico, aree, condivisioni e notifiche vengono cancellati. Potrà essere aggiunto di nuovo con il codice dell'etichetta.",
+  "areasHint": "Ricevi una notifica quando il dispositivo entra (o esce) da un'area: per esempio quando sta per arrivare a destinazione.",
+  "noAreas": "Nessuna area",
+  "addArea": "Aggiungi un'area",
+  "editArea": "Modifica area",
+  "areaName": "Nome dell'area",
+  "areaDefaultName": "Destinazione",
+  "radius": "Raggio: {distance}",
+  "@radius": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "notifyEnter": "Avvisa all'arrivo",
+  "notifyExit": "Avvisa alla partenza",
+  "tapMapToPlace": "Tocca la mappa per spostare il centro",
+  "areaInside": "dentro",
+  "areaOutside": "fuori",
+  "areaSummary": "{radius} · {state}",
+  "@areaSummary": {
+    "placeholders": {
+      "radius": {
+        "type": "String"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteAreaTitle": "Eliminare {name}?",
+  "@deleteAreaTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "areaSaved": "Area salvata",
+  "addTracker": "Aggiungi tracker",
+  "scanTitle": "Inquadra il QR dell'etichetta",
+  "stepLabel": "Etichetta del tracker",
+  "stepLabelSub": "QR code o IMEI e codice di abbinamento",
+  "stepName": "Nome e colore",
+  "stepPower": "Accensione",
+  "stepPowerSub": "Primo collegamento del tracker",
+  "stepDone": "Fatto",
+  "labelHint": "Sul tracker (o sulla sua scatola) c'è un'etichetta con un QR code, l'IMEI e il codice di abbinamento. Il codice dimostra che hai il tracker in mano: tienilo riservato.",
+  "scanQr": "Scansiona il QR code",
+  "manualEntry": "oppure inserisci i dati a mano",
+  "imeiLabel": "IMEI (15 cifre)",
+  "pairingCode": "Codice di abbinamento",
+  "imeiInvalid": "L'IMEI ha 15 cifre",
+  "alreadyMine": "Questo tracker è già nel tuo account",
+  "ownedByOther": "Il tracker appartiene a un altro account: chiedi al proprietario di condividerlo",
+  "defaultDeviceName": "La mia auto",
+  "mapColor": "Colore sulla mappa",
+  "addToAccount": "Aggiungi al mio account",
+  "insertSim": "Inserisci la SIM nel tracker",
+  "connectPower": "Collegalo all'alimentazione dell'auto",
+  "parkOutside": "Lascia l'auto all'aperto",
+  "firstFixHint": "Il primo fix GPS può richiedere qualche minuto",
+  "waitingTracker": "In attesa del primo collegamento del tracker...",
+  "continueLater": "Continua in seguito",
+  "trackerConnected": "Il tracker è collegato. La prima posizione arriva appena l'auto si muove o al prossimo controllo periodico.",
+  "openDevice": "Apri il dispositivo",
+  "accountTitle": "Account",
+  "editName": "Modifica nome",
+  "language": "Lingua",
+  "administration": "Amministrazione",
+  "administrationSub": "Utenti, inviti, ripristino accessi",
+  "passkeys": "Passkey",
+  "passkeyCreatedAgo": "Creata {ago}",
+  "@passkeyCreatedAgo": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "passkeyUsedAgo": " · usata {ago}",
+  "@passkeyUsedAgo": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "passkeySynced": " · sincronizzata",
+  "passkeyRemoved": "Passkey rimossa",
+  "addPasskey": "Aggiungi una passkey",
+  "addPasskeySub": "Accesso con impronta o blocco schermo",
+  "passkeyName": "Nome della passkey",
+  "passkeyAdded": "Passkey aggiunta",
+  "security": "Sicurezza",
+  "changePassword": "Cambia password",
+  "currentPassword": "Password attuale",
+  "passwordMin": "Almeno 12 caratteri",
+  "change": "Cambia",
+  "passwordChanged": "Password cambiata: le altre sessioni sono state chiuse",
+  "changeAuthenticator": "Cambia app di autenticazione",
+  "newPhone": "Nuovo telefono",
+  "newAuthenticator": "Nuova app di autenticazione",
+  "newAppCode": "Codice della nuova app",
+  "authenticatorUpdated": "App di autenticazione aggiornata",
+  "authenticatorCode": "Codice dell'app di autenticazione",
+  "confirmWithCode": "Conferma con il codice",
+  "recoveryLeft": "{n, plural, =1{1 rimasto} other{{n} rimasti}} · genera nuovi codici",
+  "@recoveryLeft": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "newRecoveryCodes": "Nuovi codici di recupero",
+  "newRecoveryHint": "I codici precedenti non sono più validi. Conservali in un posto sicuro.",
+  "activeSessions": "Sessioni attive",
+  "thisSession": " (questa)",
+  "sessionActive": "{ip} · attiva {ago}",
+  "@sessionActive": {
+    "placeholders": {
+      "ip": {
+        "type": "String"
+      },
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnect": "Disconnetti",
+  "disconnectOthers": "Disconnetti le altre sessioni",
+  "sessionsClosed": "Sessioni chiuse",
+  "app": "App",
+  "pushTitle": "Notifiche push",
+  "pushOn": "Attive",
+  "pushOff": "Non configurate: le notifiche arrivano solo con l'app aperta",
+  "logout": "Esci",
+  "unknownAgent": "Sconosciuto",
+  "androidApp": "App Android",
+  "invite": "Invita",
+  "users": "Utenti",
+  "userSummary": "{email} · {devices, plural, =1{1 dispositivo} other{{devices} dispositivi}} · {passkeys} passkey",
+  "@userSummary": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      },
+      "devices": {
+        "type": "int"
+      },
+      "passkeys": {
+        "type": "int"
+      }
+    }
+  },
+  "twoFactorPending": " · 2FA da configurare",
+  "lastLogin": " · accesso {ago}",
+  "@lastLogin": {
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "resetAccess": "Ripristina accesso (nuova password e 2FA)",
+  "resetLink": "Link di ripristino",
+  "enable": "Riattiva",
+  "disable": "Disattiva",
+  "removeAdmin": "Togli amministratore",
+  "makeAdmin": "Rendi amministratore",
+  "deleteUserTitle": "Eliminare {name}?",
+  "@deleteUserTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteUserBody": "I suoi dispositivi restano senza proprietario e le sue condivisioni terminano.",
+  "pendingInvites": "Inviti in attesa",
+  "none": "Nessuno",
+  "expires": "Scade {date}",
+  "@expires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelInvite": "Annulla invito",
+  "inviteUser": "Invita un utente",
+  "administrator": "Amministratore",
+  "createInvite": "Crea invito",
+  "inviteCreated": "Invito creato",
+  "linkHint": "Invia questo link alla persona: vale 72 ore e si può usare una sola volta.",
+  "linkCopied": "Link copiato",
+  "addChooseTitle": "Cosa vuoi aggiungere?",
+  "addTrackerOption": "Tracker GPS",
+  "addTrackerOptionSub": "Con il codice sull'etichetta",
+  "phoneOption": "Questo telefono",
+  "phoneOptionSub": "Condividi la posizione del telefono, senza hardware",
+  "phoneTitle": "Posizione del telefono",
+  "phoneIntro": "Senza un tracker puoi condividere la posizione di questo telefono con i tuoi amici. I dati sono meno completi di quelli di un tracker: niente satelliti, segnale o batteria dell'auto, e la precisione dipende da GPS, Wi-Fi e rete del telefono.",
+  "phoneAndroidHint": "La condivisione continua in background con una notifica fissa, anche con l'app chiusa. Si ferma con Interrompi, eliminando il telefono o uscendo dall'account.",
+  "phoneOnlyAndroid": "La posizione si condivide dall'app Android: il browser non può inviarla in background.",
+  "phoneBackgroundHint": "Per riprendere da sola dopo un riavvio del telefono, la condivisione ha bisogno della posizione consentita «Sempre».",
+  "phoneBackgroundAllow": "Consenti sempre",
+  "phoneChannel": "Condivisione della posizione",
+  "phoneName": "Nome del telefono",
+  "phoneDefaultName": "Telefono di {name}",
+  "@phoneDefaultName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneStart": "Inizia a condividere",
+  "phoneStop": "Interrompi",
+  "kindPhoneBattery": "{device}: batteria al {n}%",
+  "@kindPhoneBattery": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationBodyPhoneBattery": "La posizione potrebbe interrompersi presto, ore {time}",
+  "@notificationBodyPhoneBattery": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "kindLongStop": "{device} è fermo da più di {h, plural, =1{un'ora} other{{h} ore}}",
+  "@kindLongStop": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "h": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationBodyLongStop": "Fermo dalle {time}, fuori dalle tue aree",
+  "@notificationBodyLongStop": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "stopAlert": "Sosta prolungata",
+  "stopAlertHint": "Ti avvisa se il dispositivo resta fermo più a lungo di così fuori dalle tue aree (casa, lavoro...). Ognuno sceglie il proprio avviso, anche chi riceve la condivisione.",
+  "stopAlertOff": "Avviso disattivato",
+  "batteryAlert": "Batteria bassa",
+  "batteryAlertAt": "Avvisa al {n}%",
+  "@batteryAlertAt": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "stopAlertAfter": "Avvisa dopo {h, plural, =1{1 ora} other{{h} ore}}",
+  "@stopAlertAfter": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      }
+    }
+  },
+  "stopAlertAfterOne": "Avvisa dopo un'ora",
+  "areaSchedule": "Solo in certi orari",
+  "areaScheduleHint": "Avvisa solo nei giorni e nelle ore scelti; se la fine è prima dell'inizio, la fascia passa la mezzanotte.",
+  "areaFrom": "Dalle {time}",
+  "@areaFrom": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "areaTo": "Alle {time}",
+  "@areaTo": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "areaAllDay": "tutto il giorno",
+  "firmwareAvailable": "Disponibile il firmware {version}",
+  "@firmwareAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareInstall": "Installa",
+  "firmwareInstallTitle": "Installare il firmware {version}?",
+  "@firmwareInstallTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareInstallBody": "Il tracker scarica l'aggiornamento alla prossima connessione ({mb} MB di dati della SIM), lo verifica e si riavvia. Se il nuovo firmware non riesce a collegarsi al server torna da solo a quello attuale.",
+  "@firmwareInstallBody": {
+    "placeholders": {
+      "mb": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareWaiting": "Firmware {version}: in attesa della prossima connessione del tracker",
+  "@firmwareWaiting": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareDownloading": "Download del firmware {version} in corso",
+  "@firmwareDownloading": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareRebooting": "Firmware {version} installato, riavvio del tracker",
+  "@firmwareRebooting": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareDone": "Aggiornato al firmware {version}",
+  "@firmwareDone": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareNotApplied": "Il firmware {version} non si è avviato: il tracker è tornato alla versione precedente",
+  "@firmwareNotApplied": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareFailed": "Aggiornamento al firmware {version} non riuscito: riprova",
+  "@firmwareFailed": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareUpToDate": "Firmware {version}, aggiornato",
+  "@firmwareUpToDate": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareImages": "Firmware per gli aggiornamenti",
+  "firmwareImagesHint": "Si caricano dal server con npm run firmware; i proprietari li installano dalle impostazioni del tracker.",
+  "firmwarePending": "{n} in corso",
+  "@firmwarePending": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "errFirmware": "Questo firmware non è adatto al tracker",
+  "yourData": "I tuoi dati",
+  "exportData": "Esporta i miei dati",
+  "exportDataSub": "Profilo, accessi, amici, dispositivi con le loro posizioni, aree e notifiche in un file JSON",
+  "deleteAccount": "Elimina account",
+  "deleteAccountSub": "Elimina per sempre l'account e i dati",
+  "deleteAccountTitle": "Eliminare l'account?",
+  "deleteAccountBody": "Vengono eliminati per sempre: i telefoni e le posizioni di tutti i tuoi dispositivi, le condivisioni, gli amici, le aree e le notifiche. I tracker tornano liberi e si possono abbinare di nuovo con il codice dell'etichetta. Prima puoi esportare i tuoi dati.",
+  "deleteAccountEmail": "Scrivi {email} per confermare",
+  "@deleteAccountEmail": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "errEmailMismatch": "L'email non corrisponde",
+  "errLastAdmin": "Sei l'unico amministratore: nomina prima un altro amministratore",
+  "exportPeriod": "Esporta il periodo",
+  "exportHint": "GPX: un tracciato per viaggio. CSV: tutti i punti.",
+  "phonePauseHour": "Pausa 1 ora",
+  "phoneResume": "Riprendi",
+  "phonePausedUntil": "In pausa fino alle {time}",
+  "@phonePausedUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "battery": "Batteria {n}%",
+  "@battery": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "phoneSharing": "Stai condividendo la posizione di questo telefono",
+  "phoneLastFix": "Ultima posizione {time} · ±{meters} m",
+  "@phoneLastFix": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneWaitingFix": "In attesa della prima posizione…",
+  "phoneQueued": "{n, plural, =1{1 posizione da inviare} other{{n} posizioni da inviare}}",
+  "@phoneQueued": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "phoneOpenDevice": "Condivisione con gli amici e aree",
+  "phoneLocationOff": "Attiva la localizzazione del telefono",
+  "phoneDenied": "Permesso di posizione negato",
+  "phoneDeniedForever": "Permesso di posizione negato: abilitalo dalle impostazioni del telefono",
+  "phoneNotificationTitle": "Posizione condivisa",
+  "phoneNotificationText": "L'app sta inviando la posizione di questo telefono",
+  "phoneGone": "Il telefono è stato eliminato: condivisione interrotta",
+  "accuracyMeters": "±{meters} m",
+  "@accuracyMeters": {
+    "placeholders": {
+      "meters": {
+        "type": "String"
+      }
+    }
+  },
+  "sharingActive": "Condivisione attiva",
+  "removePhone": "Elimina il telefono",
+  "removePhoneSub": "Smette di condividere la posizione",
+  "removePhoneTitle": "Eliminare il telefono?",
+  "removePhoneBody": "Storico, aree, condivisioni e notifiche vengono cancellati.",
+  "friends": "Amici",
+  "friendsSub": "Il tuo codice e le persone con cui condividere",
+  "friendsHint": "Gli utenti non si vedono tra loro: uno dei due inserisce o inquadra il codice dell'altro, che riceve una richiesta di amicizia da accettare. Puoi condividere i dispositivi solo con gli amici.",
+  "friendRequested": "Richiesta inviata a {name}: diventerete amici quando la accetta",
+  "@friendRequested": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendRequestReceived": "{name} ti ha inviato una richiesta di amicizia",
+  "@friendRequestReceived": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "requestsReceived": "Richieste ricevute",
+  "requestsSent": "Richieste inviate",
+  "requestedOn": "Richiesta del {date}",
+  "@requestedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "requestWaiting": "In attesa di risposta",
+  "accept": "Accetta",
+  "decline": "Rifiuta",
+  "withdraw": "Ritira",
+  "errTooManyRequests": "Hai già 20 richieste in attesa: aspetta una risposta o ritirane qualcuna",
+  "yourCode": "Il tuo codice",
+  "codeCopied": "Codice copiato",
+  "newCode": "Nuovo codice",
+  "newCodeTitle": "Generare un nuovo codice?",
+  "newCodeBody": "Il codice attuale smette di funzionare. Gli amici che hai restano.",
+  "addFriend": "Aggiungi un amico",
+  "friendCode": "Codice dell'amico",
+  "scanFriend": "Inquadra il QR dell'amico",
+  "friendCodeUnknown": "Nessun utente con questo codice",
+  "friendAdded": "{name} è ora tuo amico",
+  "@friendAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "friendAddedYou": "{name} ha accettato la tua richiesta di amicizia",
+  "@friendAddedYou": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noFriends": "Nessun amico ancora",
+  "friendsSince": "Amici dal {date}",
+  "@friendsSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFriend": "Rimuovi",
+  "removeFriendTitle": "Rimuovere {name} dagli amici?",
+  "@removeFriendTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "removeFriendBody": "Le condivisioni tra voi due terminano, in entrambe le direzioni.",
+  "friendRemoved": "Amico rimosso",
+  "filterMine": "Miei",
+  "filterShared": "Condivisi con me",
+  "filterMoving": "In movimento",
+  "filterParked": "Fermi",
+  "filterOffline": "Non raggiungibili",
+  "filterTrackers": "Tracker",
+  "filterPhones": "Telefoni",
+  "filterAllOwners": "Tutti i proprietari",
+  "filterOwner": "Di {name}",
+  "@filterOwner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "searchDevices": "Cerca per nome",
+  "shownCount": "{n} di {total}",
+  "@shownCount": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fitAll": "Inquadra quelli filtrati",
+  "noMatch": "Nessun dispositivo con questi filtri",
+  "resetFilters": "Azzera i filtri",
+  "filters": "Filtri",
+  "kindBatteryHealth": "Batteria dell'auto da controllare",
+  "notificationBodyBatteryHealth": "{device}: tensione a riposo media {v} V",
+  "@notificationBodyBatteryHealth": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "v": {
+        "type": "String"
+      }
+    }
+  },
+  "kindMaintenance": "Scadenze dell'auto",
+  "maintenanceDueTitle": "Scadenza: {name}",
+  "@maintenanceDueTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "maintenanceSoonTitle": "Scadenza vicina: {name}",
+  "@maintenanceSoonTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "inDays": "tra {n, plural, =1{1 giorno} other{{n} giorni}}",
+  "@inDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "today": "oggi",
+  "overdueDays": "scaduta da {n, plural, =1{1 giorno} other{{n} giorni}}",
+  "@overdueDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "inKm": "tra {km} km",
+  "@inKm": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "kmOver": "superata di {km} km",
+  "@kmOver": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "orJoin": " o ",
+  "mkService": "Tagliando",
+  "mkInspection": "Revisione",
+  "mkInsurance": "Assicurazione",
+  "mkTax": "Bollo",
+  "mkTyres": "Cambio gomme",
+  "mkOther": "Personalizzata",
+  "maintenance": "Scadenze e manutenzione",
+  "maintenanceHint": "Tagliando a km, revisione, assicurazione e bollo a data, o scadenze personalizzate: ti avvisa prima della scadenza.",
+  "odometer": "Contachilometri",
+  "odometerUnset": "Inserisci la lettura del contachilometri per le scadenze a km",
+  "odometerValue": "{km} km",
+  "@odometerValue": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "odometerHint": "Lettura attuale del cruscotto: poi si aggiorna da sola con i km dei viaggi. Puoi correggerla quando vuoi, ad esempio se il tracker è rimasto spento.",
+  "addDeadline": "Nuova scadenza",
+  "editDeadline": "Modifica scadenza",
+  "deadlineKind": "Tipo",
+  "deadlineTitle": "Descrizione (facoltativa)",
+  "deadlineTitleRequired": "Descrizione (es. bollino blu, estintore)",
+  "deadlineNeedsTitle": "Scrivi una descrizione per la scadenza personalizzata",
+  "deadlineDate": "Data di scadenza",
+  "deadlineNoDate": "Nessuna data",
+  "deadlineKm": "Scadenza a km",
+  "deadlineEveryMonths": "Si ripete ogni (mesi)",
+  "deadlineEveryKm": "Si ripete ogni (km)",
+  "deadlineRemindDays": "Avvisa giorni prima",
+  "deadlineRemindKm": "Avvisa km prima",
+  "deadlineNote": "Note",
+  "deadlineNeedsDue": "Indica una data o i km",
+  "deadlineDone": "Fatto",
+  "deadlineDoneTitle": "Segna come fatto: {name}",
+  "@deadlineDoneTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deadlineDoneKm": "Km al momento",
+  "deadlineDoneHint": "Le scadenze ricorrenti si spostano in avanti, le altre si chiudono.",
+  "deadlineEvery": "ogni {text}",
+  "@deadlineEvery": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "monthsShort": "{n, plural, =1{1 mese} other{{n} mesi}}",
+  "@monthsShort": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "noDeadlines": "Nessuna scadenza",
+  "maintenanceLog": "Fatti",
+  "deleteDeadline": "Eliminare la scadenza?",
+  "invalidNumber": "Numero non valido",
+  "trends": "Statistiche nel tempo",
+  "trendsMonths": "12 mesi",
+  "trendsWeeks": "26 settimane",
+  "trendsKm": "Km percorsi",
+  "trendsKmSplit": "Lavoro {work} km · personali {own} km nel periodo",
+  "@trendsKmSplit": {
+    "placeholders": {
+      "work": {
+        "type": "String"
+      },
+      "own": {
+        "type": "String"
+      }
+    }
+  },
+  "trendsDriving": "Ore di guida",
+  "trendsTrips": "Viaggi",
+  "trendsVoltage": "Tensione a riposo della batteria",
+  "trendsVoltageSub": "Media dei giorni, a motore spento da almeno 2 ore",
+  "trendsSim": "Dati sulla SIM",
+  "trendsAlarms": "Allarmi",
+  "batteryHealth": "Salute della batteria dell'auto",
+  "batteryGood": "Buona: {v} V a riposo",
+  "@batteryGood": {
+    "placeholders": {
+      "v": {
+        "type": "String"
+      }
+    }
+  },
+  "batteryFair": "Da tenere d'occhio: {v} V a riposo",
+  "@batteryFair": {
+    "placeholders": {
+      "v": {
+        "type": "String"
+      }
+    }
+  },
+  "batteryLow": "Debole: {v} V a riposo, falla controllare",
+  "@batteryLow": {
+    "placeholders": {
+      "v": {
+        "type": "String"
+      }
+    }
+  },
+  "batteryUnknown": "Servono alcuni giorni di soste per valutarla",
+  "batteryTrend": "Andamento: {v} V al mese",
+  "@batteryTrend": {
+    "placeholders": {
+      "v": {
+        "type": "String"
+      }
+    }
+  },
+  "tripPurpose": "Tipo di viaggio",
+  "purposeBusiness": "Lavoro",
+  "purposePersonal": "Personale",
+  "purposeNone": "Non indicato",
+  "tripNote": "Nota",
+  "logbook": "Registro viaggi del mese",
+  "logbookHint": "CSV con viaggi, tipo, note e costi, totali lavoro e personali",
+  "walkTo": "Raggiungi a piedi",
+  "openFailed": "Impossibile aprire il collegamento",
+  "tripCosts": "Costi dei viaggi",
+  "costsIntro": "Con consumo, prezzo del carburante e usura ogni viaggio mostra quanto è costato e il registro viaggi del mese aggiunge le colonne dei costi.",
+  "fuelType": "Carburante",
+  "fuelPetrol": "Benzina",
+  "fuelDiesel": "Gasolio",
+  "fuelLpg": "GPL",
+  "fuelOther": "Altro / non indicato",
+  "fuelPriceAuto": "Prezzo dalla media nazionale",
+  "fuelPriceAutoHint": "Ogni settimana il prezzo medio rilevato dal Ministero dell'Ambiente (MASE) viene aggiunto allo storico",
+  "fuelPriceAutoNeedsType": "Scegli il carburante per usare la media nazionale",
+  "nationalAverage": "Media nazionale {fuel}: {price}/l",
+  "@nationalAverage": {
+    "placeholders": {
+      "fuel": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "nationalAverageWeek": "Rilevazione MASE della settimana del {date}",
+  "@nationalAverageWeek": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "useAverage": "Usa",
+  "ratesHint": "Prezzo, consumo e usura possono cambiare nel tempo: ogni valore vale dalla sua data fino al successivo e ogni viaggio usa i valori del giorno in cui è stato fatto.",
+  "addValue": "Nuovo valore",
+  "rateNow": "Attuale: {value}",
+  "@rateNow": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "rateUnset": "Nessun valore inserito",
+  "rateTrend": "Andamento",
+  "errTooManyRates": "Troppi valori nello storico: eliminane qualcuno",
+  "vehicleModel": "Modello del veicolo",
+  "vehicleModelHint": "es. Fiat Panda 1.2 benzina",
+  "consumption": "Consumo",
+  "consumptionUnit": "Unità del consumo",
+  "fuelPrices": "Prezzo del carburante",
+  "validFrom": "dal {date}",
+  "@validFrom": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "priceDate": "Cambia data",
+  "wearPerKm": "Usura del veicolo",
+  "wearHint": "Pneumatici, manutenzione e svalutazione per km, senza il carburante: dalle tabelle ACI del modello o una tua stima",
+  "extraData": "Dati aggiuntivi",
+  "extraIntro": "Dati letti dal tracker da un'altra scheda del veicolo, mostrati così come arrivano.",
+  "extraEmpty": "Nessun dato aggiuntivo ricevuto",
+  "extraLatest": "Valori più recenti",
+  "extraReadings": "{n, plural, =1{1 lettura} other{{n} letture}}",
+  "@extraReadings": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "extraFields": "{n, plural, =1{1 campo} other{{n} campi}}",
+  "@extraFields": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "autoUpdate": "Aggiornamenti automatici",
+  "autoUpdateNever": "Questo firmware non controlla gli aggiornamenti: i firmware personalizzati li hanno disattivati (AUTO_UPDATE 0)",
+  "autoUpdateChecked": "Il tracker controlla ogni giorno e installa le versioni ufficiali (circa 1,3 MB di SIM ciascuna) · ultimo controllo {time}",
+  "@autoUpdateChecked": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareAutomatic": "automatico",
+  "kindFirmware": "Nuovo firmware",
+  "firmwareNewTitle": "Nuovo firmware {version}",
+  "@firmwareNewTitle": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareNewAutomatic": "{device} lo installerà da solo entro un giorno",
+  "@firmwareNewAutomatic": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "firmwareNewManual": "Installalo su {device} dalla pagina del dispositivo",
+  "@firmwareNewManual": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "appUpdateAvailable": "È disponibile la versione {version} dell'app",
+  "@appUpdateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "download": "Scarica",
+  "searchAci": "Cerca il costo chilometrico ACI",
+  "costPerKm": "Costo stimato: {cost}/km",
+  "@costPerKm": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "costPerKmUnset": "Inserisci consumo e prezzo o l'usura per calcolare i costi",
+  "costsSaved": "Costi salvati",
+  "valueRange": "Valore tra {min} e {max}",
+  "@valueRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "costFuel": "carburante {cost}",
+  "@costFuel": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "costWear": "usura {cost}",
+  "@costWear": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "kpiCost": "Costo stimato",
+  "kpiFuel": "Carburante",
+  "backups": "Backup del database",
+  "backupLast": "Ultimo: {time} · {size}",
+  "@backupLast": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "backupFiles": "{n, plural, =1{1 copia} other{{n} copie}}, {size} in totale",
+  "@backupFiles": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "backupOffsite": "Copia fuori dal server: {time}",
+  "@backupOffsite": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "backupNoOffsite": "Nessuna copia fuori dal server",
+  "backupStale": "Nessun backup riuscito nelle ultime 26 ore"
+}

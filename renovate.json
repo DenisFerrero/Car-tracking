@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Updates of npm, pub, Docker images and GitHub Actions: only versions published at least 14 days ago, exact versions, actions pinned by commit",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests", ":pinVersions"],
+  "minimumReleaseAge": "14 days",
+  "internalChecksFilter": "strict",
+  "timezone": "Europe/Rome",
+  "schedule": ["before 6am on monday"],
+  "prConcurrentLimit": 5,
+  "labels": ["dependencies"],
+  "vulnerabilityAlerts": {
+    "labels": ["security"]
+  },
+  "packageRules": [
+    {
+      "description": "Patch and minor updates of the dev tools in one pull request",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "dev tools"
+    },
+    {
+      "description": "TimescaleDB: the backup, restore and test database use the same image; major updates of PostgreSQL need a dump and restore",
+      "matchPackageNames": ["timescale/timescaledb"],
+      "groupName": "TimescaleDB",
+      "major": { "enabled": false }
+    },
+    {
+      "description": "The firmware board package and the Flutter SDK are updated by hand",
+      "matchFileNames": [".github/workflows/**"],
+      "matchDepNames": ["esp32:esp32", "flutter"],
+      "enabled": false
+    }
+  ]
+}

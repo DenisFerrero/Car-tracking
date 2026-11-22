@@ -1,1 +1,24 @@
 volumes
+
+# Secrets: templates in .env.example and the secrets.example.h files
+.env
+firmware/secrets.h
+hardware/owner-beacon/secrets.h
+mosquitto/config/passwd
+nginx/.htpasswd
+nginx/ssl/*.key
+secrets/
+
+# Build outputs and dependencies
+node_modules/
+app/build/
+app/.dart_tool/
+app/coverage/
+app/android/key.properties
+# Exports of the Arduino IDE: images with the key and the credentials of secrets.h
+firmware/build/
+*.jks
+
+# Runtime data of the broker
+mosquitto/data
+mosquitto/log

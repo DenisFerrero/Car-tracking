@@ -1,0 +1,103 @@
+# Checks of every push and pull request: backend (types, tests on TimescaleDB with
+# coverage, known vulnerabilities), app (analysis, tests with coverage), firmware
+# (compilation of the variants, unit tests and cross test of the protocol with the
+# backend). Actions pinned by commit, versions at least 14 days old (Renovate keeps
+# them up to date with the same rule).
+name: CI
+
+on:
+  push:
+  pull_request:
+  # Run again by release.yml before building the release files
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  # The workflow in the group: a release runs these checks next to the CI of its tag
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      db:
+        image: timescale/timescaledb:2.24.0-pg17
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: ct_test
+        ports: ["55432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgres://postgres:test@localhost:55432/ct_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      # Production dependencies only: dev tools don't reach the server
+      - run: npm audit --omit=dev --audit-level=moderate
+
+  app:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.44.0
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      # Texts: the ARB files must match tool/strings.py
+      - run: python3 tool/strings.py && git diff --exit-code lib/l10n
+      - run: flutter gen-l10n
+      - run: flutter analyze
+      - run: flutter test --coverage
+      - run: python3 tool/coverage.py 98
+
+  firmware:
+    runs-on: ubuntu-24.04
+    env:
+      FQBN: esp32:esp32:esp32
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: arduino/setup-arduino-cli@81d310742121c928ea9c8bbd407b4217b432ae02 # v2.0.0
+        with:
+          version: 1.2.0
+      - name: Core and libraries
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.3.8
+          arduino-cli lib install "TinyGSM@0.12.0" "Adafruit BMP3XX Library@2.1.6" "Adafruit LIS3DH@1.3.0" \
+            "Adafruit BusIO@1.17.4" "Adafruit Unified Sensor@1.1.15"
+      # The real secrets stay out of the repository: the example compiles the same
+      - run: cp firmware/secrets.example.h firmware/secrets.h
+      - name: Compile (default and full variants)
+        run: |
+          arduino-cli compile --fqbn "$FQBN" --build-path "$RUNNER_TEMP/default" firmware
+          arduino-cli compile --fqbn "$FQBN:PartitionScheme=min_spiffs" --build-path "$RUNNER_TEMP/full" \
+            --build-property 'compiler.cpp.extra_flags=-DCT_CONFIG_OVERRIDE="test/config_full.h"' firmware
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Unit tests and cross test of the protocol
+        run: |
+          cd firmware
+          g++ -std=c++17 -O1 -I. -o "$RUNNER_TEMP/units_test" test/units_test.cpp track_filter.cpp nmea.cpp cell.cpp owner_code.cpp
+          "$RUNNER_TEMP/units_test"
+          g++ -std=c++17 -O1 -I. -o "$RUNNER_TEMP/protocol_test" test/protocol_test.cpp protocol.cpp chacha_poly.cpp owner_code.cpp
+          node test/cross-check.ts "$RUNNER_TEMP/protocol_test"

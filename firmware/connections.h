@@ -1,35 +1,35 @@
-#include <MQTT.h>
-#include <WiFi.h>
-#include <WiFiClientSecure.h>
+#ifndef CONNECTIONS_H
+#define CONNECTIONS_H
+
+// Network of the tracker: WiFi and/or the cellular data of the modem (modem.h) according
+// to CONNECTION_MODE, and on top of them a WebSocket to the server (TLS with SERVER_TLS)
+// carrying one frame of the protocol per binary message.
+
 #include <Arduino.h>
-#include <configurations.h>
-#include <TinyGsmClient.h>
 
-void printVariables ();
+void printVariables();
 
-extern WiFiClientSecure secureWifiNet;
-extern WiFiClient wifiNet;
-extern TinyGsmClient gsmNet;
+// WiFi and/or cellular according to CONNECTION_MODE
+bool startNetwork();
+bool networkConnected();
 
-extern MQTTClient client;
+// Called by serverLoop() for every frame received
+typedef void (*FrameHandler)(const uint8_t *frame, size_t length);
 
-struct deviceInfo {
-  int id = 0;
-  String manufacturer;
-  String model;
-  String revision;
-  String imei;
+// WebSocket to the server, a single attempt: the caller handles the back-off
+void serverBegin(FrameHandler onFrame);
+bool serverConnect();
+bool serverConnected();
+// Reads the frames received and keeps the connection alive (pings every KEEP_ALIVE_SEC)
+void serverLoop();
+bool serverSend(const uint8_t *frame, size_t length);
+// Closes the WebSocket, the network stays up
+void serverDisconnect();
 
-  String toStringJSON () {
-    return "{\"id\": " + String(this->id) + "\", \"manufacturer\": \"" + this->manufacturer + "\", \"model\": \"" + this->model + "\", \"revision\": \"" + this->revision + "\", \"imei\": \"" + this->imei + "\"}";
-  }
-};
+// Signal strength of the active network in dBm, 0 when unknown
+int signalDbm();
 
-bool startConnection ();
-bool startGPS ();
-bool startMQTT(MQTTClientCallbackSimple dispatcher);
-bool reconnectMQTT();
+// Disconnects and powers down the radios
+void prepareForSleep();
 
-String getMacAddress ();
-deviceInfo getDeviceInfo ();
-String getDeviceProperty(String property);
+#endif

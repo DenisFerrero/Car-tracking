@@ -1,0 +1,127 @@
+import type { Context } from "../context.ts";
+import type { Sql } from "../db.ts";
+import { computeDay, today } from "./daily.ts";
+
+// The car behind a tracker: health of its battery from the resting voltage of the days,
+// odometer from the km of the trips, deadlines by date and by km.
+
+/** Resting voltage of a lead-acid battery: about 75% charged above, 50% below LOW */
+export const BATTERY_GOOD = 12.4;
+export const BATTERY_LOW = 12.2;
+const BATTERY_ALERT_EVERY = "14 days";
+
+export type BatteryState = "good" | "fair" | "low" | "unknown";
+
+export interface BatteryHealth {
+	state: BatteryState;
+	/** Mean resting voltage of the last 7 days with a value */
+	average: number | null;
+	/** Linear trend of the last 30 days, volts per month */
+	trendPerMonth: number | null;
+}
+
+/** Health from the daily resting voltages (oldest first) */
+export function batteryHealth (days: { day: string; restVoltage: number | null }[]): BatteryHealth {
+	const values = days.filter((day): day is { day: string; restVoltage: number } => day.restVoltage !== null);
+	const last = values.slice(-7);
+	if (last.length < 3) return { state: "unknown", average: null, trendPerMonth: null };
+	const average = Math.round(last.reduce((sum, day) => sum + day.restVoltage, 0) / last.length * 100) / 100;
+	const recent = values.slice(-30);
+	let trendPerMonth: number | null = null;
+	if (recent.length >= 7) {
+		const x = recent.map(day => Date.parse(day.day) / 86400e3);
+		const meanX = x.reduce((a, b) => a + b, 0) / x.length;
+		const meanY = recent.reduce((sum, day) => sum + day.restVoltage, 0) / recent.length;
+		const num = recent.reduce((sum, day, i) => sum + (x[i]! - meanX) * (day.restVoltage - meanY), 0);
+		const den = x.reduce((sum, value) => sum + (value - meanX) ** 2, 0);
+		trendPerMonth = Math.round(num / den * 30 * 100) / 100;
+	}
+	return { state: average >= BATTERY_GOOD ? "good" : average >= BATTERY_LOW ? "fair" : "low", average, trendPerMonth };
+}
+
+// --- Odometer
+
+/** Current odometer of a device, null until the owner enters a reading */
+export async function odometer (sql: Sql, timeZone: string, device: { id: number; kind: "tracker" | "phone" }): Promise<number | null> {
+	const [row] = await sql<{ base: number | null; day: string | null; km: number }[]>`
+		SELECT d.odometer_base AS base, to_char(d.odometer_day, 'YYYY-MM-DD') AS day,
+			COALESCE((SELECT sum(distance_km) FROM daily_stats s WHERE s.device_id = d.id AND s.day >= d.odometer_day
+				AND s.day < (now() AT TIME ZONE ${timeZone})::date), 0)::float AS km
+		FROM devices d WHERE d.id = ${device.id}`;
+	if (!row || row.base === null) return null;
+	const current = await today(sql, timeZone);
+	const live = row.day! <= current ? (await computeDay(sql, timeZone, device, current)).distanceKm : 0;
+	return Math.round(row.base + row.km + live);
+}
+
+/** New reading: the km already driven today are subtracted, they are counted again */
+export async function setOdometer (sql: Sql, timeZone: string, device: { id: number; kind: "tracker" | "phone" }, km: number): Promise<void> {
+	const current = await today(sql, timeZone);
+	const driven = (await computeDay(sql, timeZone, device, current)).distanceKm;
+	await sql`UPDATE devices SET odometer_base = ${km - driven}, odometer_day = ${current} WHERE id = ${device.id}`;
+}
+
+// --- Deadlines
+
+export type DeadlineState = "ok" | "soon" | "due";
+const STAGE: Record<DeadlineState, number> = { ok: 0, soon: 1, due: 2 };
+
+export interface DeadlineRow {
+	id: number;
+	device_id: number;
+	kind: string;
+	title: string;
+	due_date: string | null;
+	due_km: number | null;
+	remind_days: number;
+	remind_km: number;
+	notified_stage: number;
+}
+
+/** Days and km left (null when not by date / km or without odometer) and state */
+export function deadlineState (item: Pick<DeadlineRow, "due_date" | "due_km" | "remind_days" | "remind_km">, odometerKm: number | null, todayIso: string):
+	{ remainingDays: number | null; remainingKm: number | null; state: DeadlineState } {
+	const remainingDays = item.due_date === null ? null : Math.round((Date.parse(item.due_date) - Date.parse(todayIso)) / 86400e3);
+	const remainingKm = item.due_km === null || odometerKm === null ? null : item.due_km - odometerKm;
+	const due = (remainingDays !== null && remainingDays <= 0) || (remainingKm !== null && remainingKm <= 0);
+	const soon = (remainingDays !== null && remainingDays <= item.remind_days) || (remainingKm !== null && remainingKm <= item.remind_km);
+	return { remainingDays, remainingKm, state: due ? "due" : soon ? "soon" : "ok" };
+}
+
+/** Job: deadlines getting close or passed, low resting voltage of the car battery */
+export async function checkVehicles (ctx: Context): Promise<void> {
+	const { sql, config } = ctx;
+	const current = await today(sql, config.TIMEZONE);
+	const items = await sql<(DeadlineRow & { device_kind: "tracker" | "phone" })[]>`
+		SELECT m.id, m.device_id, m.kind, m.title, to_char(m.due_date, 'YYYY-MM-DD') AS due_date, m.due_km, m.remind_days,
+			m.remind_km, m.notified_stage, d.kind AS device_kind
+		FROM maintenance m JOIN devices d ON d.id = m.device_id`;
+	const odometers = new Map<number, number | null>();
+	for (const item of items) {
+		if (!odometers.has(item.device_id)) odometers.set(item.device_id, await odometer(sql, config.TIMEZONE, { id: item.device_id, kind: item.device_kind }));
+		const { remainingDays, remainingKm, state } = deadlineState(item, odometers.get(item.device_id)!, current);
+		const stage = STAGE[state];
+		if (stage === item.notified_stage) continue;
+		// Conditional update: concurrent jobs don't notify twice
+		const updated = await sql`UPDATE maintenance SET notified_stage = ${stage} WHERE id = ${item.id} AND notified_stage = ${item.notified_stage}`;
+		if (updated.count !== 1 || stage < item.notified_stage) continue;
+		await ctx.notifier.notifyDevice(item.device_id, "maintenance", new Date(), undefined, {
+			title: item.title, maintenance: item.kind, due: state as "soon" | "due",
+			...(remainingDays === null ? {} : { days: remainingDays }), ...(remainingKm === null ? {} : { km: remainingKm })
+		});
+	}
+
+	const trackers = await sql<{ id: number }[]>`
+		SELECT id FROM devices WHERE kind = 'tracker' AND registered_at IS NOT NULL
+			AND (battery_health_alerted_at IS NULL OR battery_health_alerted_at < now() - ${BATTERY_ALERT_EVERY}::interval)
+			AND EXISTS (SELECT 1 FROM device_users WHERE device_id = devices.id)`;
+	for (const tracker of trackers) {
+		const days = await sql<{ day: string; restVoltage: number | null }[]>`
+			SELECT to_char(day, 'YYYY-MM-DD') AS day, rest_voltage AS "restVoltage" FROM daily_stats
+			WHERE device_id = ${tracker.id} AND day > now()::date - 30 ORDER BY day`;
+		const health = batteryHealth(days);
+		if (health.state !== "low") continue;
+		await sql`UPDATE devices SET battery_health_alerted_at = now() WHERE id = ${tracker.id}`;
+		await ctx.notifier.notifyDevice(tracker.id, "battery_health", new Date(), undefined, { voltage: health.average! });
+	}
+}

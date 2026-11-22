@@ -1,0 +1,57 @@
+{
+  "name": "car-tracking-backend",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Car tracking backend: REST API, realtime WebSocket and tracker gateway",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=../.env src/main.ts",
+    "dev": "node --env-file-if-exists=../.env --watch src/main.ts",
+    "migrate": "node --env-file-if-exists=../.env scripts/migrate.ts",
+    "create-admin": "node --env-file-if-exists=../.env scripts/create-admin.ts",
+    "provision": "node --env-file-if-exists=../.env scripts/provision.ts",
+    "ca-bundle": "node --env-file-if-exists=../.env scripts/ca-bundle.ts",
+    "simulate": "node --env-file-if-exists=../.env scripts/simulate.ts",
+    "firmware": "node --env-file-if-exists=../.env scripts/firmware.ts",
+    "typecheck": "tsc",
+    "test": "node --test --test-concurrency=1 \"src/**/*.test.ts\"",
+    "test:coverage": "node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-lines=98 --test-coverage-functions=90 --test-coverage-branches=90 --test-coverage-include=\"src/**/*.ts\" --test-coverage-include=scripts/compress-web.ts --test-coverage-exclude=\"src/**/*.test.ts\" --test-coverage-exclude=\"src/test/**\" --test-coverage-exclude=src/main.ts \"src/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@fastify/cookie": "11.1.5",
+    "@fastify/helmet": "13.2.0",
+    "@fastify/rate-limit": "11.2.2",
+    "@fastify/static": "10.1.10",
+    "@fastify/websocket": "11.3.7",
+    "@node-rs/argon2": "2.2.2",
+    "@simplewebauthn/server": "14.1.0",
+    "fastify": "5.12.8",
+    "otpauth": "9.6.0",
+    "pino": "10.4.0",
+    "postgres": "4.1.0",
+    "ws": "8.22.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/ws": "8.18.2",
+    "typescript": "7.0.2"
+  },
+  "overrides": {
+    "@fastify/ajv-compiler": "4.0.7",
+    "@fastify/error": "4.2.1",
+    "@fastify/fast-json-stringify-compiler": "5.1.1",
+    "@fastify/proxy-addr": "5.1.2",
+    "brace-expansion": "5.0.12",
+    "content-disposition": "3.0.0",
+    "fast-json-stringify": "7.3.2",
+    "find-my-way": "9.10.0",
+    "glob": "14.0.4",
+    "light-my-request": "6.8.0",
+    "minimatch": "11.0.5",
+    "set-cookie-parser": "3.2.2"
+  }
+}

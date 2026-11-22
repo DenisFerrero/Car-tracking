@@ -1,0 +1,147 @@
+# Release: when a GitHub release is published (tag vX.Y.Z) the checks of CI run again, then
+# the official firmware images and the signed Android APK are built and attached to the
+# release. Every backend with GITHUB_REPO reads the latest release: new firmware images
+# for its trackers (src/services/releases.ts), new app version for the Android app.
+# The repository name is never written here (github.repository): it can change.
+#
+# Secrets of the repository (Settings > Secrets and variables > Actions):
+#   ANDROID_KEYSTORE_BASE64   base64 of the release keystore (.jks), always the same one:
+#                             Android, Obtainium and the passkeys need a stable certificate
+#   ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.release.tag_name }}
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+      code: ${{ steps.tag.outputs.code }}
+    steps:
+      # v2.5.0 -> 2.5.0; Android versionCode 20500 (always growing with the version)
+      - id: tag
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="${TAG#v}"
+          if ! echo "$VERSION" | grep -Eq '^[0-9]{1,3}\.[0-9]{1,2}\.[0-9]{1,2}$'; then
+            echo "::error::Tag $TAG is not vMAJOR.MINOR.PATCH"
+            exit 1
+          fi
+          IFS=. read -r MAJOR MINOR PATCH <<< "$VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "code=$((MAJOR * 10000 + MINOR * 100 + PATCH))" >> "$GITHUB_OUTPUT"
+
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  firmware:
+    needs: [version, checks]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        # firmware/release/<variant>.h; the asset is firmware-<variant>.bin
+        variant: [lilygo-sim, lilygo-wifi-sim]
+    env:
+      FQBN: esp32:esp32:esp32
+      # Last change of lib/TinyGSM in the LilyGO repository (2026-09-29)
+      LILYGO_REPO: https://github.com/Xinyuan-LilyGO/LilyGo-Modem-Series
+      LILYGO_COMMIT: bbe9671052291fa0f5e492d7d9b5273e98f8f7c0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: arduino/setup-arduino-cli@81d310742121c928ea9c8bbd407b4217b432ae02 # v2.0.0
+        with:
+          version: 1.2.0
+      - name: Core and libraries
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@3.3.8
+          arduino-cli lib install "Adafruit BMP3XX Library@2.1.6" "Adafruit LIS3DH@1.3.0" \
+            "Adafruit BusIO@1.17.4" "Adafruit Unified Sensor@1.1.15"
+      # The real board needs the TinyGSM of LilyGO (TLS on the A76xx modem)
+      - name: LilyGO TinyGSM
+        run: |
+          git init -q "$RUNNER_TEMP/lilygo"
+          cd "$RUNNER_TEMP/lilygo"
+          git remote add origin "$LILYGO_REPO"
+          git sparse-checkout set lib/TinyGSM
+          git fetch -q --depth 1 --filter=blob:none origin "$LILYGO_COMMIT"
+          git checkout -q FETCH_HEAD
+      # No credential in the public images: every tracker keeps its own in the NVS
+      - run: cp firmware/release/secrets.h firmware/secrets.h
+      - name: Compile
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          VARIANT: ${{ matrix.variant }}
+        run: |
+          arduino-cli compile --fqbn "$FQBN" --library "$RUNNER_TEMP/lilygo/lib/TinyGSM" \
+            --build-path "$RUNNER_TEMP/build" --export-binaries --output-dir "$RUNNER_TEMP/out" \
+            --build-property "compiler.cpp.extra_flags=-DCT_CONFIG_OVERRIDE=\"release/$VARIANT.h\" -DFIRMWARE_VERSION=\"$VERSION\"" \
+            firmware
+          cp "$RUNNER_TEMP/out/firmware.ino.bin" "firmware-$VARIANT.bin"
+          # The version and the variant reported by the HELLO must be in the image
+          grep -aq "$VERSION" "firmware-$VARIANT.bin"
+          grep -aq "$VARIANT" "firmware-$VARIANT.bin"
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" "firmware-${{ matrix.variant }}.bin" --repo "$GITHUB_REPOSITORY" --clobber
+
+  apk:
+    needs: [version, checks]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Gradle of Flutter: the JDK 17 of the runner image
+      - run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.44.0
+          channel: stable
+          cache: true
+      - name: Release keystore
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE" ] || [ -z "$STORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::Release keystore secrets missing: a debug-signed APK can't be updated by the next ones"
+            exit 1
+          fi
+          echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/release.jks" "$STORE_PASSWORD" "$KEY_ALIAS" "$KEY_PASSWORD" > android/key.properties
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - name: Build
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          CODE: ${{ needs.version.outputs.code }}
+        run: |
+          flutter build apk --release --build-name "$VERSION" --build-number "$CODE" --dart-define "APP_VERSION=$VERSION"
+          cp build/app/outputs/flutter-apk/app-release.apk "car-tracking-$VERSION.apk"
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: gh release upload "$TAG" "car-tracking-$VERSION.apk" --repo "$GITHUB_REPOSITORY" --clobber

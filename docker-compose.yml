@@ -1,0 +1,205 @@
+# Car Tracking: TimescaleDB + backend (API, realtime, tracker gateway, web app).
+# Exposure, choose one profile:
+#   docker compose --profile traefik up -d   public server, TLS certificates from Let's Encrypt
+#   docker compose --profile tunnel up -d    Cloudflare Tunnel, no open port on the server
+# First administrator: docker compose exec backend node scripts/create-admin.ts <email> "<name>"
+# Backups: service "backup" (daily dump in ./volumes/backups), copy off the server with the
+# profile "offsite" (restic). See backup/ and the README.
+
+name: car-tracking
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:2.24.0-pg17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-car_tracking}
+      POSTGRES_USER: ${POSTGRES_USER:-car_tracking}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      # No telemetry to Timescale
+      TIMESCALEDB_TELEMETRY: "off"
+    volumes:
+      - ./volumes/timescaledb:/var/lib/postgresql/data
+    networks:
+      - db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: car-tracking-backend
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-car_tracking}:${POSTGRES_PASSWORD}@timescaledb:5432/${POSTGRES_DB:-car_tracking}
+      CRYPTO_MASTER_KEY: ${CRYPTO_MASTER_KEY:?CRYPTO_MASTER_KEY is required}
+      PUBLIC_URL: https://${DOMAIN:?DOMAIN is required}
+      APP_NAME: ${APP_NAME:-Car Tracking}
+      # Traefik / cloudflared on the docker networks
+      TRUST_PROXY: uniquelocal
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      RETENTION_DAYS: ${RETENTION_DAYS:-365}
+      PHONE_RETENTION_DAYS: ${PHONE_RETENTION_DAYS:-30}
+      SIM_BUDGET_MB: ${SIM_BUDGET_MB:-200}
+      OFFLINE_AFTER_HOURS: ${OFFLINE_AFTER_HOURS:-9}
+      # Days and hours of statistics, schedules of the areas, backups
+      TIMEZONE: ${TIMEZONE:-Europe/Rome}
+      ANDROID_PACKAGE: ${ANDROID_PACKAGE:-com.cartracking.app}
+      ANDROID_CERT_SHA256: ${ANDROID_CERT_SHA256:-}
+      MAP_TILE_URL: ${MAP_TILE_URL:-https://tile.openstreetmap.org/{z}/{x}/{y}.png}
+      MAP_ATTRIBUTION: ${MAP_ATTRIBUTION:-© OpenStreetMap contributors}
+      CELL_GEOLOCATION_URL: ${CELL_GEOLOCATION_URL:-}
+      FCM_SERVICE_ACCOUNT_FILE: ${FCM_SERVICE_ACCOUNT_FILE:-}
+      FUEL_PRICES_URL: ${FUEL_PRICES_URL-https://sisen.mase.gov.it/dgsaie/api/v1/weekly-prices/report/export?format=CSV&lang=it}
+      GITHUB_REPO: ${GITHUB_REPO:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      # State of the backups on the administration page
+      BACKUP_DIR: /backups
+    volumes:
+      # Optional Firebase service account (FCM_SERVICE_ACCOUNT_FILE=/run/secrets/fcm.json)
+      - ./secrets:/run/secrets:ro
+      - ./volumes/backups:/backups:ro
+    networks:
+      - db
+      - edge
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=car-tracking_edge
+      - traefik.http.routers.car-tracking.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.car-tracking.entrypoints=websecure
+      - traefik.http.routers.car-tracking.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.routers.car-tracking.middlewares=ct-ratelimit@file,ct-inflight@file,ct-compress@file
+      - traefik.http.routers.car-tracking.service=car-tracking
+      # Trackers: own router, limited new connections, no compression
+      - traefik.http.routers.car-tracking-tracker.rule=Host(`${DOMAIN}`) && Path(`/tracker`)
+      - traefik.http.routers.car-tracking-tracker.entrypoints=websecure
+      - traefik.http.routers.car-tracking-tracker.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.routers.car-tracking-tracker.middlewares=ct-tracker-ratelimit@file
+      - traefik.http.routers.car-tracking-tracker.service=car-tracking
+      - traefik.http.services.car-tracking.loadbalancer.server.port=4000
+
+  # Daily dump with the pg_dump of the same image as the database
+  backup:
+    image: timescale/timescaledb:2.24.0-pg17
+    entrypoint: ["sh", "/scripts/backup.sh"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-car_tracking}
+      POSTGRES_USER: ${POSTGRES_USER:-car_tracking}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${TIMEZONE:-Europe/Rome}
+      BACKUP_TIME: ${BACKUP_TIME:-03:30}
+      BACKUP_KEEP_DAILY: ${BACKUP_KEEP_DAILY:-7}
+      BACKUP_KEEP_WEEKLY: ${BACKUP_KEEP_WEEKLY:-4}
+      BACKUP_KEEP_MONTHLY: ${BACKUP_KEEP_MONTHLY:-6}
+    volumes:
+      - ./backup:/scripts:ro
+      - ./volumes/backups:/backups
+    networks:
+      - db
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      # Unhealthy when the last good dump is older than 26 hours
+      test: ["CMD-SHELL", "find /backups/last-success -mmin -1560 | grep -q ."]
+      interval: 30m
+      start_period: 10m
+
+  # Encrypted copy of the dumps off the server (restic): RESTIC_REPOSITORY, RESTIC_PASSWORD
+  offsite:
+    profiles: [offsite]
+    image: restic/restic:0.19.1
+    entrypoint: ["sh", "/scripts/offsite.sh"]
+    hostname: car-tracking
+    environment:
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
+      TZ: ${TIMEZONE:-Europe/Rome}
+      OFFSITE_TIME: ${OFFSITE_TIME:-04:30}
+      BACKUP_KEEP_DAILY: ${BACKUP_KEEP_DAILY:-7}
+      BACKUP_KEEP_WEEKLY: ${BACKUP_KEEP_WEEKLY:-4}
+      BACKUP_KEEP_MONTHLY: ${BACKUP_KEEP_MONTHLY:-6}
+      # S3 / Backblaze B2 credentials when the repository needs them
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      B2_ACCOUNT_ID: ${B2_ACCOUNT_ID:-}
+      B2_ACCOUNT_KEY: ${B2_ACCOUNT_KEY:-}
+    volumes:
+      - ./backup:/scripts:ro
+      - ./volumes/backups:/backups
+      - ./volumes/restic-cache:/root/.cache/restic
+      # SFTP repository: key and known_hosts of the destination
+      - ./secrets/ssh:/root/.ssh:ro
+    # The off-site destination is on Internet
+    networks:
+      - edge
+    restart: unless-stopped
+
+  traefik:
+    profiles: [traefik]
+    image: traefik:v3.7.14
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      # Trackers keep the connection open: no read timeout on the WebSocket. Slow requests
+      # are cut by the backend (30 s per request); idle keep-alive connections after 3 min
+      - --entrypoints.websecure.transport.respondingtimeouts.readtimeout=0
+      - --entrypoints.websecure.transport.respondingtimeouts.idletimeout=180s
+      - --entrypoints.websecure.http2.maxconcurrentstreams=100
+      - --entrypoints.websecure.http.tls.options=modern@file
+      - --providers.file.filename=/etc/traefik/dynamic.yml
+      # HTTP challenge: the server must be reachable on port 80/443 from Internet
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      # DNS challenge (TRAEFIK_CERTRESOLVER=letsencrypt-dns): certificates for servers not
+      # reachable from Internet (e.g. NetBird only). Provider token in CF_DNS_API_TOKEN.
+      - --certificatesresolvers.letsencrypt-dns.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt-dns.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt-dns.acme.dnschallenge.provider=${ACME_DNS_PROVIDER:-cloudflare}
+      - --log.level=WARN
+      - --accesslog=false
+      - --api.dashboard=false
+    environment:
+      CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN:-}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./volumes/letsencrypt:/letsencrypt
+    networks:
+      - edge
+    restart: unless-stopped
+
+  cloudflared:
+    profiles: [tunnel]
+    image: cloudflare/cloudflared:2025.11.1
+    # Public hostname of the tunnel (Cloudflare dashboard) -> http://backend:4000
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    networks:
+      - edge
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  # Database not reachable from the proxy
+  db:
+    internal: true
+  edge:

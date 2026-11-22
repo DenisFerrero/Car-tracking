@@ -1,0 +1,21 @@
+# Build context of backend/Dockerfile is the repository root: only app/ and backend/
+# are needed. Secrets and database data must never reach the Docker daemon.
+.env
+.env.*
+secrets/
+volumes/
+**/*.key
+**/*.jks
+**/key.properties
+
+**/node_modules/
+**/.git/
+app/build/
+app/.dart_tool/
+app/coverage/
+app/android/.gradle/
+
+firmware/
+hardware/
+utilities/
+traefik/

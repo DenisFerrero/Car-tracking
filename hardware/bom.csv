@@ -1,0 +1,36 @@
+Ref,Quantity,Component,Value / Model,Package,Notes,Indicative price EUR
+F1,1,Blade fuse + inline holder,2 A mini blade,ATM,+30 permanent line,3.00
+F2,1,Blade fuse + inline holder,1 A mini blade,ATM,+15 ignition line,3.00
+-,2,Add-a-fuse tap,Mini blade (check the car fuse box),ATM,One for +30 and one for +15,4.00
+TVS1,1,TVS diode,5KP24A (5000 W 24 V standoff),P600 through hole,Unsuppressed load dump; cathode on the protected rail,1.50
+D1,1,Schottky diode,SB3100 (3 A 100 V),DO-201AD,Reverse polarity,0.40
+D2,1,Rectifier diode,1N4007,DO-41,Ignition input reverse protection,0.10
+C1,1,Electrolytic capacitor,100 uF 63 V low ESR 105 C,Radial 8x11,Input reservoir,0.50
+C2,1,Ceramic capacitor,1 uF 100 V X7R,Radial,Input decoupling,0.30
+C3,1,Ceramic capacitor,100 nF 50 V,Radial,ADC filter,0.10
+C4,1,Ceramic capacitor,100 nF 50 V,Radial,Ignition input filter,0.10
+C5,1,Electrolytic capacitor,2200 uF 6.3 V low ESR 105 C,Radial 10x16,Close to the T-Call VBUS pin: modem 2 A bursts,0.80
+R1,1,Resistor 1%,470 kOhm 0.25 W,Axial,Voltage divider,0.05
+R2,1,Resistor 1%,100 kOhm 0.25 W,Axial,Voltage divider,0.05
+R3,1,Resistor,4.7 kOhm 1 W,Axial,Optocoupler LED,0.10
+R4,1,Resistor,10 kOhm 0.25 W,Axial,Ignition pull-down,0.05
+R5,1,Resistor,470 kOhm 0.25 W,Axial,PGOOD pull-up to 3V3,0.05
+U1,1,Step-down regulator module,Pololu D36V28F5 (5.3-50 V in / 5 V 3.2 A),Module,Charger supply,12.00
+U2,1,Li-ion charger with power path,Adafruit bq24074 (product 4755),Module,Set to 500 mA; NTC on THERM,9.00
+U3,1,Optocoupler,PC817,DIP-4,Ignition sense,0.30
+BT1,1,Li-ion cell protected,18650 protected (e.g. Samsung 35E / LG MJ1 / Panasonic NCR18650B),18650,Steel can cell; never in direct sun,9.00
+-,1,18650 holder with wires,,,,1.50
+TH1,1,NTC thermistor,10 kOhm B3950,Leaded,Glued to the cell; to THERM of U2,0.50
+J1,1,Pluggable terminal block,3 positions 5.08 mm,,+30 / +15 / GND,1.00
+-,1,Perfboard,70x90 mm 2.54 mm pitch,,,2.00
+-,1,Female headers,1x19 2.54 mm,,To plug the T-Call or wire it,1.00
+-,1,ABS enclosure,about 120x80x40 mm,,,5.00
+-,1,Automotive wire,0.75 mm2 red/black + 0.5 mm2 yellow,,,4.00
+-,1,LIS3DH breakout,Adafruit 2809 or equivalent,Module,Already in the project,5.00
+-,1,BMP390 breakout,Adafruit 4816 or equivalent,Module,Already in the project,10.00
+Q1,1,P-channel MOSFET (optional GNSS),AO3401A,SOT-23 on adapter,Not fitted without external GNSS,0.20
+R6,1,Resistor (optional GNSS),100 kOhm 0.25 W,Axial,Q1 gate pull-up,0.05
+GNSS1,1,GNSS module (optional),u-blox M10 (MAX-M10S based) or Quectel L76K,Module,Only for modems without GNSS (A7670G),15.00
+ANT1,1,GNSS active antenna (optional),28 dB IPEX/U.FL,,For the external module,5.00
+TAG1,1,Owner beacon (optional),Seeed XIAO nRF52840,Module,OWNER_TAG 2: hardware/owner-beacon,10.00
+TAG2,1,LiPo battery for the beacon (optional),3.7 V 100-150 mAh,,On the BAT+/BAT- pads of the XIAO,4.00

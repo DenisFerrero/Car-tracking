@@ -1,0 +1,37 @@
+# TLS 1.2+ with modern ciphers only. The tracker (A7670 modem / ESP32 mbedTLS) supports
+# TLS 1.2 with ECDHE-ECDSA/RSA-AES-GCM.
+tls:
+  options:
+    modern:
+      minVersion: VersionTLS12
+      sniStrict: true
+      cipherSuites:
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+
+# First line against floods, per client address, before the backend (which has its own
+# limits per address and per route). WebSockets (/api/live, /tracker) skip compression.
+http:
+  middlewares:
+    ct-ratelimit:
+      rateLimit:
+        average: 30
+        period: 1s
+        burst: 120
+    ct-inflight:
+      inFlightReq:
+        amount: 40
+    ct-compress:
+      compress:
+        # The web app is already precompressed (brotli/gzip) by the backend
+        minResponseBodyBytes: 1024
+    ct-tracker-ratelimit:
+      rateLimit:
+        # Trackers reconnect rarely: a few new connections per minute and address
+        average: 10
+        period: 1m
+        burst: 20
