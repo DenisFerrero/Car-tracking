@@ -1,0 +1,2 @@
+# Scripts run inside Linux containers (mounted from the checkout): LF also on Windows
+*.sh text eol=lf

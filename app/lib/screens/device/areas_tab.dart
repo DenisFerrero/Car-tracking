@@ -83,7 +83,14 @@ class AreasTab extends ConsumerWidget {
               ],
               zoom: 14,
               layers: [
-                CircleLayer(circles: [for (final area in list) _circle(area.center, area.radius, device.color)]),
+                CircleLayer(circles: [
+                  for (final area in list)
+                    if (area.polygon == null) _circle(area.center, area.radius, device.color),
+                ]),
+                PolygonLayer(polygons: [
+                  for (final area in list)
+                    if (area.polygon != null) _polygon(area.polygon!, device.color),
+                ]),
                 MarkerLayer(markers: deviceMarkers([device])),
               ],
             ),
@@ -98,7 +105,9 @@ class AreasTab extends ConsumerWidget {
                         leading: Icon(area.inside == true ? Icons.where_to_vote : Icons.place_outlined, color: device.color),
                         title: Text(area.name),
                         subtitle: Text([
-                          l.areaSummary(formatMeters(area.radius), area.inside == true ? l.areaInside : l.areaOutside),
+                          area.polygon == null
+                              ? l.areaSummary(formatMeters(area.radius), area.inside == true ? l.areaInside : l.areaOutside)
+                              : l.areaPolygonSummary(area.polygon!.length, area.inside == true ? l.areaInside : l.areaOutside),
                           if (area.notifyEnter) l.notifyEnter,
                           if (area.notifyExit) l.notifyExit,
                           if (area.schedule != null) scheduleText(l, area.schedule!),
@@ -127,7 +136,15 @@ CircleMarker _circle(LatLng center, int radius, Color color) => CircleMarker(
       borderStrokeWidth: 2,
     );
 
-/// New or changed area: center chosen on the map, radius, notifications
+Polygon _polygon(List<LatLng> points, Color color) => Polygon(
+      points: points,
+      color: color.withValues(alpha: 0.18),
+      borderColor: color,
+      borderStrokeWidth: 2,
+    );
+
+/// New or changed area: a circle (center chosen on the map, radius) or a polygon (vertices
+/// tapped on the map), notifications
 class AreaEditor extends ConsumerStatefulWidget {
   const AreaEditor({super.key, required this.device, this.area});
 
@@ -142,6 +159,8 @@ class _AreaEditorState extends ConsumerState<AreaEditor> {
   late final _name = TextEditingController(text: widget.area?.name);
   late LatLng _center = widget.area?.center ?? widget.device.lastPosition?.point ?? const LatLng(41.9, 12.5);
   late int _radius = widget.area?.radius ?? 500;
+  late bool _drawn = widget.area?.polygon != null;
+  late final List<LatLng> _vertices = [...?widget.area?.polygon];
   late bool _enter = widget.area?.notifyEnter ?? true;
   late bool _exit = widget.area?.notifyExit ?? false;
   late bool _scheduled = widget.area?.schedule != null;
@@ -166,11 +185,19 @@ class _AreaEditorState extends ConsumerState<AreaEditor> {
   Future<void> _save() async {
     final l = context.l10n;
     final name = _name.text.trim().isEmpty ? l.areaDefaultName : _name.text.trim();
+    if (_drawn && _vertices.length < 3) return showMessage(context, l.areaPolygonTooFew);
     final body = {
       'name': name,
-      'lat': _center.latitude,
-      'lon': _center.longitude,
-      'radius': _radius,
+      if (_drawn)
+        'polygon': [
+          for (final vertex in _vertices) [vertex.latitude, vertex.longitude],
+        ]
+      else ...{
+        'lat': _center.latitude,
+        'lon': _center.longitude,
+        'radius': _radius,
+        'polygon': null,
+      },
       'notifyEnter': _enter,
       'notifyExit': _exit,
       'schedule': _scheduled ? _schedule.toJson() : null,
@@ -197,6 +224,7 @@ class _AreaEditorState extends ConsumerState<AreaEditor> {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final step = areaRadii.indexWhere((value) => value >= _radius).clamp(0, areaRadii.length - 1);
+    final color = widget.device.color;
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.area == null ? l.addArea : l.editArea),
@@ -206,13 +234,18 @@ class _AreaEditorState extends ConsumerState<AreaEditor> {
         Expanded(
           child: Stack(children: [
             BaseMap(
-              center: _center,
+              center: _drawn && _vertices.isNotEmpty ? _vertices.first : _center,
               zoom: 14,
-              onTap: (point) => setState(() => _center = point),
+              onTap: (point) => setState(() => _drawn ? _vertices.add(point) : _center = point),
               layers: [
-                CircleLayer(circles: [_circle(_center, _radius, widget.device.color)]),
+                if (!_drawn) CircleLayer(circles: [_circle(_center, _radius, color)]),
+                if (_drawn && _vertices.length > 2) PolygonLayer(polygons: [_polygon(_vertices, color)]),
+                if (_drawn && _vertices.length == 2) PolylineLayer(polylines: [Polyline(points: _vertices, color: color, strokeWidth: 2)]),
                 MarkerLayer(markers: [
-                  Marker(point: _center, width: 36, height: 36, child: Icon(Icons.place, size: 36, color: widget.device.color)),
+                  if (!_drawn) Marker(point: _center, width: 36, height: 36, child: Icon(Icons.place, size: 36, color: color)),
+                  if (_drawn)
+                    for (final vertex in _vertices)
+                      Marker(point: vertex, width: 14, height: 14, child: Icon(Icons.circle, size: 14, color: color)),
                   ...deviceMarkers([widget.device]),
                 ]),
               ],
@@ -221,7 +254,12 @@ class _AreaEditorState extends ConsumerState<AreaEditor> {
               top: 8,
               left: 8,
               right: 8,
-              child: Card(child: Padding(padding: const EdgeInsets.all(8), child: Text(l.tapMapToPlace, textAlign: TextAlign.center))),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Text(_drawn ? l.tapMapToDraw : l.tapMapToPlace, textAlign: TextAlign.center),
+                ),
+              ),
             ),
           ]),
         ),
@@ -240,6 +278,33 @@ class _AreaEditorState extends ConsumerState<AreaEditor> {
                   maxLength: 60,
                   decoration: InputDecoration(labelText: l.areaName, hintText: l.areaDefaultName),
                 ),
+                SegmentedButton<bool>(
+                  key: const Key('areaShape'),
+                  segments: [
+                    ButtonSegment(value: false, icon: const Icon(Icons.circle_outlined), label: Text(l.areaCircle)),
+                    ButtonSegment(value: true, icon: const Icon(Icons.pentagon_outlined), label: Text(l.areaPolygon)),
+                  ],
+                  selected: {_drawn},
+                  onSelectionChanged: (selection) => setState(() => _drawn = selection.first),
+                ),
+                const SizedBox(height: 8),
+                if (_drawn)
+                  Row(children: [
+                    Expanded(child: Text(l.areaVertices(_vertices.length), key: const Key('areaVertices'))),
+                    IconButton(
+                      key: const Key('undoVertex'),
+                      tooltip: l.undoVertex,
+                      icon: const Icon(Icons.undo),
+                      onPressed: _vertices.isEmpty ? null : () => setState(_vertices.removeLast),
+                    ),
+                    IconButton(
+                      key: const Key('clearVertices'),
+                      tooltip: l.clearVertices,
+                      icon: const Icon(Icons.delete_sweep_outlined),
+                      onPressed: _vertices.isEmpty ? null : () => setState(_vertices.clear),
+                    ),
+                  ])
+                else
                 Row(children: [
                   Text(l.radius(formatMeters(_radius))),
                   Expanded(

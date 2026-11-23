@@ -78,6 +78,51 @@ describe("alerts", { skip: !process.env.TEST_DATABASE_URL && "TEST_DATABASE_URL 
 		live.close();
 	});
 
+	test("polygon areas: entered and left by their sides, invalid shapes", async () => {
+		const areas = `/api/devices/${phoneId}/geofences`;
+		// About 500 x 500 m around HOME; AWAY is 2 km north
+		const square: [number, number][] = [[45.462, 9.187], [45.462, 9.193], [45.4665, 9.193], [45.4665, 9.187]];
+		const crossed: [number, number][] = [[45.462, 9.187], [45.4665, 9.193], [45.462, 9.193], [45.4665, 9.187]];
+		const tiny: [number, number][] = [[45.462, 9.187], [45.462, 9.1871], [45.4621, 9.187]];
+		const huge: [number, number][] = [[45, 9], [45, 10], [46, 10], [46, 9]];
+		for (const [body, code] of [[{ polygon: crossed }, "polygon_invalid"], [{ polygon: tiny }, "polygon_invalid"], [{ polygon: huge }, "polygon_too_large"],
+			[{ polygon: square.slice(0, 2) }, "validation"], [{ lat: 45 }, "validation"], [{ polygon: [[91, 9], [45, 9], [45, 10]] }, "validation"]] as const) {
+			const response = await h.api("POST", areas, { token: bruno.token, body: { name: "X", ...body } });
+			assert.equal(response.body.error, code, JSON.stringify(body));
+		}
+
+		// Newer than the last point of the test before: older points are history, not areas
+		await h.api("POST", path, { token: upload, body: { positions: [fix(38, AWAY)] } });
+		const created = await h.api("POST", areas, { token: bruno.token, body: { name: "Quartiere", polygon: square, notifyExit: true } });
+		assert.equal(created.status, 200, JSON.stringify(created.body));
+		assert.deepEqual(created.body.polygon, square);
+		assert.equal(created.body.inside, false);
+		assert.ok(Math.abs(created.body.lat - 45.46425) < 1e-9 && created.body.radius > 300 && created.body.radius < 400, JSON.stringify(created.body));
+
+		const live = await h.live(bruno.token);
+		// Inside; then 20 m out of the east side (within the margin); then far
+		await h.api("POST", path, { token: upload, body: { positions: [fix(37, HOME)] } });
+		await waitFor(() => live.of("notification").length === 1);
+		await h.api("POST", path, { token: upload, body: { positions: [fix(36, { lat: 45.4642, lon: 9.19325 })] } });
+		await sleep(150);
+		assert.equal(live.of("notification").length, 1);
+		await h.api("POST", path, { token: upload, body: { positions: [fix(35, AWAY, { speed: 30 })] } });
+		await waitFor(() => live.of("notification").length === 2);
+		assert.deepEqual(live.of("notification").map(item => item.notification.kind), ["geofence_enter", "geofence_exit"]);
+
+		// Moved by its vertices; the center alone doesn't move a polygon; back to a circle
+		const moved = await h.api("PATCH", `/api/geofences/${created.body.id}`, { token: bruno.token, body: { polygon: square.map(([lat, lon]) => [lat + 0.02, lon]) } });
+		assert.equal(moved.body.inside, true);
+		const kept = await h.api("PATCH", `/api/geofences/${created.body.id}`, { token: bruno.token, body: { lat: 40 } });
+		assert.equal(kept.body.lat, moved.body.lat);
+		assert.equal((await h.api("PATCH", `/api/geofences/${created.body.id}`, { token: bruno.token, body: { polygon: crossed } })).body.error, "polygon_invalid");
+		const circle = await h.api("PATCH", `/api/geofences/${created.body.id}`, { token: bruno.token, body: { polygon: null, ...HOME, radius: 200 } });
+		assert.deepEqual([circle.body.polygon, circle.body.radius, circle.body.inside], [null, 200, false]);
+		assert.equal((await h.api("GET", "/api/account/export", { token: bruno.token })).body.areas[0].polygon, null);
+		await h.api("DELETE", `/api/geofences/${created.body.id}`, { token: bruno.token });
+		live.close();
+	});
+
 	test("low battery of a phone: threshold of each friend, once per discharge", async () => {
 		const alerts = `/api/devices/${phoneId}/alerts`;
 		assert.equal((await h.api("GET", `/api/devices/${phoneId}`, { token: bruno.token })).body.batteryAlert, 20);

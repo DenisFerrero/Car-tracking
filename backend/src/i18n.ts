@@ -7,7 +7,7 @@ export const DEFAULT_LOCALE: Locale = "en";
 
 export type NotificationKind =
 	"motion" | "tilt" | "power_lost" | "low_battery" | "offline" | "online" | "geofence_enter" | "geofence_exit" |
-	"phone_battery" | "long_stop" | "battery_health" | "maintenance" | "firmware";
+	"phone_battery" | "long_stop" | "battery_health" | "maintenance" | "firmware" | "monthly_summary";
 
 export interface NotificationData {
 	device: string;
@@ -27,6 +27,11 @@ export interface NotificationData {
 	/** firmware: new version, installed by the tracker itself (AUTO_UPDATE) or by the owner */
 	version?: string;
 	automatic?: boolean;
+	/** monthly_summary: month YYYY-MM and its totals */
+	month?: string;
+	distanceKm?: number;
+	trips?: number;
+	cost?: number | null;
 	time: string;
 }
 
@@ -62,6 +67,22 @@ function maintenanceText (language: Locale, data: NotificationData): { title: st
 	return { title, body: `${data.device}: ${parts.join(it ? " o " : " or ")}` };
 }
 
+const MONTHS: Record<Locale, string[]> = {
+	it: ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"],
+	en: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+};
+
+function summaryText (language: Locale, data: NotificationData): { title: string; body: string } {
+	const it = language === "it";
+	const format = (value: number, digits = 0) =>
+		value.toLocaleString(it ? "it-IT" : "en-GB", { minimumFractionDigits: digits, maximumFractionDigits: digits, useGrouping: "always" });
+	const name = MONTHS[language][Number(data.month!.slice(5, 7)) - 1]!;
+	const trips = plural(language, data.trips ?? 0, it ? { one: "# viaggio", other: "# viaggi" } : { one: "# trip", other: "# trips" }, format(data.trips ?? 0));
+	const parts = [`${format(data.distanceKm ?? 0)} km`, trips];
+	if (data.cost != null) parts.push(it ? `${format(data.cost, 2)} € di costi` : `€${format(data.cost, 2)} of costs`);
+	return { title: it ? `Il tuo mese di ${name}` : `Your ${name}`, body: parts.join(" · ") };
+}
+
 type Texts = Record<NotificationKind, (data: NotificationData & { clock: string }) => { title: string; body: string }>;
 
 const TEXTS: Record<Locale, Texts> = {
@@ -87,7 +108,8 @@ const TEXTS: Record<Locale, Texts> = {
 		firmware: ({ device, version, automatic }) => ({
 			title: `Nuovo firmware ${version}`,
 			body: automatic ? `${device} lo installerà da solo entro un giorno` : `Installalo su ${device} dalla pagina del dispositivo`
-		})
+		}),
+		monthly_summary: data => summaryText("it", data)
 	},
 	en: {
 		motion: ({ device, clock }) => ({ title: "Motion detected", body: `${device}, at ${clock}` }),
@@ -111,7 +133,8 @@ const TEXTS: Record<Locale, Texts> = {
 		firmware: ({ device, version, automatic }) => ({
 			title: `New firmware ${version}`,
 			body: automatic ? `${device} will install it by itself within a day` : `Install it on ${device} from the page of the device`
-		})
+		}),
+		monthly_summary: data => summaryText("en", data)
 	}
 };
 

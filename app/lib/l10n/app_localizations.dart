@@ -1952,6 +1952,78 @@ abstract class AppLocalizations {
   /// **'{radius} · {state}'**
   String areaSummary(String radius, String state);
 
+  /// No description provided for @areaPolygonSummary.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 vertice} other{{n} vertici}} · {state}'**
+  String areaPolygonSummary(int n, String state);
+
+  /// No description provided for @areaCircle.
+  ///
+  /// In it, this message translates to:
+  /// **'Cerchio'**
+  String get areaCircle;
+
+  /// No description provided for @areaPolygon.
+  ///
+  /// In it, this message translates to:
+  /// **'Poligono'**
+  String get areaPolygon;
+
+  /// No description provided for @tapMapToDraw.
+  ///
+  /// In it, this message translates to:
+  /// **'Tocca la mappa per aggiungere i vertici del poligono'**
+  String get tapMapToDraw;
+
+  /// No description provided for @areaVertices.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =0{Nessun vertice} =1{1 vertice} other{{n} vertici}}'**
+  String areaVertices(int n);
+
+  /// No description provided for @undoVertex.
+  ///
+  /// In it, this message translates to:
+  /// **'Annulla l\'ultimo'**
+  String get undoVertex;
+
+  /// No description provided for @clearVertices.
+  ///
+  /// In it, this message translates to:
+  /// **'Ricomincia'**
+  String get clearVertices;
+
+  /// No description provided for @areaPolygonTooFew.
+  ///
+  /// In it, this message translates to:
+  /// **'Servono almeno 3 vertici'**
+  String get areaPolygonTooFew;
+
+  /// No description provided for @errPolygonInvalid.
+  ///
+  /// In it, this message translates to:
+  /// **'I lati dell\'area si incrociano o l\'area è troppo piccola'**
+  String get errPolygonInvalid;
+
+  /// No description provided for @errPolygonTooLarge.
+  ///
+  /// In it, this message translates to:
+  /// **'L\'area supera i 50 km'**
+  String get errPolygonTooLarge;
+
+  /// No description provided for @errTooManyRefuels.
+  ///
+  /// In it, this message translates to:
+  /// **'Troppi rifornimenti per questo veicolo'**
+  String get errTooManyRefuels;
+
+  /// No description provided for @errRefuelFuture.
+  ///
+  /// In it, this message translates to:
+  /// **'Un rifornimento non può essere nel futuro'**
+  String get errRefuelFuture;
+
   /// No description provided for @deleteAreaTitle.
   ///
   /// In it, this message translates to:
@@ -3824,6 +3896,282 @@ abstract class AppLocalizations {
   /// **'Costi dei viaggi'**
   String get tripCosts;
 
+  /// No description provided for @refuels.
+  ///
+  /// In it, this message translates to:
+  /// **'Rifornimenti'**
+  String get refuels;
+
+  /// No description provided for @addRefuel.
+  ///
+  /// In it, this message translates to:
+  /// **'Aggiungi rifornimento'**
+  String get addRefuel;
+
+  /// No description provided for @editRefuel.
+  ///
+  /// In it, this message translates to:
+  /// **'Modifica rifornimento'**
+  String get editRefuel;
+
+  /// No description provided for @refuelSaved.
+  ///
+  /// In it, this message translates to:
+  /// **'Rifornimenti aggiornati'**
+  String get refuelSaved;
+
+  /// No description provided for @noRefuels.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessun rifornimento: aggiungi il primo pieno'**
+  String get noRefuels;
+
+  /// No description provided for @refuelsHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Tra due pieni i litri messi e i km percorsi danno il consumo reale; l\'importo dà il prezzo al litro.'**
+  String get refuelsHint;
+
+  /// No description provided for @realConsumption.
+  ///
+  /// In it, this message translates to:
+  /// **'Consumo reale: {value}'**
+  String realConsumption(String value);
+
+  /// No description provided for @realConsumptionUnknown.
+  ///
+  /// In it, this message translates to:
+  /// **'Consumo reale: servono due pieni con il contachilometri'**
+  String get realConsumptionUnknown;
+
+  /// No description provided for @lastConsumption.
+  ///
+  /// In it, this message translates to:
+  /// **'Ultimo pieno: {value}'**
+  String lastConsumption(String value);
+
+  /// No description provided for @refuelTotals.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 rifornimento} other{{n} rifornimenti}}, {litres}, {cost}'**
+  String refuelTotals(int n, String litres, String cost);
+
+  /// No description provided for @measuredKm.
+  ///
+  /// In it, this message translates to:
+  /// **'Misurato su {km} km'**
+  String measuredKm(String km);
+
+  /// No description provided for @refuelPartial.
+  ///
+  /// In it, this message translates to:
+  /// **'parziale'**
+  String get refuelPartial;
+
+  /// No description provided for @refuelMeasured.
+  ///
+  /// In it, this message translates to:
+  /// **'{value} in {km} km'**
+  String refuelMeasured(String value, String km);
+
+  /// No description provided for @refuelRatesOn.
+  ///
+  /// In it, this message translates to:
+  /// **'Prezzi e consumi usati per i costi dei viaggi'**
+  String get refuelRatesOn;
+
+  /// No description provided for @refuelRatesOff.
+  ///
+  /// In it, this message translates to:
+  /// **'Prezzi e consumi non usati per i costi dei viaggi'**
+  String get refuelRatesOff;
+
+  /// No description provided for @refuelLitres.
+  ///
+  /// In it, this message translates to:
+  /// **'Litri'**
+  String get refuelLitres;
+
+  /// No description provided for @refuelCost.
+  ///
+  /// In it, this message translates to:
+  /// **'Importo pagato'**
+  String get refuelCost;
+
+  /// No description provided for @refuelOdometer.
+  ///
+  /// In it, this message translates to:
+  /// **'Contachilometri'**
+  String get refuelOdometer;
+
+  /// No description provided for @refuelOdometerHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Lettura del cruscotto al momento del pieno'**
+  String get refuelOdometerHint;
+
+  /// No description provided for @refuelFull.
+  ///
+  /// In it, this message translates to:
+  /// **'Pieno'**
+  String get refuelFull;
+
+  /// No description provided for @refuelFullHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Serbatoio riempito fino allo scatto'**
+  String get refuelFullHint;
+
+  /// No description provided for @refuelNote.
+  ///
+  /// In it, this message translates to:
+  /// **'Nota'**
+  String get refuelNote;
+
+  /// No description provided for @refuelInvalid.
+  ///
+  /// In it, this message translates to:
+  /// **'Litri da 0 a 500, importo da 0 a 10.000 €'**
+  String get refuelInvalid;
+
+  /// No description provided for @ratesFromRefuels.
+  ///
+  /// In it, this message translates to:
+  /// **'Prezzo e consumo dai rifornimenti'**
+  String get ratesFromRefuels;
+
+  /// No description provided for @ratesFromRefuelsHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Ogni rifornimento aggiunge il prezzo pagato, ogni pieno il consumo misurato'**
+  String get ratesFromRefuelsHint;
+
+  /// No description provided for @rateFromRefuel.
+  ///
+  /// In it, this message translates to:
+  /// **'dai rifornimenti'**
+  String get rateFromRefuel;
+
+  /// No description provided for @rateFromAverage.
+  ///
+  /// In it, this message translates to:
+  /// **'media nazionale'**
+  String get rateFromAverage;
+
+  /// No description provided for @monthlySummary.
+  ///
+  /// In it, this message translates to:
+  /// **'Riepilogo del mese'**
+  String get monthlySummary;
+
+  /// No description provided for @monthlySummarySub.
+  ///
+  /// In it, this message translates to:
+  /// **'Km, viaggi, costi e rifornimenti di ogni mese'**
+  String get monthlySummarySub;
+
+  /// No description provided for @monthlySummaryNotify.
+  ///
+  /// In it, this message translates to:
+  /// **'Notifica a inizio mese'**
+  String get monthlySummaryNotify;
+
+  /// No description provided for @monthlySummaryNotifyHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Il 1° di ogni mese il riepilogo del mese appena finito'**
+  String get monthlySummaryNotifyHint;
+
+  /// No description provided for @summaryNotificationTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Il tuo mese di {month}'**
+  String summaryNotificationTitle(String month);
+
+  /// No description provided for @summaryNotificationBody.
+  ///
+  /// In it, this message translates to:
+  /// **'{km} km · {trips}'**
+  String summaryNotificationBody(String km, String trips);
+
+  /// No description provided for @summaryTrips.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 viaggio} other{{n} viaggi}}'**
+  String summaryTrips(int n);
+
+  /// No description provided for @previousMonth.
+  ///
+  /// In it, this message translates to:
+  /// **'Mese precedente'**
+  String get previousMonth;
+
+  /// No description provided for @nextMonth.
+  ///
+  /// In it, this message translates to:
+  /// **'Mese successivo'**
+  String get nextMonth;
+
+  /// No description provided for @comparedToBefore.
+  ///
+  /// In it, this message translates to:
+  /// **'{change} rispetto al mese prima'**
+  String comparedToBefore(String change);
+
+  /// No description provided for @summaryPartial.
+  ///
+  /// In it, this message translates to:
+  /// **'Mese in corso: i dati arrivano fino a oggi'**
+  String get summaryPartial;
+
+  /// No description provided for @summaryEmpty.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessun veicolo'**
+  String get summaryEmpty;
+
+  /// No description provided for @summaryDriven.
+  ///
+  /// In it, this message translates to:
+  /// **'{km} km in {n, plural, =1{1 viaggio} other{{n} viaggi}}, {time} di guida'**
+  String summaryDriven(String km, int n, String time);
+
+  /// No description provided for @summaryBusiness.
+  ///
+  /// In it, this message translates to:
+  /// **'{km} km di lavoro'**
+  String summaryBusiness(String km);
+
+  /// No description provided for @summaryCost.
+  ///
+  /// In it, this message translates to:
+  /// **'Costi: {cost}'**
+  String summaryCost(String cost);
+
+  /// No description provided for @summaryRefuels.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 rifornimento} other{{n} rifornimenti}}: {value}'**
+  String summaryRefuels(int n, String value);
+
+  /// No description provided for @summarySim.
+  ///
+  /// In it, this message translates to:
+  /// **'SIM: {size}'**
+  String summarySim(String size);
+
+  /// No description provided for @summaryAlarms.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 allarme} other{{n} allarmi}}'**
+  String summaryAlarms(int n);
+
+  /// No description provided for @kindMonthlySummary.
+  ///
+  /// In it, this message translates to:
+  /// **'Riepilogo del mese'**
+  String get kindMonthlySummary;
+
   /// No description provided for @costsIntro.
   ///
   /// In it, this message translates to:
@@ -4171,6 +4519,30 @@ abstract class AppLocalizations {
   /// In it, this message translates to:
   /// **'Nessun backup riuscito nelle ultime 26 ore'**
   String get backupStale;
+
+  /// No description provided for @backupVerifyOk.
+  ///
+  /// In it, this message translates to:
+  /// **'Prova di ripristino riuscita: {time}'**
+  String backupVerifyOk(String time);
+
+  /// No description provided for @backupVerifyFailed.
+  ///
+  /// In it, this message translates to:
+  /// **'Prova di ripristino FALLITA: {time}'**
+  String backupVerifyFailed(String time);
+
+  /// No description provided for @backupVerifyOld.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessuna prova di ripristino negli ultimi 9 giorni'**
+  String get backupVerifyOld;
+
+  /// No description provided for @backupNoVerify.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessuna prova di ripristino finora'**
+  String get backupNoVerify;
 
   /// No description provided for @navDashboards.
   ///
@@ -4537,6 +4909,30 @@ abstract class AppLocalizations {
   /// In it, this message translates to:
   /// **'Litri di carburante'**
   String get mFuel;
+
+  /// No description provided for @mRefuelCost.
+  ///
+  /// In it, this message translates to:
+  /// **'Spesa dei rifornimenti'**
+  String get mRefuelCost;
+
+  /// No description provided for @mRefuelLitres.
+  ///
+  /// In it, this message translates to:
+  /// **'Litri riforniti'**
+  String get mRefuelLitres;
+
+  /// No description provided for @mRefuelPrice.
+  ///
+  /// In it, this message translates to:
+  /// **'Prezzo pagato al litro'**
+  String get mRefuelPrice;
+
+  /// No description provided for @mRealConsumption.
+  ///
+  /// In it, this message translates to:
+  /// **'Consumo reale'**
+  String get mRealConsumption;
 
   /// No description provided for @mSpeed.
   ///

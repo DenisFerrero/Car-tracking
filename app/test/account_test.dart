@@ -100,6 +100,9 @@ void main() {
       expect(find.text(it.passkeyRemoved), findsOneWidget);
 
       // Step up closed: nothing happens
+      await reveal(tester, find.text(it.addPasskey));
+      await tester.ensureVisible(find.text(it.addPasskey));
+      await tester.pumpAndSettle();
       await tapAndSettle(tester, find.text(it.addPasskey));
       expect(find.text(it.defaultPasskeyBrowser), findsOneWidget);
       await tapAndSettle(tester, find.text(it.ok));
@@ -126,6 +129,8 @@ void main() {
       expect(app.passkeys.calls.length, 2);
 
       backend.on('DELETE', '/api/account/passkeys/pk2', (_) => Reply.error(404, 'not_found'));
+      await tester.fling(find.byType(ListView), const Offset(0, 2000), 3000);
+      await tester.pumpAndSettle();
       await tapAndSettle(tester, find.byTooltip(it.delete).last);
       expect(find.text(it.errNotFound), findsOneWidget);
     });

@@ -4,6 +4,7 @@ import type { Context } from "../context.ts";
 import { badRequest, notFound, parse } from "../http/errors.ts";
 import { requireDevice, requireVehicle } from "../services/access.ts";
 import { FUEL_TYPES, FUEL_UNITS, RATE_KINDS, convertConsumption, rateOn, vehicleProfile } from "../services/costs.ts";
+import { syncRefuelRates } from "../services/refuels.ts";
 import type { RateKind, VehicleProfile } from "../services/costs.ts";
 import { daysOf, today } from "../services/daily.ts";
 import type { DayStats } from "../services/daily.ts";
@@ -49,7 +50,9 @@ const profileBody = z.strictObject({
 	model: z.string().trim().max(60).default(""),
 	fuelUnit: z.enum(FUEL_UNITS),
 	fuelType: z.enum(FUEL_TYPES).nullable().default(null),
-	fuelPriceAuto: z.boolean().default(false)
+	fuelPriceAuto: z.boolean().default(false),
+	/** Unchanged when missing */
+	ratesFromRefuels: z.boolean().optional()
 }).refine(value => !value.fuelPriceAuto || value.fuelType !== null, "fuel type of the average price");
 
 // Values over time: price per litre 0-10 €, consumption 1-50 l/100 km (2-100 km/l, the unit
@@ -83,6 +86,7 @@ const presentProfile = async (ctx: Context, profile: VehicleProfile, todayIso: s
 		fuelUnit: profile.fuelUnit,
 		fuelType: profile.fuelType,
 		fuelPriceAuto: profile.fuelPriceAuto,
+		ratesFromRefuels: profile.ratesFromRefuels,
 		rates: Object.fromEntries(RATE_KINDS.map(kind => [kind, [...profile.rates[kind]].reverse()])),
 		current: { price, consumption: consumption === null ? null : round(consumption, 2), wear },
 		costPerKm: fuelPerKm === null && wear === null ? null : round((fuelPerKm ?? 0) + (wear ?? 0), 3),
@@ -186,8 +190,9 @@ export function registerVehicleRoutes (app: FastifyInstance, ctx: Context): void
 		await requireDevice(sql, request.auth!.user, id, "owner");
 		await sql`
 			UPDATE devices SET vehicle_model = ${body.model}, fuel_unit = ${body.fuelUnit}, fuel_type = ${body.fuelType},
-				fuel_price_auto = ${body.fuelPriceAuto}
+				fuel_price_auto = ${body.fuelPriceAuto}, rates_from_refuels = COALESCE(${body.ratesFromRefuels ?? null}, rates_from_refuels)
 			WHERE id = ${id}`;
+		if (body.ratesFromRefuels !== undefined) await syncRefuelRates(sql, id);
 		// Following the average: the latest one right away
 		if (body.fuelPriceAuto) await ctx.fuel.applyAuto(id);
 		return profileOf(id);
@@ -203,7 +208,7 @@ export function registerVehicleRoutes (app: FastifyInstance, ctx: Context): void
 		if (count!.count >= MAX_RATES) throw badRequest(`At most ${MAX_RATES} values`, "too_many_rates");
 		await sql`
 			INSERT INTO vehicle_rates (device_id, kind, valid_from, value) VALUES (${id}, ${body.kind}, ${body.validFrom ?? await today(sql, tz)}, ${body.value})
-			ON CONFLICT (device_id, kind, valid_from) DO UPDATE SET value = excluded.value`;
+			ON CONFLICT (device_id, kind, valid_from) DO UPDATE SET value = excluded.value, source = 'manual'`;
 		return profileOf(id);
 	});
 

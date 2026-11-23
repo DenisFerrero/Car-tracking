@@ -261,12 +261,13 @@ void main() {
   group('analysis', () {
     testWidgets('all the sections', (tester) async {
       final app = await openDevice(tester, analysisBackend(), '/devices/1?tab=2');
-      expect(find.text('12,3 km'), findsOneWidget);
-      expect(find.text('1 h 15 min'), findsOneWidget);
       final before = app.backend.calls('/api/devices/1/stats').length;
       await tester.drag(find.byKey(const Key('openTrends')), const Offset(0, 400));
       await settle(tester);
       expect(app.backend.calls('/api/devices/1/stats').length, greaterThan(before));
+      await reveal(tester, find.text('1 h 15 min'));
+      expect(find.text('12,3 km'), findsOneWidget);
+      expect(find.text('1 h 15 min'), findsOneWidget);
       await tapAndSettle(tester, find.text(it.tripsList(2)));
       await reveal(tester, find.textContaining('7,3 km'));
       await scrollDown(tester, 4);
@@ -335,6 +336,58 @@ void main() {
       await tapAndSettle(tester, find.byTooltip(it.delete).first);
       await tapAndSettle(tester, find.widgetWithText(FilledButton, it.delete));
       expect(backend.calls('/api/geofences/10', 'DELETE'), hasLength(1));
+    });
+
+    testWidgets('polygon areas: drawn by taps, back to a circle', (tester) async {
+      final backend = fullBackend()
+        ..on('GET', '/api/devices/1/geofences', (_) => [
+              {
+                'id': 10, 'deviceId': 1, 'name': 'Parco', 'lat': 45.07, 'lon': 7.68, 'radius': 400, 'notifyEnter': true, 'notifyExit': true,
+                'inside': false,
+                'polygon': [[45.07, 7.68], [45.072, 7.685], [45.068, 7.686]],
+              },
+            ])
+        ..on('POST', '/api/devices/1/geofences', (_) => {'id': 12})
+        ..on('PATCH', '/api/geofences/10', (_) => {'ok': true});
+      await openDevice(tester, backend, '/devices/1?tab=3');
+      expect(find.byType(PolygonLayer), findsWidgets);
+      expect(find.textContaining(it.areaPolygonSummary(3, it.areaOutside)), findsOneWidget);
+
+      // New area drawn: too few vertices refused, undo and clear, then a triangle
+      await tapAndSettle(tester, find.text(it.addArea));
+      await tapAndSettle(tester, find.text(it.areaPolygon));
+      expect(find.text(it.tapMapToDraw), findsOneWidget);
+      final map = tester.getCenter(find.byType(FlutterMap).last);
+      Future<void> vertex(Offset offset) async {
+        await tester.tapAt(map + offset);
+        await settle(tester);
+      }
+
+      await vertex(const Offset(-40, -40));
+      await vertex(const Offset(40, -40));
+      expect(find.byType(PolylineLayer), findsWidgets);
+      await tapAndSettle(tester, find.byKey(const Key('saveArea')));
+      expect(find.text(it.areaPolygonTooFew), findsOneWidget);
+      await tapAndSettle(tester, find.byKey(const Key('undoVertex')));
+      expect(find.text(it.areaVertices(1)), findsOneWidget);
+      await tapAndSettle(tester, find.byKey(const Key('clearVertices')));
+      expect(find.text(it.areaVertices(0)), findsOneWidget);
+      for (final offset in const [Offset(-40, -40), Offset(40, -40), Offset(0, 40)]) {
+        await vertex(offset);
+      }
+      await tapAndSettle(tester, find.byKey(const Key('saveArea')));
+      final body = backend.lastBody('/api/devices/1/geofences', 'POST');
+      expect((body['polygon'] as List).length, 3);
+      expect(body.containsKey('radius'), isFalse);
+
+      // The polygon edited goes back to a circle
+      await tapAndSettle(tester, find.text('Parco'));
+      expect(find.text(it.areaVertices(3)), findsOneWidget);
+      await tapAndSettle(tester, find.text(it.areaCircle));
+      await tapAndSettle(tester, find.byKey(const Key('saveArea')));
+      final patch = backend.lastBody('/api/geofences/10', 'PATCH');
+      expect(patch['polygon'], isNull);
+      expect(patch['radius'], isNotNull);
     });
 
     testWidgets('viewer areas: empty list, no position, errors', (tester) async {

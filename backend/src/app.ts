@@ -19,6 +19,8 @@ import { registerDataRoutes } from "./routes/data.ts";
 import { registerDeviceRoutes } from "./routes/devices.ts";
 import { registerExtraRoutes } from "./routes/extra.ts";
 import { registerFirmwareRoutes } from "./routes/firmware.ts";
+import { registerRefuelRoutes } from "./routes/refuels.ts";
+import { registerSummaryRoutes } from "./routes/summary.ts";
 import { registerVehicleRoutes } from "./routes/vehicle.ts";
 import { registerFriendRoutes } from "./routes/friends.ts";
 import { registerGeofenceRoutes } from "./routes/geofences.ts";
@@ -160,6 +162,8 @@ export async function buildApp (ctx: Context, gateway: Gateway): Promise<Fastify
 	registerExtraRoutes(app, ctx);
 	registerDataRoutes(app, ctx);
 	registerVehicleRoutes(app, ctx);
+	registerRefuelRoutes(app, ctx);
+	registerSummaryRoutes(app, ctx);
 	registerDashboardRoutes(app, ctx);
 	registerGeofenceRoutes(app, ctx);
 	registerNotificationRoutes(app, ctx);

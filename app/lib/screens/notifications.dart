@@ -54,9 +54,12 @@ class NotificationsScreen extends ConsumerWidget {
                           await ref.read(apiProvider).post('/api/notifications/read', {'ids': [n.id]});
                           ref.invalidate(notificationsProvider);
                         }
-                        // Alarms open the history of the owner, arrivals the live map
+                        if (!context.mounted) return;
+                        // The summary of the month opens its page; alarms the history of the
+                        // owner, arrivals the live map
+                        if (n.deviceId == null) return context.go('/account/summary?month=${n.data.month}');
                         final tab = device?.isOwner == true && !n.kind.startsWith('geofence') ? 1 : 0;
-                        if (context.mounted) context.go('/devices/${n.deviceId}?tab=$tab');
+                        context.go('/devices/${n.deviceId}?tab=$tab');
                       },
                     );
                   },

@@ -9,6 +9,7 @@ import '../core/format.dart';
 import '../core/providers.dart';
 import '../core/push.dart';
 import '../l10n/app_localizations.dart';
+import 'summary_screen.dart';
 
 final _accountProvider = FutureProvider.autoDispose<Map<String, dynamic>>(
   (ref) async => await ref.watch(apiProvider).get('/api/account') as Map<String, dynamic>,
@@ -122,6 +123,14 @@ class AccountScreen extends ConsumerWidget {
               subtitle: Text(l.friendsSub),
               onTap: () => context.go('/account/friends'),
             ),
+            ListTile(
+              key: const Key('openSummary'),
+              leading: const Icon(Icons.calendar_month),
+              title: Text(l.monthlySummary),
+              subtitle: Text(l.monthlySummarySub),
+              onTap: () => context.go('/account/summary'),
+            ),
+            MonthlySummarySwitch(enabled: data['monthlySummary'] != false, onChanged: () => ref.invalidate(_accountProvider)),
             if (session.user?.isAdmin == true)
               ListTile(
                 leading: const Icon(Icons.admin_panel_settings),

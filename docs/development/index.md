@@ -63,6 +63,60 @@ arduino-cli compile --fqbn esp32:esp32:esp32 firmware --library <LilyGo-Modem-Se
   --build-property "compiler.cpp.extra_flags=-DCT_CONFIG_OVERRIDE=\"test/config_lilygo.h\""
 ```
 
+## Test end-to-end sul web
+
+`e2e/run.sh` prova la web app come la usa una persona: costruisce l'immagine del backend
+(backend e web app, come la release), avvia un TimescaleDB, crea il primo amministratore con
+`create-admin` e lancia Playwright (Chromium, immagine ufficiale) sulla stessa rete Docker.
+Gli scenari, uno dopo l'altro sullo stesso account: invito con password, app di
+autenticazione e codici di recupero; veicolo senza tracker; due pieni e il consumo reale;
+area poligonale disegnata sulla mappa; riepilogo del mese; uscita e accesso con il secondo
+fattore. Le mappe usano tasselli del backend stesso (nessuna richiesta ai server OSM).
+
+```sh
+sh e2e/run.sh                                         # costruisce l'immagine e prova
+E2E_IMAGE=ct-e2e:local sh e2e/run.sh                  # immagine già costruita
+E2E_IMAGE=ct-e2e:local E2E_WEB=app/build/web sh e2e/run.sh   # web app di un flutter build locale
+```
+
+Flutter disegna su un canvas: i test accendono la semantica (l'albero di accessibilità dà al
+DOM testi, pulsanti e campi) e cercano gli elementi per ruolo ed etichetta, con i testi
+italiani letti da `app/lib/l10n/app_it.arb`. Screenshot e trace dei test falliti in
+`e2e/results/`, report in `e2e/report/`; la CI li allega al job `e2e`.
+
+## Test di carico
+
+`npm run load` (in `backend/`) riempie un database di tracker, utenti e storico, poi tiene
+collegati i tracker (HELLO → ACK, posizioni a gruppi) e fa usare l'app agli utenti
+(dispositivi, posizioni, viaggi, statistiche, copertura, andamento, scadenze, dashboard, canale
+realtime aperto); alla fine stampa per ogni pagina numero, errori per codice HTTP, p50 / p95 /
+p99 / max e le query più pesanti di `pg_stat_statements`. Rifiuta indirizzi non locali senza
+`--allow-remote`; `--cleanup` elimina i dati della prova.
+
+```sh
+# Database e backend dedicati (mai quelli di produzione)
+DATABASE_URL=postgres://... CRYPTO_MASTER_KEY=... npm run load -- --trackers 200 --users 40 --days 90 --minutes 12
+npm run load -- --skip-seed --minutes 3                # di nuovo, sugli stessi dati
+```
+
+Risultato con backend su 1 CPU / 512 MB e TimescaleDB su 2 CPU / 2 GB, 200 tracker, 40
+utenti, 90 giorni di storico (10 milioni di posizioni; i chunk compressi passano da 645 a
+79 MB, 974 MB in tutto con gli ultimi 14 giorni non compressi):
+circa 19 richieste al secondo senza errori, p95 sotto i 100 ms per ogni pagina (dashboard di
+30 giorni 95 ms, copertura 60 ms, il resto sotto i 35 ms).
+
+Cosa ha trovato e corretto:
+
+- **Ultima posizione dei dispositivi**: un `DISTINCT ON` decomprimeva tutti i chunk del
+  periodo (36 ms); ora una `LATERAL` con `ORDER BY time DESC LIMIT 1` per dispositivo legge
+  solo il chunk più recente (0,4 ms). Stesso schema per l'esportazione dei dati.
+- **Pulizia delle posizioni dei telefoni**: con una sottoquery sugli id TimescaleDB
+  decomprimeva ogni chunk compresso per cercarli, superava il limite di 100.000 righe e il
+  job orario si fermava lì (sessioni e inviti scaduti mai puliti). Ora gli id sono costanti e
+  le cancellazioni nei chunk compressi (pulizia, dispositivo rimosso, tracker abbinato a un
+  veicolo) tolgono il limite solo nella loro transazione.
+- **Dati aggiuntivi** (`device_extra`) compressi dopo 30 giorni come il traffico.
+
 ## Schermate per il controllo dell'interfaccia
 
 `app/screenshots/screens_test.dart` apre le pagine principali con i dati dei test (font

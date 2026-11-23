@@ -88,7 +88,9 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               content: Text('${text.title} · ${text.body}'),
               action: SnackBarAction(
                 label: context.l10n.open,
-                onPressed: () => context.go('/devices/${notification.deviceId}'),
+                onPressed: () => context.go(notification.deviceId == null
+                    ? '/account/summary?month=${notification.data.month}'
+                    : '/devices/${notification.deviceId}'),
               ),
             ),
           );

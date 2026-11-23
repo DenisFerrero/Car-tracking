@@ -43,10 +43,12 @@ every vehicle and the layout can be sent to friends: see [Custom dashboards](das
 
 ## Arrival areas and alerts
 
-- **Areas**: every user sets circular areas (50 m - 50 km) and gets a notification when the
-  device enters (and, if wanted, leaves). Areas are personal. An area can alert **only at
-  certain times** (days and time range; if the end comes before the start it goes past
-  midnight, e.g. 23:00-6:00).
+- **Areas**: every user sets **circular** areas (50 m - 50 km) or **polygons** (3 to 50
+  vertices tapped on the map, up to 50 km: a neighbourhood, a car park, a stretch of road)
+  and gets a notification when the device enters (and, if wanted, leaves). Leaving a polygon
+  has a margin of 30 m, so an inaccurate GPS point on the border doesn't send double alerts.
+  Areas are personal. An area can alert **only at certain times** (days and time range; if
+  the end comes before the start it goes past midnight, e.g. 23:00-6:00).
 - **Long stop**: alert when the device stays still for more than 1-48 hours outside the areas
   of the user.
 - **Low battery** of a shared phone: threshold 10-50%.
@@ -67,9 +69,29 @@ every vehicle and the layout can be sent to friends: see [Custom dashboards](das
   of the environment (MASE, open data, every Monday) of petrol, diesel and LPG; with *Price
   from the national average* every new week enters the history of the vehicle on its own (a
   price entered by hand on the same day wins).
+- **Refuels** (trackers and vehicles, *Analysis → Refuels*): date, litres, amount, odometer
+  (the current one proposed), full tank or partial, note. Between two full tanks the **real
+  consumption** is the litres put in since the previous full tank (partial ones included)
+  divided by the km driven; values outside 1-50 l/100 km don't count. The amount gives the
+  price per litre. With *Price and consumption from the refuels* (in the costs, on at first)
+  every refuel with an amount adds to the history the price paid from its day and every full
+  tank measured the consumption from the previous full tank: they are marked *from the
+  refuels*, follow the changes of the refuels and can't be deleted by hand; a value entered by
+  hand on the same day wins and the national average stops for 14 days after a refuel with an
+  amount.
 - **Statistics over time**: for 12 months or 26 weeks km (work and personal), driving hours
   and trips; for trackers also battery health, MB on the SIM and alarms. Daily summary kept 3
   years for trackers and vehicles, 400 days for phones.
+
+## Monthly summary
+
+On the 1st of every month, from 8:00 (time zone `TIMEZONE`), a notification with the km, trips
+and costs of the month just ended reaches who had trips or refuels; it's turned off in
+**Account → Notification at the start of the month**. The *Monthly summary* page (from the
+account or tapping the notification) shows the totals with the change on the month before,
+every vehicle (km, trips, driving time, work km, costs, refuels and real consumption, data on
+the SIM, alarms) and the deadlines near or overdue; the arrows change month (up to 3 years
+back), the current month goes up to today.
 
 ## Deadlines and maintenance
 
@@ -89,6 +111,6 @@ every field and readings with date and time, no charts.
 ## Your data
 
 *Export my data* downloads a JSON with profile, sign-ins, friends, devices with positions,
-areas, notifications, costs and extra data. *Delete account* deletes phones, vehicles,
+areas, notifications, costs, refuels and extra data. *Delete account* deletes phones, vehicles,
 positions, shares, friends, areas and notifications; trackers become free again and can be
 paired again with the code on their label.

@@ -33,6 +33,24 @@ For SFTP the SSH key goes in `secrets/ssh/` (mounted read-only). **Keep `RESTIC_
 `CRYPTO_MASTER_KEY` in a password manager off the server**: without the first the repository
 can't be read, without the second the trackers no longer connect to the restored server.
 
+## Automatic restore test
+
+A backup never restored is only a hope. Every week, on day `BACKUP_VERIFY_DAY` (1 Monday ... 7
+Sunday, default 7; `off` for never) after the backup, and anyway when the last test is older
+than 8 days, the service restores the newest dump into a separate database
+(`<POSTGRES_DB>_verify`, then dropped) and checks that it has the same migrations and
+hypertables as the database in use and at least one user. The result (time, file, duration,
+users, devices, positions, error) goes to `/backups/last-verify` and to **Account →
+Administration**, with a warning when the last test failed or is older than 9 days.
+
+```sh
+docker compose exec backup sh /scripts/backup.sh verify       # test now
+```
+
+Tried on a database of 200 trackers with 90 days of history: an 85 MB dump, restore and checks
+in 9 seconds (10 million positions, compressed chunks included). For a few seconds the test
+database takes the same space as the one in use: keep it in mind on the disk.
+
 ## Restore
 
 Verified: dump and full restore with hypertables and aggregates.

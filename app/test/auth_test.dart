@@ -269,6 +269,20 @@ void main() {
     expect(find.byType(LoginScreen), findsOneWidget);
   });
 
+  testWidgets('an invite opened while the session loads: no login', (tester) async {
+    final auth = AuthBackend();
+    auth.backend.on('GET', '/api/auth/invites/abc', (_) => {'email': 'new@example.com', 'name': 'Nuovo', 'reset': false});
+    final app = TestApp(auth.backend);
+    await app.start(tester);
+    // The link opened in a new browser: the session isn't known yet
+    app.session.ready = false;
+    app.go(tester, '/invite/abc');
+    await settle(tester);
+    await app.session.load();
+    await settle(tester);
+    expect(find.text(it.inviteHint('new@example.com')), findsOneWidget);
+  });
+
   testWidgets('a page asked before the login opens after it', (tester) async {
     final auth = AuthBackend();
     final app = TestApp(auth.backend);

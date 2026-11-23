@@ -34,6 +34,24 @@ Per SFTP la chiave SSH va in `secrets/ssh/` (montata in sola lettura). **Conserv
 la prima il repository non si legge, senza la seconda i tracker non si collegano più al
 server ripristinato.
 
+## Prova di ripristino automatica
+
+Un backup mai ripristinato è solo una speranza. Ogni settimana, il giorno `BACKUP_VERIFY_DAY`
+(1 lunedì ... 7 domenica, predefinito 7; `off` per mai) dopo il backup, e comunque se l'ultima
+prova ha più di 8 giorni, il servizio ripristina il dump più recente in un database separato
+(`<POSTGRES_DB>_verify`, poi eliminato) e controlla che abbia le stesse migrazioni e le stesse
+hypertable del database in uso e almeno un utente. Il risultato (data, file, durata, utenti,
+dispositivi, posizioni, errore) va in `/backups/last-verify` e in **Account →
+Amministrazione**, con un avviso se l'ultima prova è fallita o ha più di 9 giorni.
+
+```sh
+docker compose exec backup sh /scripts/backup.sh verify       # prova subito
+```
+
+Provata su un database di 200 tracker con 90 giorni di storico: dump di 85 MB, ripristino e
+controlli in 9 secondi (10 milioni di posizioni, chunk compressi compresi). Il database di
+prova occupa per qualche secondo lo stesso spazio di quello in uso: tienine conto sul disco.
+
 ## Ripristino
 
 Verificato: dump e ripristino completo con hypertable e aggregati.

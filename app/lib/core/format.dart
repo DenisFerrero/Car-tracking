@@ -142,6 +142,14 @@ String costText(AppLocalizations l, Map<String, dynamic> cost) {
         title: l.kindBatteryHealth,
         body: l.notificationBodyBatteryHealth(data.device, formatDecimal(data.voltage ?? 0, 2)),
       ),
+    'monthly_summary' => (
+        title: l.summaryNotificationTitle(
+            data.month == null ? '' : DateFormat('MMMM').format(DateTime(2026, int.parse(data.month!.substring(5, 7))))),
+        body: [
+          l.summaryNotificationBody(formatInt((data.distanceKm ?? 0).round()), l.summaryTrips(data.trips ?? 0)),
+          if (data.cost != null) formatEuro(data.cost!),
+        ].join(' · '),
+      ),
     'maintenance' => (
         title: (data.due == 'due' ? l.maintenanceDueTitle : l.maintenanceSoonTitle)(
             data.title?.isNotEmpty == true ? data.title! : maintenanceKindLabel(l, data.maintenance ?? 'other')),
@@ -179,6 +187,10 @@ String errorText(AppLocalizations l, Object error) {
     'not_a_tracker' => l.errNotATracker,
     'deadline_untitled' => l.deadlineNeedsTitle,
     'too_many_rates' => l.errTooManyRates,
+    'too_many_refuels' => l.errTooManyRefuels,
+    'refuel_future' => l.errRefuelFuture,
+    'polygon_invalid' => l.errPolygonInvalid,
+    'polygon_too_large' => l.errPolygonTooLarge,
     'friend_self' => l.errFriendSelf,
     'too_many_friends' => l.errTooManyFriends,
     'too_many_requests' => l.errTooManyRequests,

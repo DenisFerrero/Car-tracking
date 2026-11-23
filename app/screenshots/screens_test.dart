@@ -9,9 +9,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:car_tracking/screens/dashboards/catalog.dart';
+import 'package:car_tracking/screens/summary_screen.dart';
+import 'package:flutter_map/flutter_map.dart';
 
 import '../test/dashboards_test.dart' show dashboardBackend, dashboardJson, fakeResult;
 import '../test/platform_log_test.dart' show logBackend;
+import '../test/refuels_test.dart' show refuelsBackend;
+import '../test/summary_test.dart' show summaryJson;
 import '../test/device_test.dart' show analysisBackend;
 import '../test/support.dart';
 import '../test/vehicle_test.dart' show deadline, trendsJson;
@@ -406,6 +410,40 @@ void main() {
   testWidgets('desktop dark settings', (tester) async {
     await open(tester, '/devices/1?tab=4', size: desktop, dark: true);
     await shot(tester, 'd13_dark_settings');
+  });
+  testWidgets('34 refuels', (tester) async {
+    await open(tester, '/devices/1/refuels', backend: refuelsBackend());
+    await shot(tester, '34_refuels');
+  });
+  testWidgets('35 refuel dialog', (tester) async {
+    await open(tester, '/devices/1/refuels', backend: refuelsBackend());
+    await tapAndSettle(tester, find.byKey(const Key('addRefuel')));
+    await tester.enterText(find.byKey(const Key('refuelLitres')), '42,5');
+    await tester.enterText(find.byKey(const Key('refuelCost')), '80');
+    await settle(tester);
+    await shot(tester, '35_refuel_dialog');
+  });
+  testWidgets('36 monthly summary', (tester) async {
+    final month = lastMonth();
+    await open(tester, '/account/summary', size: tall, backend: demoBackend()..on('GET', '/api/summary/$month', (_) => summaryJson(month)));
+    await shot(tester, '36_summary');
+  });
+  testWidgets('37 polygon area', (tester) async {
+    await open(tester, '/devices/1?tab=3');
+    await tapAndSettle(tester, find.text(it.addArea));
+    await tapAndSettle(tester, find.text(it.areaPolygon));
+    final map = tester.getCenter(find.byType(FlutterMap).last);
+    for (final offset in const [Offset(-80, -60), Offset(70, -80), Offset(90, 40), Offset(-30, 80)]) {
+      await tester.tapAt(map + offset);
+      await settle(tester);
+    }
+    await shot(tester, '37_polygon_area');
+  });
+  testWidgets('desktop dark monthly summary', (tester) async {
+    final month = lastMonth();
+    await open(tester, '/account/summary', size: desktop, dark: true,
+        backend: demoBackend()..on('GET', '/api/summary/$month', (_) => summaryJson(month)));
+    await shot(tester, 'd14_dark_summary');
   });
 }
 

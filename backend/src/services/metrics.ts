@@ -8,6 +8,8 @@ import type { TripCost } from "./costs.ts";
 import { daysOf, today } from "./daily.ts";
 import type { DayStats } from "./daily.ts";
 import { deviceName } from "./notifier.ts";
+import { loadRefuels, measure } from "./refuels.ts";
+import type { MeasuredRefuel } from "./refuels.ts";
 import { deadlineState, odometer } from "./vehicle.ts";
 
 // Catalog of the metrics of the dashboards: what a widget can show, from which data, for
@@ -16,6 +18,7 @@ import { deadlineState, odometer } from "./vehicle.ts";
 //
 //  - days: the daily summaries (daily_stats), periods up to 3 years
 //  - costs: the km of each day with consumption, price and wear valid on that day
+//  - refuels: the refuels of each day (amount, litres, price, consumption measured)
 //  - positions / extra: the points of the trackers and their extra data, aggregated in
 //    TimescaleDB (time_bucket), periods up to 93 days
 //  - odometer, deadlines, status: the current state, no period
@@ -31,7 +34,7 @@ export const MAX_POINTS = 2000;
 export const MAX_SAMPLED_DAYS = 93;
 export const MAX_DAYS = 3 * 366;
 
-type Source = "days" | "costs" | "positions" | "extra" | "odometer" | "deadlines" | "status";
+type Source = "days" | "costs" | "refuels" | "positions" | "extra" | "odometer" | "deadlines" | "status";
 type Total = "sum" | "max" | "avg";
 
 interface Metric {
@@ -42,6 +45,8 @@ interface Metric {
 	total?: Total;
 	day?: (day: DayStats) => number | null;
 	cost?: keyof TripCost;
+	/** Value of the refuels of a day */
+	refuel?: (items: MeasuredRefuel[]) => number | null;
 	/** Value of a point (positions): a column or an expression of the catalog, never of the request */
 	column?: string;
 }
@@ -49,6 +54,12 @@ interface Metric {
 const ALL = ["tracker", "vehicle", "phone"] as const;
 const CARS = ["tracker", "vehicle"] as const;
 const TRACKERS = ["tracker"] as const;
+
+const sumOf = (values: (number | null)[]) => {
+	const present = values.filter((value): value is number => value !== null);
+	return present.length ? present.reduce((a, b) => a + b, 0) : null;
+};
+const lastOf = (values: (number | null)[]) => values.filter((value): value is number => value !== null).at(-1) ?? null;
 
 export const METRICS = {
 	distance: { source: "days", kinds: ALL, total: "sum", day: day => day.distanceKm },
@@ -64,6 +75,10 @@ export const METRICS = {
 	fuelCost: { source: "costs", kinds: ALL, total: "sum", cost: "fuelCost" },
 	wearCost: { source: "costs", kinds: ALL, total: "sum", cost: "wearCost" },
 	fuel: { source: "costs", kinds: ALL, total: "sum", cost: "fuelL" },
+	refuelCost: { source: "refuels", kinds: CARS, total: "sum", refuel: items => sumOf(items.map(item => item.cost)) },
+	refuelLitres: { source: "refuels", kinds: CARS, total: "sum", refuel: items => sumOf(items.map(item => item.litres)) },
+	refuelPrice: { source: "refuels", kinds: CARS, total: "avg", refuel: items => lastOf(items.map(item => item.pricePerLitre)) },
+	realConsumption: { source: "refuels", kinds: CARS, total: "avg", refuel: items => lastOf(items.map(item => item.consumption)) },
 	speed: { source: "positions", kinds: ALL, column: "CASE WHEN status = 0 THEN speed END" },
 	altitude: { source: "positions", kinds: ALL, column: "altitude" },
 	signal: { source: "positions", kinds: TRACKERS, column: "signal" },
@@ -91,6 +106,7 @@ const SERIES_VIEWS: readonly View[] = ["number", "line", "bars", "vehicles", "ta
 const VIEWS_OF: Record<Source, readonly View[]> = {
 	days: SERIES_VIEWS,
 	costs: SERIES_VIEWS,
+	refuels: SERIES_VIEWS,
 	positions: SERIES_VIEWS,
 	extra: SERIES_VIEWS,
 	odometer: ["number", "vehicles", "table"],
@@ -101,7 +117,7 @@ const VIEWS_OF: Record<Source, readonly View[]> = {
 type Group = "total" | "vehicle" | "time";
 const GROUP: Partial<Record<View, Group>> = { number: "total", vehicles: "vehicle", table: "vehicle", line: "time", bars: "time" };
 const SAMPLED: readonly Source[] = ["positions", "extra"];
-const DAILY: readonly Source[] = ["days", "costs"];
+const DAILY: readonly Source[] = ["days", "costs", "refuels"];
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 	.refine(value => !Number.isNaN(Date.parse(value)) && value >= "2000-01-01", "invalid date");
@@ -268,6 +284,8 @@ export async function computeWidgets (sql: Sql, timeZone: string, userId: number
 	const daysOfDevice = (device: DeviceInfo, from: string, to: string) =>
 		once(`days:${device.id}:${from}:${to}`, () => daysOf(sql, timeZone, device, from, to));
 	const profileOf = (id: number) => once(`profile:${id}`, () => vehicleProfile(sql, id));
+	// All the refuels: an interval can start before the period
+	const refuelsOf = (id: number) => once(`refuels:${id}`, async () => measure(await loadRefuels(sql, id)));
 	const odometerOf = (device: DeviceInfo) => once(`odometer:${device.id}`, () => odometer(sql, timeZone, device));
 	const bounds = (from: string, to: string) => once(`bounds:${from}:${to}`, async () => (await sql<{ start: Date; end: Date }[]>`
 		SELECT (${from}::date::timestamp AT TIME ZONE ${timeZone}) AS start,
@@ -275,6 +293,13 @@ export async function computeWidgets (sql: Sql, timeZone: string, userId: number
 
 	/** Value of each day of a device: daily summary or cost of the km of that day */
 	const dayValues = async (metric: Metric, device: DeviceInfo, from: string, to: string) => {
+		if (metric.source === "refuels") {
+			const byDay = new Map<string, MeasuredRefuel[]>();
+			for (const item of await refuelsOf(device.id)) {
+				if (item.day >= from && item.day <= to) byDay.set(item.day, [...byDay.get(item.day) ?? [], item]);
+			}
+			return [...byDay].map(([day, items]) => ({ day, value: metric.refuel!(items) }));
+		}
 		const days = await daysOfDevice(device, from, to);
 		if (metric.source === "days") return days.map(item => ({ day: item.day, value: metric.day!(item) }));
 		const profile = await profileOf(device.id);

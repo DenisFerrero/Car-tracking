@@ -105,6 +105,7 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
   late String _unit = _profile['fuelUnit'] as String;
   late String? _fuelType = _profile['fuelType'] as String?;
   late bool _auto = _profile['fuelPriceAuto'] as bool;
+  late bool _fromRefuels = _profile['ratesFromRefuels'] as bool? ?? true;
   late final _model = TextEditingController(text: _profile['model'] as String);
   bool _busy = false;
 
@@ -134,6 +135,7 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
           'fuelUnit': _unit,
           'fuelType': _fuelType,
           'fuelPriceAuto': _fuelType != null && _auto,
+          'ratesFromRefuels': _fromRefuels,
         }),
         context.l10n.costsSaved,
       );
@@ -208,6 +210,14 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
         value: _fuelType != null && _auto,
         onChanged: _fuelType == null ? null : (value) => setState(() => _auto = value),
       ),
+      SwitchListTile(
+        key: const Key('ratesFromRefuels'),
+        contentPadding: EdgeInsets.zero,
+        title: Text(l.ratesFromRefuels),
+        subtitle: Text(l.ratesFromRefuelsHint),
+        value: _fromRefuels,
+        onChanged: (value) => setState(() => _fromRefuels = value),
+      ),
       FilledButton(key: const Key('vehicleSave'), onPressed: _busy ? null : _save, child: Text(l.save)),
       if (average != null)
         Card(
@@ -261,8 +271,13 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
             dense: true,
             contentPadding: EdgeInsets.zero,
             title: Text(rate.format(item['value'] as num, _unit)),
-            subtitle: Text(l.validFrom(formatDay(DateTime.parse(item['validFrom'] as String)))),
-            trailing: IconButton(
+            subtitle: Text([
+              l.validFrom(formatDay(DateTime.parse(item['validFrom'] as String))),
+              if (item['source'] == 'refuel') l.rateFromRefuel,
+              if (item['source'] == 'auto') l.rateFromAverage,
+            ].join(' · ')),
+            // The values of the refuels change with the refuels
+            trailing: item['source'] == 'refuel' ? null : IconButton(
               key: Key('delete_${rate.kind}_${item['validFrom']}'),
               tooltip: l.delete,
               icon: const Icon(Icons.delete_outline),

@@ -277,6 +277,10 @@ class NotificationData {
     this.km,
     this.version,
     this.automatic,
+    this.month,
+    this.distanceKm,
+    this.trips,
+    this.cost,
   });
 
   factory NotificationData.fromJson(Map<String, dynamic>? json, DateTime fallback) => NotificationData(
@@ -292,6 +296,10 @@ class NotificationData {
         km: _int(json?['km']),
         version: json?['version'] as String?,
         automatic: json?['automatic'] as bool?,
+        month: json?['month'] as String?,
+        distanceKm: (json?['distanceKm'] as num?)?.toDouble(),
+        trips: _int(json?['trips']),
+        cost: (json?['cost'] as num?)?.toDouble(),
         time: _date(json?['time']) ?? fallback,
       );
 
@@ -312,6 +320,12 @@ class NotificationData {
   final int? days;
   final int? km;
 
+  /// monthly_summary: month YYYY-MM and its totals
+  final String? month;
+  final double? distanceKm;
+  final int? trips;
+  final double? cost;
+
   /// firmware: new version, installed by the tracker itself or by the owner
   final String? version;
   final bool? automatic;
@@ -321,7 +335,7 @@ class NotificationData {
 class AppNotification {
   AppNotification({
     required this.id,
-    required this.deviceId,
+    this.deviceId,
     required this.kind,
     required this.data,
     required this.createdAt,
@@ -334,7 +348,7 @@ class AppNotification {
     final createdAt = _date(json['createdAt'])!;
     return AppNotification(
       id: json['id'] as int,
-      deviceId: json['deviceId'] as int,
+      deviceId: json['deviceId'] as int?,
       kind: json['kind'] as String,
       data: NotificationData.fromJson(json['data'] as Map<String, dynamic>?, createdAt),
       createdAt: createdAt,
@@ -345,7 +359,9 @@ class AppNotification {
   }
 
   final int id;
-  final int deviceId;
+
+  /// null for the summary of the month
+  final int? deviceId;
   final String kind;
   final NotificationData data;
   final DateTime createdAt;
@@ -366,6 +382,7 @@ class AppNotification {
         'battery_health' => Icons.battery_3_bar,
         'maintenance' => Icons.build,
         'firmware' => Icons.system_update,
+        'monthly_summary' => Icons.insights,
         _ => Icons.directions_car,
       };
 }
@@ -396,6 +413,7 @@ class Geofence {
     required this.lat,
     required this.lon,
     required this.radius,
+    this.polygon,
     this.notifyEnter = true,
     this.notifyExit = false,
     this.schedule,
@@ -409,6 +427,9 @@ class Geofence {
         lat: _double(json['lat'])!,
         lon: _double(json['lon'])!,
         radius: _int(json['radius'])!,
+        polygon: (json['polygon'] as List?)
+            ?.map((vertex) => LatLng(_double((vertex as List)[0])!, _double(vertex[1])!))
+            .toList(),
         notifyEnter: json['notifyEnter'] != false,
         notifyExit: json['notifyExit'] == true,
         schedule: json['schedule'] == null ? null : AreaSchedule.fromJson(json['schedule'] as Map<String, dynamic>),
@@ -421,6 +442,9 @@ class Geofence {
   final double lat;
   final double lon;
   final int radius;
+
+  /// Vertices of an area drawn as a polygon; null = a circle (center and radius)
+  final List<LatLng>? polygon;
   final bool notifyEnter;
   final bool notifyExit;
 

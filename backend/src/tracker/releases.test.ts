@@ -214,7 +214,7 @@ describe("automatic updates, extra data, releases, fuel prices", { skip: SKIP },
 		assert.equal(await fuel.refreshIfStale(), 2);
 		const vehicle = (await h.api("GET", `/api/devices/${deviceId}/vehicle`, { token: owner.token })).body;
 		assert.deepEqual(vehicle.average, { week: "2026-11-16", price: 2.21 });
-		assert.deepEqual(vehicle.rates.price, [{ validFrom: "2026-11-16", value: 2.21 }]);
+		assert.deepEqual(vehicle.rates.price, [{ validFrom: "2026-11-16", value: 2.21, source: "auto" }]);
 		// Tried at most every 6 hours
 		assert.equal(await fuel.refreshIfStale(), 0);
 		// Recent weeks: not downloaded again; errors only logged

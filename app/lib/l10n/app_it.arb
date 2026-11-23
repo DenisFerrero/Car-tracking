@@ -662,6 +662,35 @@
       }
     }
   },
+  "areaPolygonSummary": "{n, plural, =1{1 vertice} other{{n} vertici}} · {state}",
+  "@areaPolygonSummary": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "areaCircle": "Cerchio",
+  "areaPolygon": "Poligono",
+  "tapMapToDraw": "Tocca la mappa per aggiungere i vertici del poligono",
+  "areaVertices": "{n, plural, =0{Nessun vertice} =1{1 vertice} other{{n} vertici}}",
+  "@areaVertices": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "undoVertex": "Annulla l'ultimo",
+  "clearVertices": "Ricomincia",
+  "areaPolygonTooFew": "Servono almeno 3 vertici",
+  "errPolygonInvalid": "I lati dell'area si incrociano o l'area è troppo piccola",
+  "errPolygonTooLarge": "L'area supera i 50 km",
+  "errTooManyRefuels": "Troppi rifornimenti per questo veicolo",
+  "errRefuelFuture": "Un rifornimento non può essere nel futuro",
   "deleteAreaTitle": "Eliminare {name}?",
   "@deleteAreaTitle": {
     "placeholders": {
@@ -1428,6 +1457,178 @@
   "walkTo": "Raggiungi a piedi",
   "openFailed": "Impossibile aprire il collegamento",
   "tripCosts": "Costi dei viaggi",
+  "refuels": "Rifornimenti",
+  "addRefuel": "Aggiungi rifornimento",
+  "editRefuel": "Modifica rifornimento",
+  "refuelSaved": "Rifornimenti aggiornati",
+  "noRefuels": "Nessun rifornimento: aggiungi il primo pieno",
+  "refuelsHint": "Tra due pieni i litri messi e i km percorsi danno il consumo reale; l'importo dà il prezzo al litro.",
+  "realConsumption": "Consumo reale: {value}",
+  "@realConsumption": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "realConsumptionUnknown": "Consumo reale: servono due pieni con il contachilometri",
+  "lastConsumption": "Ultimo pieno: {value}",
+  "@lastConsumption": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "refuelTotals": "{n, plural, =1{1 rifornimento} other{{n} rifornimenti}}, {litres}, {cost}",
+  "@refuelTotals": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "litres": {
+        "type": "String"
+      },
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "measuredKm": "Misurato su {km} km",
+  "@measuredKm": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "refuelPartial": "parziale",
+  "refuelMeasured": "{value} in {km} km",
+  "@refuelMeasured": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "refuelRatesOn": "Prezzi e consumi usati per i costi dei viaggi",
+  "refuelRatesOff": "Prezzi e consumi non usati per i costi dei viaggi",
+  "refuelLitres": "Litri",
+  "refuelCost": "Importo pagato",
+  "refuelOdometer": "Contachilometri",
+  "refuelOdometerHint": "Lettura del cruscotto al momento del pieno",
+  "refuelFull": "Pieno",
+  "refuelFullHint": "Serbatoio riempito fino allo scatto",
+  "refuelNote": "Nota",
+  "refuelInvalid": "Litri da 0 a 500, importo da 0 a 10.000 €",
+  "ratesFromRefuels": "Prezzo e consumo dai rifornimenti",
+  "ratesFromRefuelsHint": "Ogni rifornimento aggiunge il prezzo pagato, ogni pieno il consumo misurato",
+  "rateFromRefuel": "dai rifornimenti",
+  "rateFromAverage": "media nazionale",
+  "monthlySummary": "Riepilogo del mese",
+  "monthlySummarySub": "Km, viaggi, costi e rifornimenti di ogni mese",
+  "monthlySummaryNotify": "Notifica a inizio mese",
+  "monthlySummaryNotifyHint": "Il 1° di ogni mese il riepilogo del mese appena finito",
+  "summaryNotificationTitle": "Il tuo mese di {month}",
+  "@summaryNotificationTitle": {
+    "placeholders": {
+      "month": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryNotificationBody": "{km} km · {trips}",
+  "@summaryNotificationBody": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      },
+      "trips": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryTrips": "{n, plural, =1{1 viaggio} other{{n} viaggi}}",
+  "@summaryTrips": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "previousMonth": "Mese precedente",
+  "nextMonth": "Mese successivo",
+  "comparedToBefore": "{change} rispetto al mese prima",
+  "@comparedToBefore": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryPartial": "Mese in corso: i dati arrivano fino a oggi",
+  "summaryEmpty": "Nessun veicolo",
+  "summaryDriven": "{km} km in {n, plural, =1{1 viaggio} other{{n} viaggi}}, {time} di guida",
+  "@summaryDriven": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryBusiness": "{km} km di lavoro",
+  "@summaryBusiness": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryCost": "Costi: {cost}",
+  "@summaryCost": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryRefuels": "{n, plural, =1{1 rifornimento} other{{n} rifornimenti}}: {value}",
+  "@summaryRefuels": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "summarySim": "SIM: {size}",
+  "@summarySim": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryAlarms": "{n, plural, =1{1 allarme} other{{n} allarmi}}",
+  "@summaryAlarms": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "kindMonthlySummary": "Riepilogo del mese",
   "costsIntro": "Con consumo, prezzo del carburante e usura ogni viaggio mostra quanto è costato e il registro viaggi del mese aggiunge le colonne dei costi.",
   "fuelType": "Carburante",
   "fuelPetrol": "Benzina",
@@ -1624,6 +1825,24 @@
   },
   "backupNoOffsite": "Nessuna copia fuori dal server",
   "backupStale": "Nessun backup riuscito nelle ultime 26 ore",
+  "backupVerifyOk": "Prova di ripristino riuscita: {time}",
+  "@backupVerifyOk": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "backupVerifyFailed": "Prova di ripristino FALLITA: {time}",
+  "@backupVerifyFailed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "backupVerifyOld": "Nessuna prova di ripristino negli ultimi 9 giorni",
+  "backupNoVerify": "Nessuna prova di ripristino finora",
   "navDashboards": "Dashboard",
   "errTooManyDashboards": "Hai già il numero massimo di dashboard (20)",
   "dashboardNew": "Nuova dashboard",
@@ -1716,6 +1935,10 @@
   "mFuelCost": "Spesa carburante",
   "mWearCost": "Usura",
   "mFuel": "Litri di carburante",
+  "mRefuelCost": "Spesa dei rifornimenti",
+  "mRefuelLitres": "Litri riforniti",
+  "mRefuelPrice": "Prezzo pagato al litro",
+  "mRealConsumption": "Consumo reale",
   "mSpeed": "Velocità in movimento",
   "mAltitude": "Altitudine",
   "mSignal": "Segnale LTE",

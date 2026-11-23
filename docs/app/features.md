@@ -46,8 +46,11 @@ veicolo e il layout si può inviare agli amici: vedi [Dashboard personalizzate](
 
 ## Aree di arrivo e avvisi
 
-- **Aree**: ogni utente imposta aree circolari (50 m - 50 km) e riceve una notifica quando il
-  dispositivo entra (e, se vuole, esce). Le aree sono personali. Un'area può avvisare **solo
+- **Aree**: ogni utente imposta aree **circolari** (50 m - 50 km) o **poligonali** (da 3 a 50
+  vertici toccati sulla mappa, fino a 50 km: un quartiere, un parcheggio, un tratto di strada)
+  e riceve una notifica quando il dispositivo entra (e, se vuole, esce). Per l'uscita da un
+  poligono c'è un margine di 30 m, così un punto GPS impreciso sul bordo non manda avvisi
+  doppi. Le aree sono personali. Un'area può avvisare **solo
   in certi orari** (giorni e fascia oraria; se la fine è prima dell'inizio passa la
   mezzanotte, es. 23:00-6:00).
 - **Sosta prolungata**: avviso se il dispositivo resta fermo più di 1-48 ore fuori dalle aree
@@ -71,9 +74,28 @@ veicolo e il layout si può inviare agli amici: vedi [Dashboard personalizzate](
   dell'Ambiente (MASE, open data, ogni lunedì) di benzina, gasolio e GPL; con *Prezzo dalla
   media nazionale* ogni nuova settimana entra da sola nello storico del veicolo (un prezzo
   inserito a mano lo stesso giorno ha la precedenza).
+- **Rifornimenti** (tracker e veicoli, *Analisi → Rifornimenti*): data, litri, importo,
+  contachilometri (proposto quello attuale), pieno o parziale, nota. Tra due pieni il
+  **consumo reale** è dato dai litri messi dal pieno precedente (parziali compresi) diviso i
+  km percorsi; valori fuori da 1-50 l/100 km non si contano. L'importo dà il prezzo al litro.
+  Con *Prezzo e consumo dai rifornimenti* (nei costi, attivo all'inizio) ogni rifornimento con
+  importo aggiunge allo storico il prezzo pagato dal suo giorno e ogni pieno misurato il
+  consumo dal pieno precedente: sono segnati *dai rifornimenti*, seguono le modifiche dei
+  rifornimenti e non si cancellano a mano; un valore inserito a mano lo stesso giorno ha la
+  precedenza e la media nazionale si ferma per 14 giorni dopo un rifornimento con importo.
 - **Statistiche nel tempo**: per 12 mesi o 26 settimane km (lavoro e personali), ore di guida
   e viaggi; per i tracker anche salute della batteria, MB sulla SIM e allarmi. Riepilogo
   giornaliero conservato 3 anni per tracker e veicoli, 400 giorni per i telefoni.
+
+## Riepilogo del mese
+
+Il 1° di ogni mese, dalle 8 (fuso `TIMEZONE`), una notifica con km, viaggi e costi del mese
+appena finito arriva a chi ha avuto viaggi o rifornimenti; si spegne in **Account → Notifica
+a inizio mese**. La pagina *Riepilogo del mese* (dall'account o toccando la notifica) mostra
+i totali con la variazione rispetto al mese prima, ogni veicolo (km, viaggi, tempo di guida,
+km di lavoro, costi, rifornimenti e consumo reale, dati sulla SIM, allarmi) e le scadenze
+vicine o scadute; le frecce cambiano mese (fino a 3 anni prima), il mese in corso arriva a
+oggi.
 
 ## Scadenze e manutenzione
 
@@ -93,6 +115,6 @@ valore di ogni campo e letture con data e ora, senza grafici.
 ## I tuoi dati
 
 *Esporta i miei dati* scarica un JSON con profilo, accessi, amici, dispositivi con posizioni,
-aree, notifiche, costi e dati aggiuntivi. *Elimina account* elimina telefoni, veicoli,
+aree, notifiche, costi, rifornimenti e dati aggiuntivi. *Elimina account* elimina telefoni, veicoli,
 posizioni, condivisioni, amici, aree e notifiche; i tracker tornano liberi e si riabbinano con
 il codice dell'etichetta.

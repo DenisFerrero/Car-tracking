@@ -13,9 +13,14 @@ export type FuelType = typeof FUEL_TYPES[number];
 export const RATE_KINDS = ["price", "consumption", "wear"] as const;
 export type RateKind = typeof RATE_KINDS[number];
 
+export const RATE_SOURCES = ["manual", "auto", "refuel"] as const;
+export type RateSource = typeof RATE_SOURCES[number];
+
 export interface Rate {
 	validFrom: string;
 	value: number;
+	/** Entered by the owner, national average, from the refuels */
+	source?: RateSource;
 }
 
 export interface VehicleProfile {
@@ -23,6 +28,7 @@ export interface VehicleProfile {
 	fuelUnit: FuelUnit;
 	fuelType: FuelType | null;
 	fuelPriceAuto: boolean;
+	ratesFromRefuels: boolean;
 	/** Oldest first; consumption in l/100 km */
 	rates: Record<RateKind, Rate[]>;
 }
@@ -76,12 +82,13 @@ export function sumCosts (costs: TripCost[]): TripCost {
 
 export async function vehicleProfile (sql: Sql, deviceId: number): Promise<VehicleProfile> {
 	const [row] = await sql<Omit<VehicleProfile, "rates">[]>`
-		SELECT vehicle_model AS model, fuel_unit AS "fuelUnit", fuel_type AS "fuelType", fuel_price_auto AS "fuelPriceAuto"
+		SELECT vehicle_model AS model, fuel_unit AS "fuelUnit", fuel_type AS "fuelType", fuel_price_auto AS "fuelPriceAuto",
+			rates_from_refuels AS "ratesFromRefuels"
 		FROM devices WHERE id = ${deviceId}`;
 	const rows = await sql<(Rate & { kind: RateKind })[]>`
-		SELECT kind, to_char(valid_from, 'YYYY-MM-DD') AS "validFrom", value FROM vehicle_rates
+		SELECT kind, to_char(valid_from, 'YYYY-MM-DD') AS "validFrom", value, source FROM vehicle_rates
 		WHERE device_id = ${deviceId} ORDER BY valid_from`;
 	const rates = Object.fromEntries(RATE_KINDS.map(kind => [kind, rows.filter(item => item.kind === kind)
-		.map(({ validFrom, value }) => ({ validFrom, value }))])) as Record<RateKind, Rate[]>;
+		.map(({ validFrom, value, source }) => ({ validFrom, value, source }))])) as Record<RateKind, Rate[]>;
 	return { ...row!, rates };
 }

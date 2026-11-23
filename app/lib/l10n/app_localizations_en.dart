@@ -1055,6 +1055,60 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String areaPolygonSummary(int n, String state) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n vertices',
+      one: '1 vertex',
+    );
+    return '$_temp0 · $state';
+  }
+
+  @override
+  String get areaCircle => 'Circle';
+
+  @override
+  String get areaPolygon => 'Polygon';
+
+  @override
+  String get tapMapToDraw => 'Tap the map to add the vertices of the polygon';
+
+  @override
+  String areaVertices(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n vertices',
+      one: '1 vertex',
+      zero: 'No vertices',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get undoVertex => 'Undo the last one';
+
+  @override
+  String get clearVertices => 'Start over';
+
+  @override
+  String get areaPolygonTooFew => 'At least 3 vertices are needed';
+
+  @override
+  String get errPolygonInvalid =>
+      'The sides of the area cross each other or the area is too small';
+
+  @override
+  String get errPolygonTooLarge => 'The area is larger than 50 km';
+
+  @override
+  String get errTooManyRefuels => 'Too many refuels for this vehicle';
+
+  @override
+  String get errRefuelFuture => 'A refuel can\'t be in the future';
+
+  @override
   String deleteAreaTitle(String name) {
     return 'Delete $name?';
   }
@@ -2200,6 +2254,209 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tripCosts => 'Trip costs';
 
   @override
+  String get refuels => 'Refuels';
+
+  @override
+  String get addRefuel => 'Add refuel';
+
+  @override
+  String get editRefuel => 'Edit refuel';
+
+  @override
+  String get refuelSaved => 'Refuels updated';
+
+  @override
+  String get noRefuels => 'No refuels: add the first full tank';
+
+  @override
+  String get refuelsHint =>
+      'Between two full tanks the litres put in and the km driven give the real consumption; the amount gives the price per litre.';
+
+  @override
+  String realConsumption(String value) {
+    return 'Real consumption: $value';
+  }
+
+  @override
+  String get realConsumptionUnknown =>
+      'Real consumption: two full tanks with the odometer are needed';
+
+  @override
+  String lastConsumption(String value) {
+    return 'Last full tank: $value';
+  }
+
+  @override
+  String refuelTotals(int n, String litres, String cost) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n refuels',
+      one: '1 refuel',
+    );
+    return '$_temp0, $litres, $cost';
+  }
+
+  @override
+  String measuredKm(String km) {
+    return 'Measured over $km km';
+  }
+
+  @override
+  String get refuelPartial => 'partial';
+
+  @override
+  String refuelMeasured(String value, String km) {
+    return '$value over $km km';
+  }
+
+  @override
+  String get refuelRatesOn => 'Prices and consumptions used for the trip costs';
+
+  @override
+  String get refuelRatesOff =>
+      'Prices and consumptions not used for the trip costs';
+
+  @override
+  String get refuelLitres => 'Litres';
+
+  @override
+  String get refuelCost => 'Amount paid';
+
+  @override
+  String get refuelOdometer => 'Odometer';
+
+  @override
+  String get refuelOdometerHint => 'Reading of the dashboard at the refuel';
+
+  @override
+  String get refuelFull => 'Full tank';
+
+  @override
+  String get refuelFullHint => 'Tank filled up to the click';
+
+  @override
+  String get refuelNote => 'Note';
+
+  @override
+  String get refuelInvalid => 'Litres 0 to 500, amount 0 to 10,000 €';
+
+  @override
+  String get ratesFromRefuels => 'Price and consumption from the refuels';
+
+  @override
+  String get ratesFromRefuelsHint =>
+      'Every refuel adds the price paid, every full tank the consumption measured';
+
+  @override
+  String get rateFromRefuel => 'from the refuels';
+
+  @override
+  String get rateFromAverage => 'national average';
+
+  @override
+  String get monthlySummary => 'Monthly summary';
+
+  @override
+  String get monthlySummarySub => 'Km, trips, costs and refuels of every month';
+
+  @override
+  String get monthlySummaryNotify => 'Notification at the start of the month';
+
+  @override
+  String get monthlySummaryNotifyHint =>
+      'On the 1st of every month the summary of the month just ended';
+
+  @override
+  String summaryNotificationTitle(String month) {
+    return 'Your $month';
+  }
+
+  @override
+  String summaryNotificationBody(String km, String trips) {
+    return '$km km · $trips';
+  }
+
+  @override
+  String summaryTrips(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n trips',
+      one: '1 trip',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get previousMonth => 'Previous month';
+
+  @override
+  String get nextMonth => 'Next month';
+
+  @override
+  String comparedToBefore(String change) {
+    return '$change on the month before';
+  }
+
+  @override
+  String get summaryPartial => 'Current month: the data go up to today';
+
+  @override
+  String get summaryEmpty => 'No vehicles';
+
+  @override
+  String summaryDriven(String km, int n, String time) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n trips',
+      one: '1 trip',
+    );
+    return '$km km in $_temp0, $time driving';
+  }
+
+  @override
+  String summaryBusiness(String km) {
+    return '$km km for work';
+  }
+
+  @override
+  String summaryCost(String cost) {
+    return 'Costs: $cost';
+  }
+
+  @override
+  String summaryRefuels(int n, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n refuels',
+      one: '1 refuel',
+    );
+    return '$_temp0: $value';
+  }
+
+  @override
+  String summarySim(String size) {
+    return 'SIM: $size';
+  }
+
+  @override
+  String summaryAlarms(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n alarms',
+      one: '1 alarm',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get kindMonthlySummary => 'Monthly summary';
+
+  @override
   String get costsIntro =>
       'With consumption, fuel price and wear each trip shows what it cost and the trip log of the month adds the columns of the costs.';
 
@@ -2436,6 +2693,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backupStale => 'No successful backup in the last 26 hours';
 
   @override
+  String backupVerifyOk(String time) {
+    return 'Restore test passed: $time';
+  }
+
+  @override
+  String backupVerifyFailed(String time) {
+    return 'Restore test FAILED: $time';
+  }
+
+  @override
+  String get backupVerifyOld => 'No restore test in the last 9 days';
+
+  @override
+  String get backupNoVerify => 'No restore test yet';
+
+  @override
   String get navDashboards => 'Dashboards';
 
   @override
@@ -2640,6 +2913,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mFuel => 'Fuel litres';
+
+  @override
+  String get mRefuelCost => 'Spent on refuels';
+
+  @override
+  String get mRefuelLitres => 'Litres refuelled';
+
+  @override
+  String get mRefuelPrice => 'Price paid per litre';
+
+  @override
+  String get mRealConsumption => 'Real consumption';
 
   @override
   String get mSpeed => 'Moving speed';

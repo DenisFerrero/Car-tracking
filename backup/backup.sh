@@ -5,6 +5,11 @@
 #   /backups/daily/<date>.dump     custom format, compressed, checked with pg_restore --list
 #   /backups/weekly/  (Mondays)    /backups/monthly/  (1st of the month)
 #   /backups/last-success          time of the last good dump (healthcheck, admin page)
+#   /backups/last-verify           result of the last restore test (admin page)
+# Restore test: every BACKUP_VERIFY_DAY (1 Monday ... 7 Sunday, default 7, "off" never)
+# after the dump, and after a dump when the last test is older than 8 days, the newest dump
+# is restored into a separate database (<POSTGRES_DB>_verify, then dropped) and checked:
+# same migrations and hypertables as the database in use, at least one user.
 # Copies off the server: service "offsite" (restic) or any sync of ./volumes/backups.
 set -eu
 
@@ -12,6 +17,7 @@ set -eu
 : "${BACKUP_KEEP_DAILY:=7}"
 : "${BACKUP_KEEP_WEEKLY:=4}"
 : "${BACKUP_KEEP_MONTHLY:=6}"
+: "${BACKUP_VERIFY_DAY:=7}"
 : "${PGHOST:=timescaledb}"
 DIR=/backups
 
@@ -41,7 +47,45 @@ dump () {
 	echo "$(date -Iseconds) backup $stamp.dump $(wc -c < "$DIR/daily/$stamp.dump") bytes"
 }
 
-# One-off: docker compose run --rm backup now | restore <file> [--yes]
+# Restores the newest dump into a separate database and checks it; writes last-verify (JSON)
+verify () {
+	file=$(ls -1t "$DIR"/daily/*.dump 2>/dev/null | head -n 1)
+	[ -n "$file" ] || { echo "$(date -Iseconds) verify: no dump" >&2; return 1; }
+	db="${POSTGRES_DB}_verify"
+	started=$(date +%s)
+	q () { psql -h "$PGHOST" -U "$POSTGRES_USER" -v ON_ERROR_STOP=1 -At -d "$1" -c "$2"; }
+	check="SELECT (SELECT count(*) FROM schema_migrations) || ':' || (SELECT count(*) FROM timescaledb_information.hypertables)"
+	ok=false
+	reason=""
+	counts="0 0 0"
+	if ! RESTORE_DB="$db" sh /scripts/restore.sh "$file" > /dev/null 2> "$DIR/.verify.log"; then
+		reason="restore failed: $(tail -n 1 "$DIR/.verify.log" | tr -d '"\\')"
+	elif [ "$(q "$db" "$check")" != "$(q "$POSTGRES_DB" "$check")" ]; then
+		reason="migrations or hypertables differ from the database in use"
+	else
+		counts=$(q "$db" "SELECT (SELECT count(*) FROM users) || ' ' || (SELECT count(*) FROM devices) || ' ' || (SELECT count(*) FROM positions)")
+		if [ "${counts%% *}" -gt 0 ]; then ok=true; else reason="no users"; fi
+	fi
+	q postgres "DROP DATABASE IF EXISTS \"$db\" WITH (FORCE)" > /dev/null || true
+	rm -f "$DIR/.verify.log"
+	set -- $counts
+	printf '{"time":"%s","file":"%s","ok":%s,"seconds":%s,"users":%s,"devices":%s,"positions":%s,"error":"%s"}\n' \
+		"$(date -Iseconds)" "${file#"$DIR"/}" "$ok" "$(($(date +%s) - started))" "$1" "$2" "$3" "$reason" > "$DIR/last-verify"
+	echo "$(date -Iseconds) verify ${file#"$DIR"/}: $([ "$ok" = true ] && echo ok || echo "FAILED, $reason")"
+	[ "$ok" = true ]
+}
+
+# A restore test after the dump: on the chosen day, or when the last one is old
+verify_due () {
+	[ "$BACKUP_VERIFY_DAY" != off ] || return 1
+	[ "$(date +%u)" = "$BACKUP_VERIFY_DAY" ] || [ -z "$(find "$DIR/last-verify" -mmin -11520 2>/dev/null)" ]
+}
+
+# One-off: docker compose run --rm backup now | verify | restore <file> [--yes]
+if [ "${1:-}" = verify ]; then
+	verify
+	exit
+fi
 if [ "${1:-}" = restore ]; then
 	shift
 	exec sh /scripts/restore.sh "$@"
@@ -52,12 +96,12 @@ if [ "${1:-}" = now ]; then
 fi
 
 until pg_isready -h "$PGHOST" -U "$POSTGRES_USER" -q; do sleep 5; done
-if [ -z "$(find "$DIR/last-success" -mmin -1440 2>/dev/null)" ]; then dump || true; fi
+if [ -z "$(find "$DIR/last-success" -mmin -1440 2>/dev/null)" ]; then dump && verify_due && verify || true; fi
 last=$(date +%F)
 while true; do
 	sleep 30
 	if [ "$(date +%H:%M)" = "$BACKUP_TIME" ] && [ "$(date +%F)" != "$last" ]; then
 		last=$(date +%F)
-		dump || true
+		dump && verify_due && verify || true
 	fi
 done

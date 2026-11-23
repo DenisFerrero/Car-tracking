@@ -294,7 +294,7 @@ describe("authentication", { skip: SKIP }, () => {
 		// Backups not configured in the tests (BACKUP_DIR empty)
 		assert.equal((await h.api("GET", "/api/admin/backup", { token: user.token })).status, 403);
 		assert.deepEqual((await h.api("GET", "/api/admin/backup", { token: admin.token })).body,
-			{ configured: false, lastSuccess: null, lastOffsite: null, stale: true, latest: null, files: 0, totalBytes: 0 });
+			{ configured: false, lastSuccess: null, lastOffsite: null, stale: true, verify: null, verifyStale: false, latest: null, files: 0, totalBytes: 0 });
 
 		const created = await h.api("POST", "/api/admin/invites", { token: admin.token, body: { email: "nuovo@example.com", name: "Nuovo" } });
 		assert.match(created.body.link, /\/#\/invite\/[\w-]{40,}$/);

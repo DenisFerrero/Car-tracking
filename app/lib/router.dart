@@ -11,6 +11,7 @@ import 'screens/device/device_screen.dart';
 import 'screens/device/costs_screen.dart';
 import 'screens/device/extra_screen.dart';
 import 'screens/device/maintenance_screen.dart';
+import 'screens/device/refuels_screen.dart';
 import 'screens/device/trends_screen.dart';
 import 'screens/devices.dart';
 import 'screens/friends.dart';
@@ -20,6 +21,7 @@ import 'screens/notifications.dart';
 import 'screens/phone.dart';
 import 'screens/platform_log.dart';
 import 'screens/server_setup.dart';
+import 'screens/summary_screen.dart';
 
 /// Routes. The session decides where the user can go: server address (mobile),
 /// login and second factor, TOTP enrollment, then the platform.
@@ -39,6 +41,12 @@ GoRouter buildRouter(Session session) {
       final location = state.matchedLocation;
       if (!session.ready) return hold(state, '/splash');
       if (location.startsWith('/invite/')) return null;
+      // Invite opened before the session was ready: it needs no login
+      if (wanted?.startsWith('/invite/') == true) {
+        final invite = wanted;
+        wanted = null;
+        return invite;
+      }
       if (!session.api.web && !session.api.hasServer) return hold(state, '/server');
 
       final auth = switch (session.stage) {
@@ -101,6 +109,10 @@ GoRouter buildRouter(Session session) {
                       builder: (context, state) => CostsScreen(deviceId: int.parse(state.pathParameters['id']!)),
                     ),
                     GoRoute(
+                      path: 'refuels',
+                      builder: (context, state) => RefuelsScreen(deviceId: int.parse(state.pathParameters['id']!)),
+                    ),
+                    GoRoute(
                       path: 'extra',
                       builder: (context, state) => ExtraScreen(deviceId: int.parse(state.pathParameters['id']!)),
                     ),
@@ -126,6 +138,7 @@ GoRouter buildRouter(Session session) {
                   routes: [GoRoute(path: 'logs', builder: (context, state) => const PlatformLogScreen())],
                 ),
                 GoRoute(path: 'friends', builder: (context, state) => const FriendsScreen()),
+                GoRoute(path: 'summary', builder: (context, state) => SummaryScreen(month: state.uri.queryParameters['month'])),
               ],
             ),
           ]),

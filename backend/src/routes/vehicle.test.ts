@@ -132,7 +132,7 @@ describe("statistics, trip log, car", { skip: !process.env.TEST_DATABASE_URL && 
 		// Costs: profile, then price, consumption and wear over time
 		const vehicle = `/api/devices/${deviceId}/vehicle`;
 		const empty = {
-			model: "", fuelUnit: "l_per_100km", fuelType: null, fuelPriceAuto: false, rates: { price: [], consumption: [], wear: [] },
+			model: "", fuelUnit: "l_per_100km", fuelType: null, fuelPriceAuto: false, ratesFromRefuels: true, rates: { price: [], consumption: [], wear: [] },
 			current: { price: null, consumption: null, wear: null }, costPerKm: null, average: null
 		};
 		assert.deepEqual((await h.api("GET", vehicle, { token: anna.token })).body, empty);
@@ -190,7 +190,7 @@ describe("statistics, trip log, car", { skip: !process.env.TEST_DATABASE_URL && 
 		assert.deepEqual((await h.api("GET", vehicle, { token: anna.token })).body.average, { week: "2026-11-16", price: 1.97 });
 		const auto = (await h.api("PUT", vehicle, { token: anna.token, body: { model: "Panda 1.2", fuelUnit: "km_per_l", fuelType: "petrol", fuelPriceAuto: true } })).body;
 		assert.equal(auto.fuelPriceAuto, true);
-		assert.deepEqual(auto.rates.price.find((item: { validFrom: string }) => item.validFrom === "2026-11-16"), { validFrom: "2026-11-16", value: 1.97 });
+		assert.deepEqual(auto.rates.price.find((item: { validFrom: string }) => item.validFrom === "2026-11-16"), { validFrom: "2026-11-16", value: 1.97, source: "auto" });
 		assert.equal(await h.server.ctx.fuel.applyAuto(), 0);
 		await h.api("PUT", vehicle, { token: anna.token, body: { model: "Panda 1.2", fuelUnit: "km_per_l", fuelType: "petrol" } });
 		await h.api("DELETE", `${rates}/price/2026-11-16`, { token: anna.token });

@@ -1,5 +1,6 @@
 import type { Context } from "../context.ts";
 import type { DeviceKind } from "./access.ts";
+import { allowDecompression } from "../db.ts";
 import type { Sql } from "../db.ts";
 
 // Removal of devices and users with all their data: used by the owner (device removed),
@@ -12,6 +13,7 @@ import type { Sql } from "../db.ts";
  */
 export async function releaseDevice (sql: Sql, id: number, kind: DeviceKind): Promise<number[]> {
 	return sql.begin(async tx => {
+		await allowDecompression(tx);
 		const removed = await tx<{ user_id: number }[]>`DELETE FROM device_users WHERE device_id = ${id} RETURNING user_id`;
 		await tx`DELETE FROM positions WHERE device_id = ${id}`;
 		await tx`DELETE FROM traffic WHERE device_id = ${id}`;

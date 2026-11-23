@@ -1,0 +1,13 @@
+{
+  "name": "car-tracking-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "description": "End-to-end tests of the web app on the image of the backend (run.sh)",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}

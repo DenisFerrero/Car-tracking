@@ -7,7 +7,7 @@ import '../../l10n/app_localizations.dart';
 /// (src/services/metrics.ts): a new value of the platform (sensor, daily total, cost)
 /// gets its entry in both, with its texts and tests.
 
-enum Source { days, costs, positions, extra, odometer, deadlines, status }
+enum Source { days, costs, refuels, positions, extra, odometer, deadlines, status }
 
 const _all = {'tracker', 'vehicle', 'phone'};
 const _cars = {'tracker', 'vehicle'};
@@ -32,7 +32,7 @@ class MetricInfo {
   final double chartScale;
 
   bool get sampled => source == Source.positions || source == Source.extra;
-  bool get daily => source == Source.days || source == Source.costs;
+  bool get daily => source == Source.days || source == Source.costs || source == Source.refuels;
 
   /// Values of a period (not the current state)
   bool get hasPeriod => sampled || daily;
@@ -71,6 +71,12 @@ final metrics = <MetricInfo>[
   MetricInfo('fuelCost', Source.costs, _all, Icons.local_gas_station, (l) => l.mFuelCost, _euro, chartUnit: ' €'),
   MetricInfo('wearCost', Source.costs, _all, Icons.tire_repair, (l) => l.mWearCost, _euro, chartUnit: ' €'),
   MetricInfo('fuel', Source.costs, _all, Icons.water_drop, (l) => l.mFuel, _unit('l', 1), chartUnit: ' l'),
+  MetricInfo('refuelCost', Source.refuels, _cars, Icons.local_gas_station, (l) => l.mRefuelCost, _euro, chartUnit: ' €'),
+  MetricInfo('refuelLitres', Source.refuels, _cars, Icons.water_drop, (l) => l.mRefuelLitres, _unit('l', 1), chartUnit: ' l'),
+  MetricInfo('refuelPrice', Source.refuels, _cars, Icons.price_change, (l) => l.mRefuelPrice, (l, v) => '${formatEuro(v, digits: 3)}/l',
+      chartUnit: ' €/l'),
+  MetricInfo('realConsumption', Source.refuels, _cars, Icons.speed, (l) => l.mRealConsumption, _unit('l/100 km', 1),
+      chartUnit: ' l/100 km'),
   MetricInfo('speed', Source.positions, _all, Icons.speed, (l) => l.mSpeed, _unit('km/h'), chartUnit: ' km/h'),
   MetricInfo('altitude', Source.positions, _all, Icons.terrain, (l) => l.mAltitude, _unit('m'), chartUnit: ' m'),
   MetricInfo('signal', Source.positions, _trackers, Icons.signal_cellular_alt, (l) => l.mSignal, _unit('dBm'),
@@ -93,7 +99,7 @@ final metricByKey = {for (final m in metrics) m.key: m};
 /// Groups of the metrics in the editor
 String sourceGroup(AppLocalizations l, Source source) => switch (source) {
       Source.days => l.groupTrips,
-      Source.costs => l.groupCosts,
+      Source.costs || Source.refuels => l.groupCosts,
       Source.positions || Source.extra => l.groupTracker,
       _ => l.groupState,
     };

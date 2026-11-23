@@ -67,6 +67,13 @@ class AnalysisTab extends ConsumerWidget {
               ),
               if (!device.isPhone)
                 ActionChip(
+                  key: const Key('openRefuels'),
+                  avatar: const Icon(Icons.local_gas_station, size: 18),
+                  label: Text(context.l10n.refuels),
+                  onPressed: () => context.push('/devices/${device.id}/refuels'),
+                ),
+              if (!device.isPhone)
+                ActionChip(
                   key: const Key('openMaintenance'),
                   avatar: const Icon(Icons.build, size: 18),
                   label: Text(context.l10n.maintenance),

@@ -15,6 +15,7 @@
     "provision": "node --env-file-if-exists=../.env scripts/provision.ts",
     "ca-bundle": "node --env-file-if-exists=../.env scripts/ca-bundle.ts",
     "simulate": "node --env-file-if-exists=../.env scripts/simulate.ts",
+    "load": "node --env-file-if-exists=../.env scripts/load.ts",
     "firmware": "node --env-file-if-exists=../.env scripts/firmware.ts",
     "typecheck": "tsc",
     "test": "node --test --test-concurrency=1 \"src/**/*.test.ts\"",

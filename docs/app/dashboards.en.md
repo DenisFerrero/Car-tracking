@@ -78,6 +78,7 @@ The **preview** at the bottom shows the real values right away.
 | Trips | distance, business and personal km, driving time, number of trips, top speed | all | 3 years |
 | Trips | alarms, data on the SIM, battery at rest | trackers | 3 years |
 | Costs | estimated cost, fuel cost, wear, litres (from the consumption, prices and wear entered) | all | 3 years |
+| Costs | spent on refuels, litres refuelled, price paid per litre, real consumption (from the [refuels](features.md#trips-log-and-costs)) | trackers and vehicles | 3 years |
 | Tracker data | moving speed, altitude | all | 93 days |
 | Tracker data | LTE signal, satellites, voltage, temperature, pressure | trackers | 93 days |
 | Tracker data | a numeric field of the **extra data** (e.g. `rpm`) | trackers | 93 days |

@@ -116,14 +116,17 @@ export class FuelPrices {
 
 	/**
 	 * The latest average in the history of the vehicles that follow it (or one vehicle),
-	 * not when a price of the owner is already there that day. Returns the prices added.
+	 * not when a price of the owner is already there that day, nor for a vehicle with the
+	 * prices of its refuels of the last 14 days (the real price wins). Returns the prices added.
 	 */
 	async applyAuto (deviceId: number | null = null): Promise<number> {
 		const added = await this.#sql`
-			INSERT INTO vehicle_rates (device_id, kind, valid_from, value)
-			SELECT d.id, 'price', a.week, a.price FROM devices d
+			INSERT INTO vehicle_rates (device_id, kind, valid_from, value, source)
+			SELECT d.id, 'price', a.week, a.price, 'auto' FROM devices d
 			JOIN LATERAL (SELECT week, price FROM fuel_averages WHERE fuel = d.fuel_type ORDER BY week DESC LIMIT 1) a ON true
 			WHERE d.fuel_price_auto AND (${deviceId}::int IS NULL OR d.id = ${deviceId})
+				AND NOT (d.rates_from_refuels AND EXISTS (SELECT 1 FROM refuels r WHERE r.device_id = d.id AND r.cost > 0
+					AND r.day > now()::date - 14))
 			ON CONFLICT DO NOTHING`;
 		return added.count;
 	}

@@ -179,6 +179,7 @@ void main() {
       expect(find.text(it.errOwnerOnly), findsOneWidget);
       await clearSnackbars(tester);
 
+      await reveal(tester, find.text(it.kpiCost));
       expect(find.text(it.kpiCost), findsOneWidget);
       await tapAndSettle(tester, find.text(it.tripsList(1)));
       expect(find.textContaining('≈ ${formatEuro(2.34)} (${it.costFuel(formatEuro(1.11))} · ${it.costWear(formatEuro(1.23))})'), findsOneWidget);
@@ -316,7 +317,7 @@ void main() {
       await show(find.byKey(const Key('vehicleSave')));
       await tapAndSettle(tester, find.byKey(const Key('vehicleSave')));
       expect(backend.lastBody('/api/devices/1/vehicle', 'PUT'),
-          {'model': 'Fiat Panda 1.2', 'fuelUnit': 'km_per_l', 'fuelType': 'diesel', 'fuelPriceAuto': true});
+          {'model': 'Fiat Panda 1.2', 'fuelUnit': 'km_per_l', 'fuelType': 'diesel', 'fuelPriceAuto': true, 'ratesFromRefuels': true});
       expect(find.text(it.costsSaved), findsOneWidget);
       expect(find.text(it.nationalAverage(it.fuelDiesel, formatEuro(1.97, digits: 3))), findsOneWidget);
 
@@ -590,6 +591,8 @@ void main() {
   group('backups', () {
     testWidgets('state for the administrator, warning when stale, hidden when not set up', (tester) async {
       var stale = false;
+      Map<String, dynamic>? verify = {'time': iso(ago(const Duration(days: 2))), 'ok': true, 'error': ''};
+      var verifyStale = false;
       final backend = fullBackend()
         ..on('GET', '/api/admin/users', (_) => [])
         ..on('GET', '/api/admin/invites', (_) => [])
@@ -599,6 +602,8 @@ void main() {
               'lastSuccess': iso(ago(const Duration(hours: 3))),
               'lastOffsite': stale ? null : iso(ago(const Duration(hours: 2))),
               'stale': stale,
+              'verify': verify,
+              'verifyStale': verifyStale,
               'latest': stale ? null : {'name': 'daily/2026-11-21_0330.dump', 'size': 2 * 1024 * 1024},
               'files': 12,
               'totalBytes': 30 * 1024 * 1024,
@@ -610,6 +615,28 @@ void main() {
       expect(find.byKey(const Key('backupCard')), findsOneWidget);
       expect(find.textContaining(it.backupFiles(12, formatBytes(30 * 1024 * 1024))), findsOneWidget);
       expect(find.byIcon(Icons.backup), findsOneWidget);
+      expect(find.textContaining(it.backupVerifyOk('').trim()), findsOneWidget);
+
+      // Restore test failed, then old, then never done
+      Future<void> reopen() async {
+        app.go(tester, '/account');
+        await settle(tester);
+        app.go(tester, '/account/admin');
+        await settle(tester);
+      }
+
+      verify = {'time': iso(ago(const Duration(days: 1))), 'ok': false, 'error': 'restore failed: out of disk'};
+      verifyStale = true;
+      await reopen();
+      expect(find.byIcon(Icons.warning_amber), findsOneWidget);
+      expect(find.textContaining('restore failed: out of disk'), findsOneWidget);
+      verify = {'time': iso(ago(const Duration(days: 12))), 'ok': true, 'error': ''};
+      await reopen();
+      expect(find.textContaining(it.backupVerifyOld), findsOneWidget);
+      verify = null;
+      verifyStale = false;
+      await reopen();
+      expect(find.textContaining(it.backupNoVerify), findsOneWidget);
 
       stale = true;
       app.go(tester, '/account');

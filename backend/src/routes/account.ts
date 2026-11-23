@@ -49,51 +49,58 @@ export function registerAccountRoutes (app: FastifyInstance, ctx: Context): void
 				FROM sessions WHERE user_id = ${userId} AND stage = 'full' AND expires_at > now() ORDER BY last_seen_at DESC`,
 			sql<{ left: number }[]>`SELECT count(*)::int AS left FROM recovery_codes WHERE user_id = ${userId} AND used_at IS NULL`
 		]);
+		const [preferences] = await sql<{ monthly_summary: boolean }[]>`SELECT monthly_summary FROM users WHERE id = ${userId}`;
 		return {
 			user: request.auth!.user,
 			passkeys,
 			sessions,
 			recoveryCodesLeft: recovery[0]?.left ?? 0,
+			monthlySummary: preferences!.monthly_summary,
 			pushEnabled: ctx.notifier.pushEnabled
 		};
 	});
 
 	/**
 	 * Copy of the personal data (GDPR, art. 15 and 20): profile, access history, friends,
-	 * devices owned with their positions, areas, notifications, dashboards. No secrets (password hash,
+	 * devices owned with their positions, areas, notifications, costs, refuels, dashboards. No secrets (password hash,
 	 * passkeys, TOTP, tokens), no data of other users besides the names of the friends.
 	 */
 	app.get("/api/account/export", { config: STRICT }, async (request, reply) => {
 		const userId = request.auth!.user.id;
 		const [profile] = await sql`
-			SELECT id, email, name, locale, is_admin AS "isAdmin", created_at AS "createdAt" FROM users WHERE id = ${userId}`;
+			SELECT id, email, name, locale, is_admin AS "isAdmin", monthly_summary AS "monthlySummary", created_at AS "createdAt" FROM users WHERE id = ${userId}`;
 		const devices = await sql<{ id: number }[]>`
 			SELECT d.id, d.kind, d.imei, d.name, d.color, d.manufacturer, d.model, d.firmware, d.registered_at AS "registeredAt",
 				d.last_seen_at AS "lastSeenAt", du.role, du.expires_at AS "shareExpiresAt"
 			FROM device_users du JOIN devices d ON d.id = du.device_id WHERE du.user_id = ${userId} ORDER BY d.id`;
 		const owned = (devices as unknown as { id: number; role: string }[]).filter(device => device.role === "owner").map(device => device.id);
-		const [events, friends, areas, notifications, settings, positions, dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, extraData, dashboards] = await Promise.all([
+		const [events, friends, areas, notifications, settings, positions, dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, refuels, extraData, dashboards] = await Promise.all([
 			sql`SELECT event, host(ip) AS ip, user_agent AS "userAgent", created_at AS "createdAt" FROM auth_events WHERE user_id = ${userId} ORDER BY created_at`,
 			sql`SELECT u.name, f.created_at AS since FROM friendships f JOIN users u ON u.id = f.friend_id WHERE f.user_id = ${userId} ORDER BY u.name`,
-			sql`SELECT device_id AS "deviceId", name, lat, lon, radius, schedule, created_at AS "createdAt" FROM geofences WHERE user_id = ${userId} ORDER BY id`,
+			sql`SELECT device_id AS "deviceId", name, lat, lon, radius, polygon, schedule, created_at AS "createdAt" FROM geofences WHERE user_id = ${userId} ORDER BY id`,
 			sql`SELECT device_id AS "deviceId", kind, data, created_at AS "createdAt" FROM notifications WHERE user_id = ${userId} ORDER BY created_at`,
 			sql`SELECT device_id AS "deviceId", kinds FROM notification_settings WHERE user_id = ${userId}`,
 			owned.length === 0 ? [] : sql`
 				SELECT device_id AS "deviceId", time, lat, lon, altitude, speed, accuracy, satellites, signal, voltage, temperature,
 					pressure, status, stale, events
-				FROM (SELECT *, row_number() OVER (PARTITION BY device_id ORDER BY time DESC) AS n FROM positions WHERE device_id = ANY (${owned})) p
-				WHERE n <= ${EXPORT_POSITIONS} ORDER BY device_id, time`,
+				FROM unnest(${owned}::int[]) d (id) CROSS JOIN LATERAL (
+					SELECT * FROM positions WHERE device_id = d.id ORDER BY time DESC LIMIT ${EXPORT_POSITIONS}) p
+				ORDER BY device_id, time`,
 			sql`SELECT * FROM daily_stats WHERE device_id = ANY (${owned}) ORDER BY device_id, day`,
 			sql`SELECT * FROM trip_tags WHERE device_id = ANY (${owned}) ORDER BY device_id, start`,
 			sql`SELECT * FROM maintenance WHERE device_id = ANY (${owned}) ORDER BY device_id, id`,
 			sql`SELECT * FROM maintenance_log WHERE device_id = ANY (${owned}) ORDER BY device_id, done_on`,
 			sql`
 				SELECT id AS "deviceId", vehicle_model AS model, fuel_unit AS "fuelUnit", fuel_type AS "fuelType",
-					fuel_price_auto AS "fuelPriceAuto", auto_update AS "autoUpdate"
+					fuel_price_auto AS "fuelPriceAuto", rates_from_refuels AS "ratesFromRefuels", auto_update AS "autoUpdate"
 				FROM devices WHERE id = ANY (${owned}) ORDER BY id`,
 			sql`
-				SELECT device_id AS "deviceId", kind, to_char(valid_from, 'YYYY-MM-DD') AS "validFrom", value
+				SELECT device_id AS "deviceId", kind, to_char(valid_from, 'YYYY-MM-DD') AS "validFrom", value, source
 				FROM vehicle_rates WHERE device_id = ANY (${owned}) ORDER BY device_id, kind, valid_from`,
+			sql`
+				SELECT device_id AS "deviceId", to_char(day, 'YYYY-MM-DD') AS day, litres, cost, odometer_km AS "odometerKm",
+					full_tank AS full, note
+				FROM refuels WHERE device_id = ANY (${owned}) ORDER BY device_id, day, id`,
 			sql`SELECT device_id AS "deviceId", time, data FROM device_extra WHERE device_id = ANY (${owned}) ORDER BY device_id, time`,
 			sql`SELECT name, layout, is_current AS "current", created_at AS "createdAt", updated_at AS "updatedAt" FROM dashboards WHERE user_id = ${userId} ORDER BY id`
 		]);
@@ -101,7 +108,7 @@ export function registerAccountRoutes (app: FastifyInstance, ctx: Context): void
 		reply.header("content-disposition", `attachment; filename="car-tracking-${day}.json"`);
 		return {
 			exportedAt: new Date(), profile, authEvents: events, friends, devices, areas, notifications, notificationSettings: settings, positions,
-			dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, extraData, dashboards
+			dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, refuels, extraData, dashboards
 		};
 	});
 
@@ -123,12 +130,17 @@ export function registerAccountRoutes (app: FastifyInstance, ctx: Context): void
 		return { ok: true };
 	});
 
-	/** Name and language (detected by the app at the first login, then chosen by the user) */
+	/** Name, language (detected by the app at the first login, then chosen by the user), summary of the month */
 	app.patch("/api/account", async (request) => {
-		const body = parse(z.strictObject({ name: z.string().trim().min(1).max(80).optional(), locale: z.enum(LOCALES).optional() }), request.body);
+		const body = parse(z.strictObject({
+			name: z.string().trim().min(1).max(80).optional(),
+			locale: z.enum(LOCALES).optional(),
+			monthlySummary: z.boolean().optional()
+		}), request.body);
 		const userId = request.auth!.user.id;
 		if (body.name !== undefined) await sql`UPDATE users SET name = ${body.name} WHERE id = ${userId}`;
 		if (body.locale !== undefined) await sql`UPDATE users SET locale = ${body.locale} WHERE id = ${userId}`;
+		if (body.monthlySummary !== undefined) await sql`UPDATE users SET monthly_summary = ${body.monthlySummary} WHERE id = ${userId}`;
 		return { ok: true };
 	});
 

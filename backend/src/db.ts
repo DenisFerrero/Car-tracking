@@ -6,6 +6,14 @@ export type Sql = postgres.Sql;
 /** Queries inside sql.begin() */
 export type Tx = postgres.TransactionSql;
 
+/**
+ * Deletes in the compressed chunks of a transaction: TimescaleDB stops a statement that
+ * decompresses more than 100k rows, the history of a tracker over the months goes beyond
+ */
+export async function allowDecompression (tx: Tx): Promise<void> {
+	await tx`SET LOCAL timescaledb.max_tuples_decompressed_per_dml_transaction = 0`;
+}
+
 export function connect (url: string): Sql {
 	return postgres(url, {
 		max: 10,

@@ -5,6 +5,7 @@ import type { NotificationData, NotificationKind } from "../i18n.ts";
 import { EVENT } from "../protocol/protocol.ts";
 import type { Fcm } from "./fcm.ts";
 import type { Hub } from "./hub.ts";
+import type { MonthTotals } from "./summary.ts";
 
 // Notifications: stored for the inbox of the app (kind + values, the app writes the text
 // in its language), sent on the realtime channel and, when Firebase is configured, as
@@ -13,6 +14,7 @@ import type { Hub } from "./hub.ts";
 // - alarms and state of the tracker (KINDS): only the owner, per kind settings
 // - arrival areas: the user who created the area (owner or viewer)
 // - long stop, low battery of a phone: each user, by their own settings on the device
+// - summary of the month: each user who wants it, no device
 
 export const KINDS = ["motion", "tilt", "power_lost", "low_battery", "offline", "online", "battery_health", "maintenance", "firmware"] as const;
 export type Kind = typeof KINDS[number];
@@ -86,7 +88,16 @@ export class Notifier {
 		await this.#deliver(userId, recipient.locale, deviceId, kind, { device: deviceName(recipient), area, time: at.toISOString() }, position);
 	}
 
-	async #deliver (userId: number, locale: string | null, deviceId: number, kind: NotificationKind, data: NotificationData, position: Position): Promise<void> {
+	/** Totals of the month just ended (src/services/summary.ts) */
+	async notifySummary (userId: number, month: string, totals: MonthTotals): Promise<void> {
+		const [recipient] = await this.#sql<{ locale: string | null }[]>`SELECT locale FROM users WHERE id = ${userId} AND NOT disabled`;
+		if (!recipient) return;
+		await this.#deliver(userId, recipient.locale, null, "monthly_summary", {
+			device: "", month, distanceKm: totals.distanceKm, trips: totals.trips, cost: totals.cost, time: new Date().toISOString()
+		}, { lat: null, lon: null });
+	}
+
+	async #deliver (userId: number, locale: string | null, deviceId: number | null, kind: NotificationKind, data: NotificationData, position: Position): Promise<void> {
 		const [notification] = await this.#sql<{ id: number; created_at: Date }[]>`
 			INSERT INTO notifications (user_id, device_id, kind, data, lat, lon)
 			VALUES (${userId}, ${deviceId}, ${kind}, ${this.#sql.json(data as never)}, ${position.lat}, ${position.lon})
@@ -100,7 +111,10 @@ export class Notifier {
 		});
 		if (!this.#fcm) return;
 		const { title, body } = notificationText(locale, kind, data, this.#timeZone);
-		await this.#push(userId, title, body, { deviceId: String(deviceId), kind, notificationId: String(notification!.id) });
+		await this.#push(userId, title, body, {
+			...(deviceId === null ? {} : { deviceId: String(deviceId) }), ...(data.month ? { month: data.month } : {}),
+			kind, notificationId: String(notification!.id)
+		});
 	}
 
 	async #push (userId: number, title: string, body: string, data: Record<string, string>): Promise<void> {

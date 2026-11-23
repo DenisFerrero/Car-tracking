@@ -3,7 +3,7 @@ import type { FastifyBaseLogger, FastifyInstance } from "fastify";
 import { buildApp, createLogger } from "./app.ts";
 import type { Config } from "./config.ts";
 import type { Context } from "./context.ts";
-import { connect, migrate } from "./db.ts";
+import { allowDecompression, connect, migrate } from "./db.ts";
 import type { Sql } from "./db.ts";
 import { SecretBox } from "./auth/secrets.ts";
 import { WebAuthn } from "./auth/webauthn.ts";
@@ -20,6 +20,7 @@ import { Notifier } from "./services/notifier.ts";
 import { capturing, PlatformLog } from "./services/platform-log.ts";
 import { Releases } from "./services/releases.ts";
 import { notifyLongStops } from "./services/stops.ts";
+import { sendMonthlySummaries } from "./services/summary.ts";
 import { updateDailyStats } from "./services/daily.ts";
 import { checkVehicles } from "./services/vehicle.ts";
 import { Gateway } from "./tracker/gateway.ts";
@@ -80,16 +81,24 @@ export async function runJobs (ctx: Context): Promise<void> {
 		lastDailyRun = Date.now();
 		await updateDailyStats(ctx);
 		await checkVehicles(ctx);
+		await sendMonthlySummaries(ctx);
 		// Public data: each at most every 6 hours, failures only logged
 		await ctx.fuel.refreshIfStale();
 		await ctx.releases.checkIfDue();
 		await ctx.platformLog.snapshotQueries(ctx.sql);
 	}
 
-	// Positions of the phones: shorter retention than the trackers
-	await ctx.sql`
-		DELETE FROM positions WHERE device_id IN (SELECT id FROM devices WHERE kind = 'phone')
-			AND time < now() - ${`${ctx.config.PHONE_RETENTION_DAYS} days`}::interval`;
+	// Positions of the phones: shorter retention than the trackers. The ids as constants: with
+	// a subquery TimescaleDB decompresses every compressed chunk to look for them
+	const phones = (await ctx.sql<{ id: number }[]>`SELECT id FROM devices WHERE kind = 'phone'`).map(row => row.id);
+	if (phones.length > 0) {
+		await ctx.sql.begin(async tx => {
+			await allowDecompression(tx);
+			await tx`
+				DELETE FROM positions WHERE device_id = ANY(${phones}::int[])
+					AND time < now() - ${`${ctx.config.PHONE_RETENTION_DAYS} days`}::interval`;
+		});
+	}
 	await ctx.sql`UPDATE devices SET paused_until = NULL WHERE paused_until < now()`;
 	await ctx.sql`DELETE FROM sessions WHERE expires_at < now()`;
 	await ctx.sql`DELETE FROM invites WHERE expires_at < now() - interval '30 days'`;

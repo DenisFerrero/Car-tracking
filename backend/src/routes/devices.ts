@@ -85,11 +85,13 @@ export function registerDeviceRoutes (app: FastifyInstance, ctx: Context, tracke
 
 	const latestPositions = async (ids: number[]) => {
 		if (ids.length === 0) return new Map<number, PositionRow>();
+		// One newest point per device (ordered scan of the chunks, stops at the first row): a
+		// DISTINCT ON would read and decompress all the chunks of the period
 		const rows = await sql<(PositionRow & { device_id: number })[]>`
-			SELECT DISTINCT ON (device_id) device_id, time, lat, lon, speed, altitude, satellites, signal, voltage,
-				temperature, status, stale, events, accuracy
-			FROM positions WHERE device_id = ANY (${ids}) AND time > now() - interval '60 days'
-			ORDER BY device_id, time DESC`;
+			SELECT d.id AS device_id, p.* FROM unnest(${ids}::int[]) d (id) CROSS JOIN LATERAL (
+				SELECT time, lat, lon, speed, altitude, satellites, signal, voltage, temperature, status, stale, events, accuracy
+				FROM positions WHERE device_id = d.id AND time > now() - interval '60 days'
+				ORDER BY time DESC LIMIT 1) p`;
 		return new Map(rows.map(row => [row.device_id, row]));
 	};
 

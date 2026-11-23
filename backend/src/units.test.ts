@@ -72,7 +72,7 @@ describe("car: battery, deadlines, trip log, summaries", () => {
 	test("costs of a trip: price, consumption and wear of the day, sums", () => {
 		const rates = (...items: [string, number][]): Rate[] => items.map(([validFrom, value]) => ({ validFrom, value }));
 		const profile: VehicleProfile = {
-			model: "Panda", fuelUnit: "l_per_100km", fuelType: null, fuelPriceAuto: false,
+			model: "Panda", fuelUnit: "l_per_100km", fuelType: null, fuelPriceAuto: false, ratesFromRefuels: false,
 			rates: { price: rates(["2026-10-01", 1.85], ["2026-11-01", 2]), consumption: rates(["2026-01-01", 6]), wear: rates(["2026-01-01", 0.12]) }
 		};
 		assert.deepEqual(tripCost(100, profile, "2026-10-31"), { fuelL: 6, fuelCost: 11.1, wearCost: 12, cost: 23.1 });
@@ -146,7 +146,7 @@ describe("car: battery, deadlines, trip log, summaries", () => {
 		assert.equal(english[1], "2026-11-02,07:00,07:20,45.10000 9.20000,45.20000 9.30000,12.3,20,,");
 		// Without consumption and wear: no columns of the costs
 		const price = [{ validFrom: "2026-10-01", value: 1.8 }, { validFrom: "2026-11-04", value: 2 }];
-		const empty: VehicleProfile = { model: "", fuelUnit: "l_per_100km", fuelType: null, fuelPriceAuto: false, rates: { price, consumption: [], wear: [] } };
+		const empty: VehicleProfile = { model: "", fuelUnit: "l_per_100km", fuelType: null, fuelPriceAuto: false, ratesFromRefuels: false, rates: { price, consumption: [], wear: [] } };
 		assert.equal(toLogbook(trips, [], null, "UTC", empty).split("\r\n")[0], english[0]);
 		// 5 l/100 km at 1.80 €/l, 2 €/l from the 4th; wear 0.10 €/km; totals = sums of the trips
 		const costly = toLogbook(trips, tags, "it", "Europe/Rome",
@@ -188,17 +188,32 @@ describe("state of the backups", () => {
 			fs.writeFileSync(path.join(dir, "weekly", "2026-11-16_0330.dump"), Buffer.alloc(80));
 			fs.writeFileSync(path.join(dir, "last-success"), "2026-11-21T03:30:12+01:00\n");
 			fs.writeFileSync(path.join(dir, "last-offsite"), "broken");
+			fs.writeFileSync(path.join(dir, "last-verify"), "not json");
+			assert.equal((await backupState(dir)).verify, null);
+			fs.writeFileSync(path.join(dir, "last-verify"), JSON.stringify({ time: "2026-11-21T03:40:00+01:00", ok: "yes" }));
+			assert.equal((await backupState(dir)).verify, null);
+			const verify = { time: "2026-11-15T03:41:07+01:00", file: "daily/2026-11-15_0330.dump", ok: true, seconds: 41, users: 3, devices: 5, positions: 120000, error: "" };
+			fs.writeFileSync(path.join(dir, "last-verify"), `${JSON.stringify(verify)}
+`);
 			const state = await backupState(dir, Date.parse("2026-11-21T12:00:00Z"));
 			assert.deepEqual(state, {
 				configured: true,
 				lastSuccess: new Date("2026-11-21T02:30:12Z"),
 				lastOffsite: null,
 				stale: false,
+				verify: { ...verify, time: new Date("2026-11-15T02:41:07Z") },
+				verifyStale: false,
 				latest: { name: "daily/2026-11-21_0330.dump", size: 150 },
 				files: 3,
 				totalBytes: 330
 			});
-			assert.equal((await backupState(dir, Date.parse("2026-11-23T12:00:00Z"))).stale, true);
+			const later = await backupState(dir, Date.parse("2026-11-25T12:00:00Z"));
+			assert.deepEqual([later.stale, later.verifyStale], [true, true]);
+			fs.writeFileSync(path.join(dir, "last-verify"), JSON.stringify({ ...verify, ok: false, error: "restore failed" }));
+			assert.equal((await backupState(dir, Date.parse("2026-11-15T12:00:00Z"))).verifyStale, true);
+			assert.deepEqual(await backupState(""), {
+				configured: false, lastSuccess: null, lastOffsite: null, stale: true, verify: null, verifyStale: false, latest: null, files: 0, totalBytes: 0
+			});
 		} finally {
 			fs.rmSync(dir, { recursive: true, force: true });
 		}

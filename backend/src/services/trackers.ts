@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { allowDecompression } from "../db.ts";
 import type { Sql, Tx } from "../db.ts";
 import { badRequest, notFound } from "../http/errors.ts";
 import { FUEL_TYPES } from "./costs.ts";
@@ -114,6 +115,7 @@ export async function detachTracker (tx: Tx, from: number): Promise<string> {
  */
 export async function pairInVehicle (tx: Tx, trackerRow: number, vehicle: number): Promise<void> {
 	const hardware = await takeHardware(tx, trackerRow);
+	await allowDecompression(tx);
 	await tx`DELETE FROM positions WHERE device_id = ${trackerRow}`;
 	await tx`DELETE FROM traffic WHERE device_id = ${trackerRow}`;
 	await tx`DELETE FROM device_extra WHERE device_id = ${trackerRow}`;

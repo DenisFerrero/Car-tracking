@@ -259,7 +259,9 @@ class _BackupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (backup['configured'] != true) return const SizedBox.shrink();
     final l = context.l10n;
-    final stale = backup['stale'] == true;
+    final verify = backup['verify'] as Map<String, dynamic>?;
+    final verifyStale = backup['verifyStale'] == true;
+    final stale = backup['stale'] == true || verifyStale;
     final latest = backup['latest'] as Map<String, dynamic>?;
     final last = backup['lastSuccess'] as String?;
     final offsite = backup['lastOffsite'] as String?;
@@ -271,10 +273,19 @@ class _BackupCard extends StatelessWidget {
         leading: Icon(stale ? Icons.warning_amber : Icons.backup, color: stale ? Colors.red : Colors.green),
         title: Text(l.backups),
         subtitle: Text([
-          if (stale) l.backupStale,
+          if (backup['stale'] == true) l.backupStale,
           if (last != null) l.backupLast(time(last), latest == null ? '-' : formatBytes(latest['size'] as num)),
           l.backupFiles(backup['files'] as int, formatBytes(backup['totalBytes'] as num)),
           offsite == null ? l.backupNoOffsite : l.backupOffsite(time(offsite)),
+          // Weekly restore of the newest dump into a separate database
+          if (verify == null)
+            l.backupNoVerify
+          else if (verify['ok'] != true)
+            '${l.backupVerifyFailed(time(verify['time'] as String))}\n${verify['error']}'
+          else ...[
+            l.backupVerifyOk(time(verify['time'] as String)),
+            if (verifyStale) l.backupVerifyOld,
+          ],
         ].join('\n')),
       ),
     );
