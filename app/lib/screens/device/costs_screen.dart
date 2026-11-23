@@ -17,8 +17,9 @@ final vehicleProvider = FutureProvider.autoDispose.family<Map<String, dynamic>, 
 const consumptionRange = {'l_per_100km': (min: 1.0, max: 50.0), 'km_per_l': (min: 2.0, max: 100.0)};
 const _priceRange = (min: 0.0, max: 10.0);
 const _wearRange = (min: 0.0, max: 10.0);
+const _reimbursementRange = (min: 0.0, max: 10.0);
 
-const fuelTypes = ['petrol', 'diesel', 'lpg'];
+const fuelTypes = ['petrol', 'diesel', 'lpg', 'hybrid', 'electric'];
 
 String _text(Object? value) => value == null ? '' : NumberFormat('0.###', Intl.getCurrentLocale()).format(value as num);
 double? _parse(TextEditingController controller) => double.tryParse(controller.text.trim().replaceAll(',', '.'));
@@ -28,10 +29,13 @@ String fuelTypeLabel(AppLocalizations l, String? type) => switch (type) {
       'petrol' => l.fuelPetrol,
       'diesel' => l.fuelDiesel,
       'lpg' => l.fuelLpg,
+      'hybrid' => l.fuelHybrid,
+      'electric' => l.fuelElectric,
       _ => l.fuelOther,
     };
 
-/// One of the values over time: price of the fuel, consumption, wear
+/// One of the values over time: price of the fuel (or of the kWh), consumption, wear, mileage
+/// allowance
 class _Rate {
   const _Rate(this.kind, this.icon, this.color);
 
@@ -39,25 +43,34 @@ class _Rate {
   final IconData icon;
   final Color color;
 
-  String title(AppLocalizations l) => switch (kind) { 'price' => l.fuelPrices, 'consumption' => l.consumption, _ => l.wearPerKm };
+  String title(AppLocalizations l, [String energy = 'l']) => switch (kind) {
+        'price' => energy == 'kWh' ? l.energyPrices : l.fuelPrices,
+        'consumption' => l.consumption,
+        'reimbursement' => l.reimbursementRate,
+        _ => l.wearPerKm,
+      };
 
-  String unit(String fuelUnit) => switch (kind) {
-        'price' => '€/l',
-        'consumption' => fuelUnit == 'l_per_100km' ? 'l/100 km' : 'km/l',
+  String unit(String fuelUnit, [String energy = 'l']) => switch (kind) {
+        'price' => '€/$energy',
+        'consumption' => fuelUnit == 'l_per_100km' ? '$energy/100 km' : 'km/$energy',
         _ => '€/km',
       };
 
-  ({double min, double max}) range(String fuelUnit) =>
-      switch (kind) { 'price' => _priceRange, 'consumption' => consumptionRange[fuelUnit]!, _ => _wearRange };
+  ({double min, double max}) range(String fuelUnit) => switch (kind) {
+        'price' => _priceRange,
+        'consumption' => consumptionRange[fuelUnit]!,
+        'reimbursement' => _reimbursementRange,
+        _ => _wearRange,
+      };
 
   /// Stored in l/100 km, shown in the unit of the owner
   double shown(num value, String fuelUnit) =>
       kind == 'consumption' && fuelUnit == 'km_per_l' ? double.parse((100 / value).toStringAsFixed(1)) : value.toDouble();
 
-  String format(num value, String fuelUnit) => switch (kind) {
-        'price' => '${formatEuro(value, digits: 3)}/l',
-        'wear' => '${formatEuro(value, digits: 3)}/km',
-        _ => '${_text(shown(value, fuelUnit))} ${unit(fuelUnit)}',
+  String format(num value, String fuelUnit, [String energy = 'l']) => switch (kind) {
+        'price' => '${formatEuro(value, digits: 3)}/$energy',
+        'wear' || 'reimbursement' => '${formatEuro(value, digits: 3)}/km',
+        _ => '${_text(shown(value, fuelUnit))} ${unit(fuelUnit, energy)}',
       };
 }
 
@@ -65,6 +78,7 @@ const _rates = [
   _Rate('price', Icons.local_gas_station, Colors.orange),
   _Rate('consumption', Icons.speed, Colors.blue),
   _Rate('wear', Icons.tire_repair, Colors.purple),
+  _Rate('reimbursement', Icons.work, Colors.teal),
 ];
 
 /// Costs of the trips: price of the fuel, consumption (l/100 km or km/l) and wear per km,
@@ -109,6 +123,12 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
   late final _model = TextEditingController(text: _profile['model'] as String);
   bool _busy = false;
 
+  /// kWh for an electric vehicle (as saved), litres otherwise
+  String get _energy => _profile['energyUnit'] as String? ?? 'l';
+
+  /// No national average for the electric ones
+  bool get _canAuto => _fuelType != null && _fuelType != 'electric';
+
   @override
   void dispose() {
     _model.dispose();
@@ -134,7 +154,7 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
           'model': _model.text.trim(),
           'fuelUnit': _unit,
           'fuelType': _fuelType,
-          'fuelPriceAuto': _fuelType != null && _auto,
+          'fuelPriceAuto': _canAuto && _auto,
           'ratesFromRefuels': _fromRefuels,
         }),
         context.l10n.costsSaved,
@@ -143,7 +163,12 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
   Future<void> _addRate(_Rate rate, {double? value}) async {
     final entry = await showDialog<({String validFrom, double value})>(
       context: context,
-      builder: (_) => _RateDialog(title: rate.title(context.l10n), unit: rate.unit(_unit), range: rate.range(_unit), initial: value),
+      builder: (_) => _RateDialog(
+          title: rate.title(context.l10n, _energy),
+          unit: rate.unit(_unit, _energy),
+          range: rate.range(_unit),
+          positive: rate.kind == 'price',
+          initial: value),
     );
     if (entry == null || !mounted) return;
     await _send(
@@ -160,7 +185,8 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
     final costPerKm = _profile['costPerKm'] as num?;
     final current = _profile['current'] as Map<String, dynamic>;
     final average = _profile['average'] as Map<String, dynamic>?;
-    final values = (_profile['rates'] as Map<String, dynamic>).map((kind, list) => MapEntry(kind, (list as List).cast<Map<String, dynamic>>()));
+    final rates = _profile['rates'] as Map<String, dynamic>;
+    final values = {for (final rate in _rates) rate.kind: ((rates[rate.kind] as List?) ?? const []).cast<Map<String, dynamic>>()};
 
     return ListView(padding: readable(context, const EdgeInsets.all(16)), children: [
       Card(
@@ -195,9 +221,9 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
       const SizedBox(height: 8),
       SegmentedButton<String>(
         key: const Key('fuelUnit'),
-        segments: const [
-          ButtonSegment(value: 'l_per_100km', label: Text('l/100 km')),
-          ButtonSegment(value: 'km_per_l', label: Text('km/l')),
+        segments: [
+          ButtonSegment(value: 'l_per_100km', label: Text('$_energy/100 km')),
+          ButtonSegment(value: 'km_per_l', label: Text('km/$_energy')),
         ],
         selected: {_unit},
         onSelectionChanged: (selection) => setState(() => _unit = selection.first),
@@ -206,14 +232,14 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
         key: const Key('fuelPriceAuto'),
         contentPadding: EdgeInsets.zero,
         title: Text(l.fuelPriceAuto),
-        subtitle: Text(_fuelType == null ? l.fuelPriceAutoNeedsType : l.fuelPriceAutoHint),
-        value: _fuelType != null && _auto,
-        onChanged: _fuelType == null ? null : (value) => setState(() => _auto = value),
+        subtitle: Text(switch (_fuelType) { null => l.fuelPriceAutoNeedsType, 'electric' => l.nationalAverageNone, _ => l.fuelPriceAutoHint }),
+        value: _canAuto && _auto,
+        onChanged: _canAuto ? (value) => setState(() => _auto = value) : null,
       ),
       SwitchListTile(
         key: const Key('ratesFromRefuels'),
         contentPadding: EdgeInsets.zero,
-        title: Text(l.ratesFromRefuels),
+        title: Text(_energy == 'kWh' ? l.chargeRatesFrom : l.ratesFromRefuels),
         subtitle: Text(l.ratesFromRefuelsHint),
         value: _fromRefuels,
         onChanged: (value) => setState(() => _fromRefuels = value),
@@ -242,7 +268,7 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
         Row(children: [
           Icon(rate.icon, color: rate.color),
           const SizedBox(width: 8),
-          Expanded(child: Text(rate.title(l), style: theme.textTheme.titleMedium)),
+          Expanded(child: Text(rate.title(l, _energy), style: theme.textTheme.titleMedium)),
           TextButton.icon(
             key: Key('add_${rate.kind}'),
             icon: const Icon(Icons.add),
@@ -250,7 +276,8 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
             onPressed: _busy ? null : () => _addRate(rate),
           ),
         ]),
-        Text(current[rate.kind] == null ? l.rateUnset : l.rateNow(rate.format(current[rate.kind] as num, _unit))),
+        Text(current[rate.kind] == null ? l.rateUnset : l.rateNow(rate.format(current[rate.kind] as num, _unit, _energy))),
+        if (rate.kind == 'reimbursement') Text(l.reimbursementHint, style: theme.textTheme.bodySmall),
         if (rate.kind == 'wear')
           Align(
             alignment: Alignment.centerLeft,
@@ -265,12 +292,12 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
               ),
             ),
           ),
-        if (values[rate.kind]!.length > 1) _RateChart(rate: rate, values: values[rate.kind]!, unit: _unit),
+        if (values[rate.kind]!.length > 1) _RateChart(rate: rate, values: values[rate.kind]!, unit: _unit, energy: _energy),
         for (final item in values[rate.kind]!)
           ListTile(
             dense: true,
             contentPadding: EdgeInsets.zero,
-            title: Text(rate.format(item['value'] as num, _unit)),
+            title: Text(rate.format(item['value'] as num, _unit, _energy)),
             subtitle: Text([
               l.validFrom(formatDay(DateTime.parse(item['validFrom'] as String))),
               if (item['source'] == 'refuel') l.rateFromRefuel,
@@ -295,11 +322,12 @@ class _CostsFormState extends ConsumerState<_CostsForm> {
 
 /// A value over time, up to today
 class _RateChart extends StatelessWidget {
-  const _RateChart({required this.rate, required this.values, required this.unit});
+  const _RateChart({required this.rate, required this.values, required this.unit, required this.energy});
 
   final _Rate rate;
   final List<Map<String, dynamic>> values;
   final String unit;
+  final String energy;
 
   @override
   Widget build(BuildContext context) {
@@ -317,8 +345,8 @@ class _RateChart extends StatelessWidget {
       child: TimeChart(
         from: DateTime.parse(oldest.first['validFrom'] as String),
         to: last.isBefore(now) ? now : last,
-        unit: ' ${rate.unit(unit)}',
-        series: [Series(rate.title(context.l10n), rate.color, spots)],
+        unit: ' ${rate.unit(unit, energy)}',
+        series: [Series(rate.title(context.l10n, energy), rate.color, spots)],
       ),
     );
   }
@@ -326,11 +354,14 @@ class _RateChart extends StatelessWidget {
 
 /// New value from a day (default today)
 class _RateDialog extends StatefulWidget {
-  const _RateDialog({required this.title, required this.unit, required this.range, this.initial});
+  const _RateDialog({required this.title, required this.unit, required this.range, this.positive = false, this.initial});
 
   final String title;
   final String unit;
   final ({double min, double max}) range;
+
+  /// Above the minimum (the price), not equal
+  final bool positive;
   final double? initial;
 
   @override
@@ -352,7 +383,7 @@ class _RateDialogState extends State<_RateDialog> {
     final value = _parse(_value);
     final range = widget.range;
     // The price must be above 0, the other values can be 0
-    final valid = value != null && value <= range.max && (widget.unit == '€/l' ? value > range.min : value >= range.min);
+    final valid = value != null && value <= range.max && (widget.positive ? value > range.min : value >= range.min);
     if (!valid) return setState(() => _error = context.l10n.valueRange(_text(range.min), _text(range.max)));
     Navigator.pop(context, (validFrom: _day(_date), value: value));
   }

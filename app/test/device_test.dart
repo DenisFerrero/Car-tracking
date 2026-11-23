@@ -462,7 +462,7 @@ void main() {
       await tapAndSettle(tester, find.byKey(const Key('shareFriend')));
       await tapAndSettle(tester, find.text('Mario').last);
       await tapAndSettle(tester, find.text(it.daysShort(7)));
-      await tapAndSettle(tester, find.text(it.permanent).first);
+      await tapAndSettle(tester, find.text(it.permanent).last);
       await tapAndSettle(tester, find.text(it.share));
       expect(backend.lastBody('/api/devices/1/shares', 'POST'), {'userId': 7, 'expiresAt': null});
       expect(find.text(it.shared), findsOneWidget);

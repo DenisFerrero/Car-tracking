@@ -132,8 +132,9 @@ describe("statistics, trip log, car", { skip: !process.env.TEST_DATABASE_URL && 
 		// Costs: profile, then price, consumption and wear over time
 		const vehicle = `/api/devices/${deviceId}/vehicle`;
 		const empty = {
-			model: "", fuelUnit: "l_per_100km", fuelType: null, fuelPriceAuto: false, ratesFromRefuels: true, rates: { price: [], consumption: [], wear: [] },
-			current: { price: null, consumption: null, wear: null }, costPerKm: null, average: null
+			model: "", fuelUnit: "l_per_100km", fuelType: null, energyUnit: "l", fuelPriceAuto: false, ratesFromRefuels: true,
+			rates: { price: [], consumption: [], wear: [], reimbursement: [] },
+			current: { price: null, consumption: null, wear: null, reimbursement: null }, costPerKm: null, average: null
 		};
 		assert.deepEqual((await h.api("GET", vehicle, { token: anna.token })).body, empty);
 		assert.equal((await h.api("GET", vehicle, { token: bruno.token })).body.error, "owner_only");
@@ -149,7 +150,7 @@ describe("statistics, trip log, car", { skip: !process.env.TEST_DATABASE_URL && 
 		// Values from a day: each trip with the ones of its day; consumption in either unit
 		const rates = `/api/devices/${deviceId}/rates`;
 		for (const body of [{ kind: "price", value: 0 }, { kind: "price", value: 11 }, { kind: "consumption", value: 0.5 },
-			{ kind: "consumption", value: 1, unit: "km_per_l" }, { kind: "wear", value: -1 }, { kind: "tax", value: 1 },
+			{ kind: "consumption", value: 1, unit: "km_per_l" }, { kind: "wear", value: -1 }, { kind: "reimbursement", value: 11 }, { kind: "tax", value: 1 },
 			{ kind: "price", validFrom: "1999-12-31", value: 1 }, { kind: "price", validFrom: "yesterday", value: 1 }, { kind: "price", value: 1, extra: 1 }]) {
 			assert.equal((await h.api("POST", rates, { token: anna.token, body })).status, 400, JSON.stringify(body));
 		}
@@ -164,7 +165,7 @@ describe("statistics, trip log, car", { skip: !process.env.TEST_DATABASE_URL && 
 		const latest = (await h.api("POST", rates, { token: anna.token, body: { kind: "price", value: 1.8 } })).body;
 		assert.deepEqual(latest.rates.price.map((item: { value: number }) => item.value), [1.8, 2, 1.6]);
 		assert.deepEqual(latest.rates.consumption.map((item: { value: number }) => item.value), [5, 10]);
-		assert.deepEqual([latest.current, latest.costPerKm], [{ price: 1.8, consumption: 5, wear: 0.1 }, 0.19]);
+		assert.deepEqual([latest.current, latest.costPerKm], [{ price: 1.8, consumption: 5, wear: 0.1, reimbursement: null }, 0.19]);
 		const priced = (await h.api("GET", `/api/devices/${deviceId}/trips?${query}`, { token: anna.token })).body;
 		const cost = priced.trips.find((item: { start: string }) => item.start === trip.start).cost;
 		assert.ok(Math.abs(cost.fuelL - trip.distanceKm * 0.05) < 0.006);
@@ -196,6 +197,19 @@ describe("statistics, trip log, car", { skip: !process.env.TEST_DATABASE_URL && 
 		await h.api("DELETE", `${rates}/price/2026-11-16`, { token: anna.token });
 		const costly = (await h.api("GET", `${logbook}?month=${month}`, { token: anna.token })).body as string;
 		assert.match(costly, /,Litres,Fuel \(€\),Wear \(€\),Cost \(€\)\r\n/);
+		// A hybrid follows the average of petrol
+		const hybrid = (await h.api("PUT", vehicle, { token: anna.token, body: { fuelUnit: "km_per_l", fuelType: "hybrid", fuelPriceAuto: true } })).body;
+		assert.deepEqual([hybrid.fuelType, hybrid.average], ["hybrid", { week: "2026-11-16", price: 1.97 }]);
+		await h.api("PUT", vehicle, { token: anna.token, body: { model: "Panda 1.2", fuelUnit: "km_per_l", fuelType: "petrol" } });
+		await h.api("DELETE", `${rates}/price/2026-11-16`, { token: anna.token });
+		// Mileage allowance: the business trips of the trip log
+		const allowance = (await h.api("POST", rates, { token: anna.token, body: { kind: "reimbursement", validFrom: "2020-01-01", value: 0.5 } })).body;
+		assert.equal(allowance.current.reimbursement, 0.5);
+		const refunded = (await h.api("GET", `${logbook}?month=${month}`, { token: anna.token })).body as string;
+		assert.match(refunded, /,Allowance \(€\)\r\n/);
+		const business = refunded.split("\r\n").find(line => line.startsWith("Total business"))!;
+		assert.equal(business.split(",").at(-1), (Math.round(trip.distanceKm * 0.5 * 100) / 100).toFixed(2));
+		await h.api("DELETE", `${rates}/reimbursement/2020-01-01`, { token: anna.token });
 
 		// Tag removed
 		await h.api("PUT", tag, { token: anna.token, body: { start: trip.start, purpose: null } });

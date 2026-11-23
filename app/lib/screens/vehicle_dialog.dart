@@ -6,6 +6,7 @@ import '../core/format.dart';
 import '../core/models.dart';
 import '../core/providers.dart';
 import 'add_device.dart' show deviceColors;
+import 'device/costs_screen.dart' show fuelTypeLabel, fuelTypes;
 
 /// Icon of a device: the phone of a person, a car with a tracker or fed by a phone
 IconData deviceIcon(Device device) => switch (device.kind) {
@@ -89,8 +90,7 @@ class _VehicleDialogState extends ConsumerState<_VehicleDialog> {
             isExpanded: true,
             decoration: InputDecoration(labelText: l.fuelType),
             items: [
-              for (final (value, label) in [('petrol', l.fuelPetrol), ('diesel', l.fuelDiesel), ('lpg', l.fuelLpg), (null, l.fuelOther)])
-                DropdownMenuItem(value: value, child: Text(label)),
+              for (final value in [...fuelTypes, null]) DropdownMenuItem(value: value, child: Text(fuelTypeLabel(l, value))),
             ],
             onChanged: (value) => setState(() => _fuel = value),
           ),

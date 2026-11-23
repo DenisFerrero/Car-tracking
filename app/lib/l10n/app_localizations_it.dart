@@ -212,6 +212,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get errNetwork => 'Server non raggiungibile';
 
   @override
+  String get errUnavailable =>
+      'Servizio momentaneamente non disponibile, riprova tra poco';
+
+  @override
   String get errInvalidCredentials => 'Email o password errate';
 
   @override
@@ -3191,4 +3195,370 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get logCopied => 'Dettagli copiati';
+
+  @override
+  String get fuelElectric => 'Elettrica';
+
+  @override
+  String get fuelHybrid => 'Ibrida';
+
+  @override
+  String get charges => 'Ricariche';
+
+  @override
+  String get addCharge => 'Aggiungi ricarica';
+
+  @override
+  String get editCharge => 'Modifica ricarica';
+
+  @override
+  String get noCharges => 'Nessuna ricarica: aggiungi la prima carica completa';
+
+  @override
+  String get chargesHint =>
+      'Tra due cariche complete i kWh caricati e i km percorsi danno il consumo reale; l\'importo dà il prezzo al kWh.';
+
+  @override
+  String get realConsumptionUnknownElectric =>
+      'Consumo reale: servono due cariche complete con il contachilometri';
+
+  @override
+  String lastCharge(String value) {
+    return 'Ultima carica completa: $value';
+  }
+
+  @override
+  String chargeTotals(int n, String energy, String cost) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n ricariche',
+      one: '1 ricarica',
+    );
+    return '$_temp0, $energy, $cost';
+  }
+
+  @override
+  String get chargeEnergy => 'Energia caricata';
+
+  @override
+  String get chargeFull => 'Carica completa';
+
+  @override
+  String get chargeFullHint =>
+      'Batteria caricata fino al limite che usi di solito (es. 80% o 100%)';
+
+  @override
+  String get chargePartial => 'parziale';
+
+  @override
+  String get chargePlace => 'Dove';
+
+  @override
+  String get chargeHome => 'A casa';
+
+  @override
+  String get chargePublic => 'Colonnina';
+
+  @override
+  String get chargePlaceUnset => 'Non indicato';
+
+  @override
+  String get chargeInvalid => 'kWh da 0 a 500, importo da 0 a 10.000 €';
+
+  @override
+  String get chargeRatesFrom => 'Prezzo e consumo dalle ricariche';
+
+  @override
+  String get energyPrices => 'Prezzo dell\'energia';
+
+  @override
+  String get nationalAverageNone =>
+      'Nessuna media nazionale per le auto elettriche: inserisci il prezzo o usa le ricariche';
+
+  @override
+  String get reimbursementRate => 'Rimborso chilometrico';
+
+  @override
+  String get reimbursementHint =>
+      'Euro per km dei viaggi di lavoro (es. tabelle ACI o accordo con l\'azienda): il registro viaggi aggiunge la colonna del rimborso';
+
+  @override
+  String summaryCharges(int n, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n ricariche',
+      one: '1 ricarica',
+    );
+    return '$_temp0: $value';
+  }
+
+  @override
+  String summaryReimbursement(String cost) {
+    return 'Rimborso chilometrico: $cost';
+  }
+
+  @override
+  String get mEnergy => 'kWh dei viaggi';
+
+  @override
+  String get mReimbursement => 'Rimborso chilometrico';
+
+  @override
+  String get mChargedEnergy => 'kWh caricati';
+
+  @override
+  String get mChargePrice => 'Prezzo pagato al kWh';
+
+  @override
+  String get mRealEnergyConsumption => 'Consumo reale (kWh)';
+
+  @override
+  String expectedAround(String date) {
+    return 'prevista verso il $date';
+  }
+
+  @override
+  String kmPerDayAverage(String km) {
+    return 'In media $km km al giorno negli ultimi 60 giorni';
+  }
+
+  @override
+  String get parking => 'Sosta';
+
+  @override
+  String get parkHere => 'Parcheggia';
+
+  @override
+  String parkingActive(String time) {
+    return 'In sosta dalle $time';
+  }
+
+  @override
+  String parkingUntil(String time) {
+    return 'Scade alle $time';
+  }
+
+  @override
+  String get parkingNoEnd => 'Senza scadenza';
+
+  @override
+  String parkingExpired(String time) {
+    return 'Scaduta alle $time';
+  }
+
+  @override
+  String get parkingTitle => 'Sosta del veicolo';
+
+  @override
+  String get parkingHint =>
+      'Il posto è l\'ultima posizione del veicolo. Con la scadenza del biglietto ricevi un promemoria prima della fine e un avviso alla scadenza; senza (es. Telepass) resta solo il posto. La sosta finisce da sola quando il veicolo riparte.';
+
+  @override
+  String get parkingHasEnd => 'Biglietto con scadenza';
+
+  @override
+  String get parkingHasEndHint =>
+      'Disattiva se paghi a consumo (es. Telepass, app)';
+
+  @override
+  String parkingEnd(String time) {
+    return 'Scadenza: $time';
+  }
+
+  @override
+  String get parkingChangeEnd => 'Cambia';
+
+  @override
+  String get parkingRemind => 'Promemoria';
+
+  @override
+  String get parkingRemindNone => 'Nessun promemoria';
+
+  @override
+  String parkingRemindBefore(int n) {
+    return '$n minuti prima';
+  }
+
+  @override
+  String get parkingNote => 'Nota (piano, posto, colore delle strisce…)';
+
+  @override
+  String get parkingNoPlace =>
+      'Nessuna posizione recente: la sosta resta senza posto';
+
+  @override
+  String get parkingStart => 'Avvia la sosta';
+
+  @override
+  String get parkingStop => 'Termina la sosta';
+
+  @override
+  String get parkingSaved => 'Sosta salvata';
+
+  @override
+  String get parkingStopped => 'Sosta terminata';
+
+  @override
+  String get parkingPrompt => 'Proponi la sosta allo spegnimento';
+
+  @override
+  String get parkingPromptHint =>
+      'Quando spegni il motore una notifica ti propone di impostare la sosta e la scadenza';
+
+  @override
+  String get errParkingPast => 'La scadenza è già passata';
+
+  @override
+  String get errParkingTooLong =>
+      'La scadenza può essere al massimo tra 31 giorni';
+
+  @override
+  String get kindParking => 'Sosta';
+
+  @override
+  String parkingPromptTitle(String device) {
+    return '$device parcheggiato';
+  }
+
+  @override
+  String parkingPromptBody(String time) {
+    return 'Ore $time: tocca per impostare la sosta e il promemoria';
+  }
+
+  @override
+  String parkingReminderTitle(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Sosta in scadenza tra $n minuti',
+      one: 'Sosta in scadenza tra 1 minuto',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String parkingReminderBody(String device, String time) {
+    return '$device: scade alle $time';
+  }
+
+  @override
+  String get parkingExpiredTitle => 'Sosta scaduta';
+
+  @override
+  String parkingExpiredBody(String device, String time) {
+    return '$device: scaduta alle $time';
+  }
+
+  @override
+  String get liveLinks => 'Link temporanei alla posizione';
+
+  @override
+  String get liveLinksHint =>
+      'Chi riceve il link vede solo il nome e la posizione attuale, senza account e senza storico, fino alla scadenza. Puoi revocarlo quando vuoi.';
+
+  @override
+  String get liveLinkNew => 'Crea un link';
+
+  @override
+  String get liveLinkLabel => 'Per chi è (facoltativo)';
+
+  @override
+  String get liveLinkHours => 'Durata';
+
+  @override
+  String liveLinkDuration(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n ore',
+      one: '1 ora',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveLinkCreated =>
+      'Link creato: copialo ora, non verrà più mostrato';
+
+  @override
+  String get liveLinkCopied => 'Link copiato';
+
+  @override
+  String liveLinkUntil(String time) {
+    return 'Fino alle $time';
+  }
+
+  @override
+  String liveLinkViewed(String time) {
+    return 'aperto $time';
+  }
+
+  @override
+  String get liveLinkNotViewed => 'mai aperto';
+
+  @override
+  String get liveLinkRevoke => 'Revoca';
+
+  @override
+  String get liveLinkRevoked => 'Link revocato';
+
+  @override
+  String get liveLinksNone => 'Nessun link attivo';
+
+  @override
+  String get errTooManyLinks => 'Al massimo 5 link attivi per dispositivo';
+
+  @override
+  String get publicLinkTitle => 'Posizione condivisa';
+
+  @override
+  String publicLinkUntil(String time) {
+    return 'Link valido fino alle $time';
+  }
+
+  @override
+  String get publicLinkGone => 'Link scaduto o revocato';
+
+  @override
+  String get publicLinkGoneHint =>
+      'Chiedi un nuovo link a chi te l\'ha mandato';
+
+  @override
+  String get publicLinkNoPosition => 'Nessuna posizione recente';
+
+  @override
+  String publicLinkUpdated(String time) {
+    return 'Posizione delle $time';
+  }
+
+  @override
+  String publicLinkMoving(String speed) {
+    return 'In movimento a $speed km/h';
+  }
+
+  @override
+  String get adminAlerts => 'Avvisi di errori nuovi';
+
+  @override
+  String get adminAlertsHint =>
+      'Una notifica quando il log della piattaforma registra un errore mai visto negli ultimi 30 giorni (al massimo 6 all\'ora)';
+
+  @override
+  String get kindPlatformError => 'Errore nuovo nel log';
+
+  @override
+  String platformErrorTitle(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n errori nuovi nel log',
+      one: 'Errore nuovo nel log',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mfaCode => 'Codice';
 }

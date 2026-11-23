@@ -89,6 +89,13 @@ with fingerprint or screen lock.
 
 To avoid building on the server use the release image: see [Updates](updates.md).
 
+`GET /healthz` answers `200 {"ok": true, "database": true}` only if the database answers
+within 3 seconds, otherwise `503`: the healthcheck of the container and any external monitor
+(e.g. Uptime Kuma) use it. While the database can't be reached (stopped, restarting or
+starting) the API calls answer `503` with `Retry-After: 10` too and the app shows *Service
+temporarily unavailable*; the backend reconnects by itself as soon as the database is back,
+without restarts.
+
 ## 4. Users and access
 
 - No public sign-up: the administrator invites the users from **Account → Administration**

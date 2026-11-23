@@ -88,6 +88,8 @@ String kindLabel(AppLocalizations l, String kind) => switch (kind) {
       'battery_health' => l.kindBatteryHealth,
       'maintenance' => l.kindMaintenance,
       'firmware' => l.kindFirmware,
+      'platform_error' => l.kindPlatformError,
+      'parking_prompt' || 'parking_reminder' || 'parking_expired' => l.kindParking,
       _ => kind,
     };
 
@@ -100,11 +102,16 @@ String maintenanceKindLabel(AppLocalizations l, String kind) => switch (kind) {
       _ => l.mkOther,
     };
 
-/// Days and km left of a deadline: "in 10 days or in 1,500 km"
-String remainingText(AppLocalizations l, int? days, int? km) => [
-      if (days != null) days > 0 ? l.inDays(days) : (days == 0 ? l.today : l.overdueDays(-days)),
-      if (km != null) km > 0 ? l.inKm(formatInt(km)) : l.kmOver(formatInt(-km)),
-    ].join(l.orJoin);
+/// Days and km left of a deadline: "in 10 days or in 1,500 km", with the day expected at the
+/// average km of the vehicle: "in 900 km (expected around 4 December)"
+String remainingText(AppLocalizations l, int? days, int? km, [String? expected]) {
+  final text = [
+    if (days != null) days > 0 ? l.inDays(days) : (days == 0 ? l.today : l.overdueDays(-days)),
+    if (km != null) km > 0 ? l.inKm(formatInt(km)) : l.kmOver(formatInt(-km)),
+  ].join(l.orJoin);
+  if (expected == null) return text;
+  return '$text (${l.expectedAround(DateFormat('d MMMM').format(DateTime.parse(expected)))})';
+}
 
 /// Integer with thousands separators of the language of the app
 String formatInt(int value) => NumberFormat.decimalPattern(Intl.getCurrentLocale()).format(value);
@@ -153,8 +160,12 @@ String costText(AppLocalizations l, Map<String, dynamic> cost) {
     'maintenance' => (
         title: (data.due == 'due' ? l.maintenanceDueTitle : l.maintenanceSoonTitle)(
             data.title?.isNotEmpty == true ? data.title! : maintenanceKindLabel(l, data.maintenance ?? 'other')),
-        body: '${data.device}: ${remainingText(l, data.days, data.km)}',
+        body: '${data.device}: ${remainingText(l, data.days, data.km, data.expected)}',
       ),
+    'platform_error' => (title: l.platformErrorTitle((data.others ?? 0) + 1), body: '${data.source}: ${data.message}'),
+    'parking_prompt' => (title: l.parkingPromptTitle(data.device), body: l.parkingPromptBody(time)),
+    'parking_reminder' => (title: l.parkingReminderTitle(data.minutes ?? 1), body: l.parkingReminderBody(data.device, time)),
+    'parking_expired' => (title: l.parkingExpiredTitle, body: l.parkingExpiredBody(data.device, time)),
     _ => (title: kindLabel(l, kind), body: l.notificationBodyAt(data.device, time)),
   };
 }
@@ -164,6 +175,7 @@ String errorText(AppLocalizations l, Object error) {
   if (error is! ApiException) return error.toString();
   return switch (error.code) {
     'network' => l.errNetwork,
+    'unavailable' => l.errUnavailable,
     'invalid_credentials' => l.errInvalidCredentials,
     'locked' => l.errLocked,
     'invalid_code' => l.errInvalidCode,
@@ -189,6 +201,9 @@ String errorText(AppLocalizations l, Object error) {
     'too_many_rates' => l.errTooManyRates,
     'too_many_refuels' => l.errTooManyRefuels,
     'refuel_future' => l.errRefuelFuture,
+    'parking_past' => l.errParkingPast,
+    'parking_too_long' => l.errParkingTooLong,
+    'too_many_links' => l.errTooManyLinks,
     'polygon_invalid' => l.errPolygonInvalid,
     'polygon_too_large' => l.errPolygonTooLarge,
     'friend_self' => l.errFriendSelf,

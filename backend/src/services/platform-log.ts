@@ -22,6 +22,14 @@ const MAX_TEXT = 2000;
 const MAX_STACK = 4000;
 /** Fields of the log calls never written to the platform log */
 const PRIVATE = new Set(["ip", "email", "token", "password", "code", "secret", "userAgent", "req", "res"]);
+/** An error is new when the same source and message is not in the log of these days */
+const NEW_ERROR_DAYS = 30;
+
+export interface NewError {
+	source: string;
+	message: string;
+	count: number;
+}
 
 interface Pending {
 	kind: LogKind;
@@ -52,6 +60,7 @@ export class PlatformLog {
 	#sql: Sql | null = null;
 	#timer: NodeJS.Timeout | null = null;
 	#dropped = 0;
+	#onNewErrors: ((errors: NewError[]) => Promise<void>) | null = null;
 	/** pg_stat_statements loaded by the database */
 	slowQueriesAvailable = false;
 
@@ -63,9 +72,10 @@ export class PlatformLog {
 		this.slowQueryMs = slowQueryMs;
 	}
 
-	/** Starts writing to the database */
-	start (sql: Sql): void {
+	/** Starts writing to the database; errors never seen in the last days go to onNewErrors */
+	start (sql: Sql, onNewErrors: ((errors: NewError[]) => Promise<void>) | null = null): void {
 		this.#sql = sql;
+		this.#onNewErrors = onNewErrors;
 		this.#timer = setInterval(() => void this.flush().catch(() => {}), FLUSH_INTERVAL);
 		this.#timer.unref();
 	}
@@ -141,10 +151,24 @@ export class PlatformLog {
 		}));
 		this.#pending.clear();
 		const sql = this.#sql;
+		const errors = rows.filter(row => row.kind === "error");
+		let fresh: NewError[] = [];
+		if (this.#onNewErrors && errors.length) {
+			const seen = await sql<{ source: string; message: string }[]>`
+				SELECT DISTINCT source, message FROM platform_log
+				WHERE kind = 'error' AND time > now() - make_interval(days => ${NEW_ERROR_DAYS})
+					AND (source, message) IN (SELECT * FROM jsonb_to_recordset(${sql.json(errors.map(({ source, message }) => ({ source, message })))})
+						AS t (source text, message text))`;
+			const known = new Set(seen.map(row => `${row.source}\u0000${row.message}`));
+			fresh = errors.filter(row => !known.has(`${row.source}\u0000${row.message}`))
+				.map(({ source, message, count }) => ({ source, message, count }));
+		}
 		await sql`
 			INSERT INTO platform_log (kind, source, message, count, duration_ms, details)
 			SELECT * FROM jsonb_to_recordset(${sql.json(rows as never)})
 				AS t (kind text, source text, message text, count integer, duration_ms double precision, details jsonb)`;
+		// A failure of the alert is not logged as an error: it would be new again at every flush
+		if (fresh.length) await this.#onNewErrors!(fresh).catch(() => {});
 	}
 
 	/**

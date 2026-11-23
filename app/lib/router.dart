@@ -20,6 +20,7 @@ import 'screens/map_overview.dart';
 import 'screens/notifications.dart';
 import 'screens/phone.dart';
 import 'screens/platform_log.dart';
+import 'screens/public_link.dart';
 import 'screens/server_setup.dart';
 import 'screens/summary_screen.dart';
 
@@ -40,12 +41,14 @@ GoRouter buildRouter(Session session) {
     redirect: (context, state) {
       final location = state.matchedLocation;
       if (!session.ready) return hold(state, '/splash');
-      if (location.startsWith('/invite/')) return null;
-      // Invite opened before the session was ready: it needs no login
-      if (wanted?.startsWith('/invite/') == true) {
-        final invite = wanted;
+      // Invites and temporary links to a position need no login
+      bool open(String? path) => path != null && (path.startsWith('/invite/') || path.startsWith('/l/'));
+      if (open(location)) return null;
+      // Opened before the session was ready
+      if (open(wanted)) {
+        final page = wanted;
         wanted = null;
-        return invite;
+        return page;
       }
       if (!session.api.web && !session.api.hasServer) return hold(state, '/server');
 
@@ -76,6 +79,7 @@ GoRouter buildRouter(Session session) {
         path: '/invite/:token',
         builder: (context, state) => InviteScreen(token: state.pathParameters['token']!),
       ),
+      GoRoute(path: '/l/:token', builder: (context, state) => PublicLinkScreen(token: state.pathParameters['token']!)),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => HomeShell(shell: shell),
         branches: [

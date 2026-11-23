@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/format.dart';
+import '../core/models.dart';
 import '../core/providers.dart';
 
 class NotificationsScreen extends ConsumerWidget {
@@ -54,12 +55,7 @@ class NotificationsScreen extends ConsumerWidget {
                           await ref.read(apiProvider).post('/api/notifications/read', {'ids': [n.id]});
                           ref.invalidate(notificationsProvider);
                         }
-                        if (!context.mounted) return;
-                        // The summary of the month opens its page; alarms the history of the
-                        // owner, arrivals the live map
-                        if (n.deviceId == null) return context.go('/account/summary?month=${n.data.month}');
-                        final tab = device?.isOwner == true && !n.kind.startsWith('geofence') ? 1 : 0;
-                        context.go('/devices/${n.deviceId}?tab=$tab');
+                        if (context.mounted) context.go(notificationTarget(n, owner: device?.isOwner == true));
                       },
                     );
                   },
@@ -68,4 +64,14 @@ class NotificationsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Page of a notification: the summary of the month, the log for the errors of the platform,
+/// the live map for arrivals and parkings (and for viewers), the history for the alarms of the
+/// owner
+String notificationTarget(AppNotification n, {required bool owner}) {
+  if (n.kind == 'platform_error') return '/account/admin/logs';
+  if (n.deviceId == null) return '/account/summary?month=${n.data.month}';
+  final live = !owner || n.kind.startsWith('geofence') || n.kind.startsWith('parking');
+  return '/devices/${n.deviceId}?tab=${live ? 0 : 1}';
 }

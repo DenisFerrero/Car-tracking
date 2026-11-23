@@ -3,12 +3,12 @@ import { z } from "zod";
 import type { Context } from "../context.ts";
 import { badRequest, notFound, parse } from "../http/errors.ts";
 import { requireDevice, requireVehicle } from "../services/access.ts";
-import { FUEL_TYPES, FUEL_UNITS, RATE_KINDS, convertConsumption, rateOn, vehicleProfile } from "../services/costs.ts";
+import { AVERAGE_FUEL, FUEL_TYPES, FUEL_UNITS, RATE_KINDS, convertConsumption, energyUnit, rateOn, vehicleProfile } from "../services/costs.ts";
 import { syncRefuelRates } from "../services/refuels.ts";
 import type { RateKind, VehicleProfile } from "../services/costs.ts";
 import { daysOf, today } from "../services/daily.ts";
 import type { DayStats } from "../services/daily.ts";
-import { BATTERY_GOOD, BATTERY_LOW, batteryHealth, deadlineState, odometer, setOdometer } from "../services/vehicle.ts";
+import { BATTERY_GOOD, BATTERY_LOW, batteryHealth, deadlineState, kmPerDay, odometer, setOdometer } from "../services/vehicle.ts";
 import type { DeadlineRow } from "../services/vehicle.ts";
 import { idParams } from "./devices.ts";
 
@@ -53,15 +53,16 @@ const profileBody = z.strictObject({
 	fuelPriceAuto: z.boolean().default(false),
 	/** Unchanged when missing */
 	ratesFromRefuels: z.boolean().optional()
-}).refine(value => !value.fuelPriceAuto || value.fuelType !== null, "fuel type of the average price");
+}).refine(value => !value.fuelPriceAuto || (value.fuelType !== null && AVERAGE_FUEL[value.fuelType] !== null), "fuel type of the average price");
 
-// Values over time: price per litre 0-10 €, consumption 1-50 l/100 km (2-100 km/l, the unit
-// of the request), wear 0-10 €/km
+// Values over time: price per litre (or kWh) 0-10 €, consumption 1-50 l/100 km or kWh/100 km
+// (2-100 km/l, the unit of the request), wear and mileage allowance 0-10 €/km
 export const MAX_RATES = 500;
 const RANGES: Record<RateKind, { min: number; max: number; strict?: boolean }> = {
 	price: { min: 0, max: 10, strict: true },
 	consumption: { min: 1, max: 50 },
-	wear: { min: 0, max: 10 }
+	wear: { min: 0, max: 10 },
+	reimbursement: { min: 0, max: 10 }
 };
 const rateBody = z.strictObject({
 	kind: z.enum(RATE_KINDS),
@@ -80,17 +81,20 @@ const presentProfile = async (ctx: Context, profile: VehicleProfile, todayIso: s
 	const consumption = now("consumption");
 	const price = now("price");
 	const wear = now("wear");
+	const allowance = now("reimbursement");
 	const fuelPerKm = consumption === null || price === null ? null : consumption / 100 * price;
 	return {
 		model: profile.model,
 		fuelUnit: profile.fuelUnit,
 		fuelType: profile.fuelType,
+		/** Litres or kWh: refuels, consumption, price */
+		energyUnit: energyUnit(profile.fuelType),
 		fuelPriceAuto: profile.fuelPriceAuto,
 		ratesFromRefuels: profile.ratesFromRefuels,
 		rates: Object.fromEntries(RATE_KINDS.map(kind => [kind, [...profile.rates[kind]].reverse()])),
-		current: { price, consumption: consumption === null ? null : round(consumption, 2), wear },
+		current: { price, consumption: consumption === null ? null : round(consumption, 2), wear, reimbursement: allowance },
 		costPerKm: fuelPerKm === null && wear === null ? null : round((fuelPerKm ?? 0) + (wear ?? 0), 3),
-		average: profile.fuelType ? await ctx.fuel.latest(profile.fuelType) : null
+		average: profile.fuelType && AVERAGE_FUEL[profile.fuelType] ? await ctx.fuel.latest(AVERAGE_FUEL[profile.fuelType]!) : null
 	};
 };
 
@@ -99,7 +103,7 @@ const COLUMNS = `id, kind, title, to_char(due_date, 'YYYY-MM-DD') AS due_date, d
 
 type Row = DeadlineRow & { every_months: number | null; every_km: number | null; note: string };
 
-const present = (row: Row, odometerKm: number | null, todayIso: string) => ({
+const present = (row: Row, odometerKm: number | null, todayIso: string, pace: number | null) => ({
 	id: row.id,
 	kind: row.kind,
 	title: row.title,
@@ -110,7 +114,7 @@ const present = (row: Row, odometerKm: number | null, todayIso: string) => ({
 	remindDays: row.remind_days,
 	remindKm: row.remind_km,
 	note: row.note,
-	...deadlineState(row, odometerKm, todayIso)
+	...deadlineState(row, odometerKm, todayIso, pace)
 });
 
 /** Monday of the ISO week of a day */
@@ -236,14 +240,15 @@ export function registerVehicleRoutes (app: FastifyInstance, ctx: Context): void
 		const access = await requireVehicle(sql, request.auth!.user, id);
 		const odometerKm = await odometer(sql, tz, { id, kind: access.kind });
 		const current = await today(sql, tz);
+		const pace = await kmPerDay(sql, id, current);
 		const rows = await sql<Row[]>`SELECT ${sql.unsafe(COLUMNS)} FROM maintenance WHERE device_id = ${id}`;
-		const items = rows.map(row => present(row, odometerKm, current))
+		const items = rows.map(row => present(row, odometerKm, current, pace))
 			.sort((a, b) => ["due", "soon", "ok"].indexOf(a.state) - ["due", "soon", "ok"].indexOf(b.state) ||
 				(a.remainingDays ?? Infinity) - (b.remainingDays ?? Infinity) || (a.remainingKm ?? Infinity) - (b.remainingKm ?? Infinity));
 		const log = await sql`
 			SELECT id, kind, title, to_char(done_on, 'YYYY-MM-DD') AS "doneOn", km, note FROM maintenance_log
 			WHERE device_id = ${id} ORDER BY done_on DESC, id DESC LIMIT 50`;
-		return { odometerKm, items, log };
+		return { odometerKm, kmPerDay: pace, items, log };
 	});
 
 	app.put("/api/devices/:id/odometer", async (request) => {
@@ -265,7 +270,8 @@ export function registerVehicleRoutes (app: FastifyInstance, ctx: Context): void
 			VALUES (${id}, ${body.kind}, ${body.title}, ${body.dueDate}, ${body.dueKm}, ${body.everyMonths}, ${body.everyKm},
 				${body.remindDays}, ${body.remindKm}, ${body.note})
 			RETURNING ${sql.unsafe(COLUMNS)}`;
-		return present(row!, await odometer(sql, tz, { id, kind: "tracker" }), await today(sql, tz));
+		const current = await today(sql, tz);
+		return present(row!, await odometer(sql, tz, { id, kind: "tracker" }), current, await kmPerDay(sql, id, current));
 	});
 
 	app.patch("/api/maintenance/:id", async (request) => {
@@ -285,7 +291,8 @@ export function registerVehicleRoutes (app: FastifyInstance, ctx: Context): void
 				remind_days = COALESCE(${body.remindDays ?? null}, remind_days), remind_km = COALESCE(${body.remindKm ?? null}, remind_km),
 				note = COALESCE(${body.note ?? null}, note)
 			WHERE id = ${row.id} RETURNING ${sql.unsafe(COLUMNS)}`;
-		return present(updated!, await odometer(sql, tz, device), await today(sql, tz));
+		const current = await today(sql, tz);
+		return present(updated!, await odometer(sql, tz, device), current, await kmPerDay(sql, device.id, current));
 	});
 
 	app.delete("/api/maintenance/:id", async (request) => {
@@ -320,6 +327,6 @@ export function registerVehicleRoutes (app: FastifyInstance, ctx: Context): void
 				due_km = CASE WHEN every_km IS NOT NULL AND ${body.km}::int IS NOT NULL THEN ${body.km}::int + every_km
 					WHEN every_months IS NULL THEN due_km END
 			WHERE id = ${row.id} RETURNING ${sql.unsafe(COLUMNS)}`;
-		return { next: present(updated!, odometerKm, current) };
+		return { next: present(updated!, odometerKm, current, await kmPerDay(sql, device.id, current)) };
 	});
 }

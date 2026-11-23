@@ -56,17 +56,21 @@ describe("summary of the month", { skip: !process.env.TEST_DATABASE_URL && "TEST
 	});
 
 	test("totals per device, month before, deadlines", async () => {
+		// Mileage allowance of the business km from the month: 0.40 €/km
+		await h.api("POST", `/api/devices/${vehicle}/rates`, { token: anna.token, body: { kind: "reimbursement", validFrom: `${month}-01`, value: 0.4 } });
 		const summary = (await h.api("GET", `/api/summary/${month}`, { token: anna.token })).body;
 		assert.deepEqual([summary.month, summary.from, summary.complete], [month, `${month}-01`, true]);
-		const [punto] = summary.devices;
-		assert.deepEqual([punto.name, punto.distanceKm, punto.businessKm, punto.trips, punto.drivingMin, punto.maxSpeed], ["Punto", 150, 75, 3, 90, 110]);
+		const [car] = summary.devices;
+		assert.deepEqual([car.name, car.distanceKm, car.businessKm, car.trips, car.drivingMin, car.maxSpeed], ["Punto", 150, 75, 3, 90, 110]);
 		// Price and consumption from the refuels: 150 km at 8 l/100 km and 1.90 €/l
-		assert.deepEqual(punto.cost, { fuelL: 12, fuelCost: 22.8, wearCost: 15, cost: 37.8 });
-		assert.deepEqual(punto.refuels, { count: 2, litres: 70, cost: 135, consumption: 8 });
-		assert.equal(punto.trafficBytes, null);
-		assert.deepEqual(summary.totals, { distanceKm: 150, drivingMin: 90, trips: 3, cost: 37.8, refuelCost: 135 });
-		// Before the first refuel its values hold: 80 km at 8 l/100 km and 1.90 €/l, plus the wear
-		assert.deepEqual(summary.previous, { distanceKm: 80, drivingMin: 90, trips: 3, cost: 20.16, refuelCost: null });
+		assert.deepEqual(car.cost, { fuelL: 12, fuelCost: 22.8, wearCost: 15, cost: 37.8 });
+		assert.deepEqual(car.refuels, { count: 2, litres: 70, cost: 135, consumption: 8 });
+		assert.deepEqual([car.trafficBytes, car.reimbursement, car.energyUnit], [null, 30, "l"]);
+		assert.deepEqual(summary.totals, { distanceKm: 150, drivingMin: 90, trips: 3, cost: 37.8, refuelCost: 135, reimbursement: 30 });
+		// Before the first refuel its values hold: 80 km at 8 l/100 km and 1.90 €/l, plus the wear; the
+		// first allowance holds before its day too
+		assert.deepEqual(summary.previous, { distanceKm: 80, drivingMin: 90, trips: 3, cost: 20.16, refuelCost: null, reimbursement: 16 });
+		await h.api("DELETE", `/api/devices/${vehicle}/rates/reimbursement/${month}-01`, { token: anna.token });
 		assert.deepEqual(summary.deadlines.map((item: { kind: string; state: string }) => [item.kind, item.state]), [["tax", "due"]]);
 
 		// Bruno has no devices; months out of range

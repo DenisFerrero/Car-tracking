@@ -4,12 +4,20 @@ import type { Sql } from "../db.ts";
 import { computeDay, today } from "./daily.ts";
 
 // The car behind a tracker: health of its battery from the resting voltage of the days,
-// odometer from the km of the trips, deadlines by date and by km.
+// odometer from the km of the trips, deadlines by date and by km. A deadline by km gets an
+// expected date from the average km a day of the last weeks, and is near also when that
+// date is within its reminder days.
 
 /** Resting voltage of a lead-acid battery: about 75% charged above, 50% below LOW */
 export const BATTERY_GOOD = 12.4;
 export const BATTERY_LOW = 12.2;
 const BATTERY_ALERT_EVERY = "14 days";
+/** Days of the average km a day, the least of them with data, the least km a day to expect a date */
+const PACE_DAYS = 60;
+const PACE_MIN_DAYS = 14;
+const PACE_MIN_KM = 1;
+/** An expected date further than this is not a date */
+const EXPECTED_MAX_DAYS = 3 * 365;
 
 export type BatteryState = "good" | "fair" | "low" | "unknown";
 
@@ -79,14 +87,34 @@ export interface DeadlineRow {
 	notified_stage: number;
 }
 
-/** Days and km left (null when not by date / km or without odometer) and state */
-export function deadlineState (item: Pick<DeadlineRow, "due_date" | "due_km" | "remind_days" | "remind_km">, odometerKm: number | null, todayIso: string):
-	{ remainingDays: number | null; remainingKm: number | null; state: DeadlineState } {
+/**
+ * Average km a day of a vehicle in the last PACE_DAYS days (days without trips included,
+ * from the first day with data), null with too few days or almost still
+ */
+export async function kmPerDay (sql: Sql, deviceId: number, todayIso: string): Promise<number | null> {
+	const [row] = await sql<{ km: number; days: number }[]>`
+		SELECT COALESCE(sum(distance_km), 0)::float AS km, (${todayIso}::date - min(day))::int AS days FROM daily_stats
+		WHERE device_id = ${deviceId} AND day >= ${todayIso}::date - ${PACE_DAYS}::int AND day < ${todayIso}::date`;
+	if (!row || row.days === null || row.days < PACE_MIN_DAYS) return null;
+	const pace = row.km / row.days;
+	return pace >= PACE_MIN_KM ? Math.round(pace * 10) / 10 : null;
+}
+
+/**
+ * Days and km left (null when not by date / km or without odometer), date expected for the
+ * km at the average km a day, and state
+ */
+export function deadlineState (item: Pick<DeadlineRow, "due_date" | "due_km" | "remind_days" | "remind_km">, odometerKm: number | null, todayIso: string,
+	pace: number | null = null): { remainingDays: number | null; remainingKm: number | null; expectedDate: string | null; state: DeadlineState } {
 	const remainingDays = item.due_date === null ? null : Math.round((Date.parse(item.due_date) - Date.parse(todayIso)) / 86400e3);
 	const remainingKm = item.due_km === null || odometerKm === null ? null : item.due_km - odometerKm;
+	const expectedDays = remainingKm !== null && remainingKm > 0 && pace !== null ? Math.ceil(remainingKm / pace) : null;
+	const expectedDate = expectedDays === null || expectedDays > EXPECTED_MAX_DAYS ? null
+		: new Date(Date.parse(todayIso) + expectedDays * 86400e3).toISOString().slice(0, 10);
 	const due = (remainingDays !== null && remainingDays <= 0) || (remainingKm !== null && remainingKm <= 0);
-	const soon = (remainingDays !== null && remainingDays <= item.remind_days) || (remainingKm !== null && remainingKm <= item.remind_km);
-	return { remainingDays, remainingKm, state: due ? "due" : soon ? "soon" : "ok" };
+	const soon = (remainingDays !== null && remainingDays <= item.remind_days) || (remainingKm !== null && remainingKm <= item.remind_km) ||
+		(expectedDate !== null && expectedDays! <= item.remind_days);
+	return { remainingDays, remainingKm, expectedDate, state: due ? "due" : soon ? "soon" : "ok" };
 }
 
 /** Job: deadlines getting close or passed, low resting voltage of the car battery */
@@ -98,9 +126,13 @@ export async function checkVehicles (ctx: Context): Promise<void> {
 			m.remind_km, m.notified_stage, d.kind AS device_kind
 		FROM maintenance m JOIN devices d ON d.id = m.device_id`;
 	const odometers = new Map<number, number | null>();
+	const paces = new Map<number, number | null>();
 	for (const item of items) {
-		if (!odometers.has(item.device_id)) odometers.set(item.device_id, await odometer(sql, config.TIMEZONE, { id: item.device_id, kind: item.device_kind }));
-		const { remainingDays, remainingKm, state } = deadlineState(item, odometers.get(item.device_id)!, current);
+		if (!odometers.has(item.device_id)) {
+			odometers.set(item.device_id, await odometer(sql, config.TIMEZONE, { id: item.device_id, kind: item.device_kind }));
+			paces.set(item.device_id, await kmPerDay(sql, item.device_id, current));
+		}
+		const { remainingDays, remainingKm, expectedDate, state } = deadlineState(item, odometers.get(item.device_id)!, current, paces.get(item.device_id)!);
 		const stage = STAGE[state];
 		if (stage === item.notified_stage) continue;
 		// Conditional update: concurrent jobs don't notify twice
@@ -108,7 +140,8 @@ export async function checkVehicles (ctx: Context): Promise<void> {
 		if (updated.count !== 1 || stage < item.notified_stage) continue;
 		await ctx.notifier.notifyDevice(item.device_id, "maintenance", new Date(), undefined, {
 			title: item.title, maintenance: item.kind, due: state as "soon" | "due",
-			...(remainingDays === null ? {} : { days: remainingDays }), ...(remainingKm === null ? {} : { km: remainingKm })
+			...(remainingDays === null ? {} : { days: remainingDays }), ...(remainingKm === null ? {} : { km: remainingKm }),
+			...(expectedDate === null ? {} : { expected: expectedDate })
 		});
 	}
 

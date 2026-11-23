@@ -22,6 +22,10 @@
   con controllo dell'Origin nel browser, token bearer nell'app. CSP restrittiva,
   HSTS. Ogni API controlla l'accesso al singolo dispositivo (404 per quelli altrui) e
   il realtime arriva solo agli utenti del dispositivo.
+- **Link temporanei alla posizione**: token di 32 byte casuali, nel database solo l'hash;
+  durata 1-24 ore, al massimo 5 attivi per dispositivo, revocabili. La pagina pubblica legge
+  solo nome, colore, tipo e ultima posizione (niente storico, IMEI o account) con un rate
+  limit dedicato; link scaduti, revocati o inesistenti rispondono tutti 404.
 - **Telefoni**: le posizioni si caricano con un token valido solo per quel telefono,
   rinnovato a ogni avvio della condivisione; un punto può indicare solo un veicolo del
   proprietario del telefono, gli altri vengono scartati.

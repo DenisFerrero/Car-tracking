@@ -12,7 +12,7 @@ import { MAX_REFUELS } from "./refuels.ts";
 test("consumption between full tanks, partial refuels, wrong readings", () => {
 	let id = 0;
 	const refuel = (day: string, litres: number, odometerKm: number | null, full = true, cost: number | null = null): Refuel =>
-		({ id: ++id, day, litres, cost, odometerKm, full, note: "" });
+		({ id: ++id, day, litres, cost, odometerKm, full, place: null, note: "" });
 	const measured = measure([
 		refuel("2026-10-20", 40, 10_600, true, 76),
 		// First full tank: nothing to measure; then a partial one, counted in the next interval
@@ -59,7 +59,7 @@ describe("refuels", { skip: !process.env.TEST_DATABASE_URL && "TEST_DATABASE_URL
 		const empty = (await h.api("GET", path, { token: anna.token })).body;
 		assert.deepEqual(empty, {
 			refuels: [], summary: { count: 0, litres: 0, cost: null, averageConsumption: null, lastConsumption: null, measuredKm: 0 },
-			ratesFromRefuels: true, fuelUnit: "l_per_100km", odometerKm: null
+			ratesFromRefuels: true, fuelUnit: "l_per_100km", energyUnit: "l", odometerKm: null
 		});
 		assert.equal((await h.api("GET", path, { token: bruno.token })).status, 404);
 		const phone = (await h.api("POST", "/api/phones", { token: anna.token, body: { name: "Pixel" } })).body.id;
@@ -159,10 +159,43 @@ describe("refuels", { skip: !process.env.TEST_DATABASE_URL && "TEST_DATABASE_URL
 		assert.deepEqual(widget.body.results.w.unavailable, [phone]);
 	});
 
+	test("electric vehicle: charges in kWh at home or at a station, metrics in kWh", async () => {
+		const car = (await h.api("POST", "/api/vehicles", { token: anna.token, body: { name: "Zoe", fuelType: "electric" } })).body.id;
+		const path = `/api/devices/${car}/refuels`;
+		assert.equal((await h.api("POST", path, { token: anna.token, body: { litres: 30, place: "garage" } })).status, 400);
+		await h.api("POST", path, { token: anna.token, body: { day: day(-6), litres: 40, cost: 10, odometerKm: 1000, place: "home" } });
+		const second = (await h.api("POST", path, { token: anna.token, body: { day: day(-2), litres: 32, cost: 16, odometerKm: 1200, place: "public" } })).body;
+		assert.equal(second.energyUnit, "kWh");
+		// 32 kWh in 200 km, 0.50 €/kWh
+		assert.deepEqual([second.refuels[0].place, second.refuels[0].consumption, second.refuels[0].pricePerLitre], ["public", 16, 0.5]);
+		const changed = (await h.api("PATCH", `/api/refuels/${second.refuels[1].id}`, { token: anna.token, body: { place: null } })).body;
+		assert.equal(changed.refuels[1].place, null);
+		assert.equal((await h.api("PATCH", `/api/refuels/${second.refuels[1].id}`, { token: anna.token, body: { note: "x" } })).body.refuels[1].place, null);
+		const profile = (await h.api("GET", `/api/devices/${car}/vehicle`, { token: anna.token })).body;
+		assert.deepEqual([profile.fuelType, profile.energyUnit, profile.average], ["electric", "kWh", null]);
+		// No national average for the electric ones
+		const auto = await h.api("PUT", `/api/devices/${car}/vehicle`, { token: anna.token, body: { fuelUnit: "l_per_100km", fuelType: "electric", fuelPriceAuto: true } });
+		assert.equal(auto.status, 400);
+
+		const data = async (metric: string, devices: number[]) => (await h.api("POST", "/api/dashboards/data", {
+			token: anna.token, body: { period: "30d", widgets: [{ id: "w", metric, view: "vehicles", devices }] }
+		})).body.results.w.values;
+		assert.deepEqual(await data("chargedEnergy", [car, vehicle]), [{ deviceId: car, value: 72 }, { deviceId: vehicle, value: null }]);
+		// Average of the days: 0.25 at home, 0.50 at the station
+		assert.deepEqual(await data("chargePrice", [car]), [{ deviceId: car, value: 0.38 }]);
+		assert.deepEqual(await data("realEnergyConsumption", [car]), [{ deviceId: car, value: 16 }]);
+		// The litres skip the electric vehicle
+		assert.deepEqual(await data("refuelLitres", [car, vehicle]), [{ deviceId: car, value: null }, { deviceId: vehicle, value: 40 }]);
+		// Energy of the trips: kWh for the electric ones only
+		assert.deepEqual(await data("energy", [car, vehicle]), [{ deviceId: car, value: 0 }, { deviceId: vehicle, value: null }]);
+		assert.deepEqual(await data("fuel", [car]), [{ deviceId: car, value: null }]);
+		await h.api("DELETE", `/api/devices/${car}`, { token: anna.token, body: { confirm: true } });
+	});
+
 	test("at most MAX_REFUELS per vehicle", async () => {
 		await h.sql`
 			INSERT INTO refuels (device_id, day, litres)
-			SELECT ${vehicle}, '2010-01-01'::date + n, 30 FROM generate_series(1, ${MAX_REFUELS - (await h.sql<{ count: number }[]>`SELECT count(*)::int AS count FROM refuels`)[0]!.count}) n`;
+			SELECT ${vehicle}, '2010-01-01'::date + n, 30 FROM generate_series(1, ${MAX_REFUELS - (await h.sql<{ count: number }[]>`SELECT count(*)::int AS count FROM refuels WHERE device_id = ${vehicle}`)[0]!.count}) n`;
 		assert.equal((await h.api("POST", `/api/devices/${vehicle}/refuels`, { token: anna.token, body: { litres: 30 } })).body.error, "too_many_refuels");
 	});
 });

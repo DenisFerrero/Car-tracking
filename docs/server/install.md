@@ -89,6 +89,13 @@ passkey per accedere con impronta o blocco schermo.
 
 Per non compilare sul server usa l'immagine delle release: vedi [Aggiornamenti](updates.md).
 
+`GET /healthz` risponde `200 {"ok": true, "database": true}` solo se il database risponde
+entro 3 secondi, altrimenti `503`: lo usano l'healthcheck del container e un eventuale
+monitoraggio esterno (es. Uptime Kuma). Finché il database non è raggiungibile (fermo, in
+riavvio o in avvio) anche le chiamate alle API rispondono `503` con `Retry-After: 10` e la app
+mostra *Servizio momentaneamente non disponibile*; il backend si ricollega da solo appena il
+database torna, senza riavvii.
+
 ## 4. Utenti e accesso
 
 - Nessuna registrazione pubblica: l'amministratore invita gli utenti da

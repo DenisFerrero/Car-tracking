@@ -9,6 +9,7 @@ import type { Cells } from "../services/cells.ts";
 import type { Downlink } from "../services/commands.ts";
 import { storeExtra } from "../services/extra.ts";
 import { kindsOfEvents } from "../services/notifier.ts";
+import { promptParking } from "../services/parking.ts";
 import { Throttle } from "../services/throttle.ts";
 
 // Gateway of the trackers: one WebSocket per tracker on /tracker (TLS terminated by the
@@ -330,6 +331,7 @@ export class Gateway implements Downlink {
 			}
 		}
 		await this.#ctx.geofences.evaluate(deviceId, rows.filter(row => fresh.has(row.time.getTime())));
+		await promptParking(this.#ctx, deviceId, rows.filter(row => fresh.has(row.time.getTime())));
 	}
 
 	async close (): Promise<void> {

@@ -143,6 +143,7 @@
   "markAllRead": "Segna tutte come lette",
   "noNotifications": "Nessuna notifica",
   "errNetwork": "Server non raggiungibile",
+  "errUnavailable": "Servizio momentaneamente non disponibile, riprova tra poco",
   "errInvalidCredentials": "Email o password errate",
   "errLocked": "Troppi tentativi: account bloccato temporaneamente",
   "errInvalidCode": "Codice non valido",
@@ -2108,5 +2109,273 @@
     }
   },
   "logQueriesOff": "Le query lente non vengono raccolte: il database deve caricare pg_stat_statements (vedi la documentazione del server).",
-  "logCopied": "Dettagli copiati"
+  "logCopied": "Dettagli copiati",
+  "fuelElectric": "Elettrica",
+  "fuelHybrid": "Ibrida",
+  "charges": "Ricariche",
+  "addCharge": "Aggiungi ricarica",
+  "editCharge": "Modifica ricarica",
+  "noCharges": "Nessuna ricarica: aggiungi la prima carica completa",
+  "chargesHint": "Tra due cariche complete i kWh caricati e i km percorsi danno il consumo reale; l'importo dà il prezzo al kWh.",
+  "realConsumptionUnknownElectric": "Consumo reale: servono due cariche complete con il contachilometri",
+  "lastCharge": "Ultima carica completa: {value}",
+  "@lastCharge": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "chargeTotals": "{n, plural, =1{1 ricarica} other{{n} ricariche}}, {energy}, {cost}",
+  "@chargeTotals": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "energy": {
+        "type": "String"
+      },
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "chargeEnergy": "Energia caricata",
+  "chargeFull": "Carica completa",
+  "chargeFullHint": "Batteria caricata fino al limite che usi di solito (es. 80% o 100%)",
+  "chargePartial": "parziale",
+  "chargePlace": "Dove",
+  "chargeHome": "A casa",
+  "chargePublic": "Colonnina",
+  "chargePlaceUnset": "Non indicato",
+  "chargeInvalid": "kWh da 0 a 500, importo da 0 a 10.000 €",
+  "chargeRatesFrom": "Prezzo e consumo dalle ricariche",
+  "energyPrices": "Prezzo dell'energia",
+  "nationalAverageNone": "Nessuna media nazionale per le auto elettriche: inserisci il prezzo o usa le ricariche",
+  "reimbursementRate": "Rimborso chilometrico",
+  "reimbursementHint": "Euro per km dei viaggi di lavoro (es. tabelle ACI o accordo con l'azienda): il registro viaggi aggiunge la colonna del rimborso",
+  "summaryCharges": "{n, plural, =1{1 ricarica} other{{n} ricariche}}: {value}",
+  "@summaryCharges": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryReimbursement": "Rimborso chilometrico: {cost}",
+  "@summaryReimbursement": {
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
+  },
+  "mEnergy": "kWh dei viaggi",
+  "mReimbursement": "Rimborso chilometrico",
+  "mChargedEnergy": "kWh caricati",
+  "mChargePrice": "Prezzo pagato al kWh",
+  "mRealEnergyConsumption": "Consumo reale (kWh)",
+  "expectedAround": "prevista verso il {date}",
+  "@expectedAround": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "kmPerDayAverage": "In media {km} km al giorno negli ultimi 60 giorni",
+  "@kmPerDayAverage": {
+    "placeholders": {
+      "km": {
+        "type": "String"
+      }
+    }
+  },
+  "parking": "Sosta",
+  "parkHere": "Parcheggia",
+  "parkingActive": "In sosta dalle {time}",
+  "@parkingActive": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "parkingUntil": "Scade alle {time}",
+  "@parkingUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "parkingNoEnd": "Senza scadenza",
+  "parkingExpired": "Scaduta alle {time}",
+  "@parkingExpired": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "parkingTitle": "Sosta del veicolo",
+  "parkingHint": "Il posto è l'ultima posizione del veicolo. Con la scadenza del biglietto ricevi un promemoria prima della fine e un avviso alla scadenza; senza (es. Telepass) resta solo il posto. La sosta finisce da sola quando il veicolo riparte.",
+  "parkingHasEnd": "Biglietto con scadenza",
+  "parkingHasEndHint": "Disattiva se paghi a consumo (es. Telepass, app)",
+  "parkingEnd": "Scadenza: {time}",
+  "@parkingEnd": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "parkingChangeEnd": "Cambia",
+  "parkingRemind": "Promemoria",
+  "parkingRemindNone": "Nessun promemoria",
+  "parkingRemindBefore": "{n} minuti prima",
+  "@parkingRemindBefore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "parkingNote": "Nota (piano, posto, colore delle strisce…)",
+  "parkingNoPlace": "Nessuna posizione recente: la sosta resta senza posto",
+  "parkingStart": "Avvia la sosta",
+  "parkingStop": "Termina la sosta",
+  "parkingSaved": "Sosta salvata",
+  "parkingStopped": "Sosta terminata",
+  "parkingPrompt": "Proponi la sosta allo spegnimento",
+  "parkingPromptHint": "Quando spegni il motore una notifica ti propone di impostare la sosta e la scadenza",
+  "errParkingPast": "La scadenza è già passata",
+  "errParkingTooLong": "La scadenza può essere al massimo tra 31 giorni",
+  "kindParking": "Sosta",
+  "parkingPromptTitle": "{device} parcheggiato",
+  "@parkingPromptTitle": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      }
+    }
+  },
+  "parkingPromptBody": "Ore {time}: tocca per impostare la sosta e il promemoria",
+  "@parkingPromptBody": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "parkingReminderTitle": "{n, plural, =1{Sosta in scadenza tra 1 minuto} other{Sosta in scadenza tra {n} minuti}}",
+  "@parkingReminderTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "parkingReminderBody": "{device}: scade alle {time}",
+  "@parkingReminderBody": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "parkingExpiredTitle": "Sosta scaduta",
+  "parkingExpiredBody": "{device}: scaduta alle {time}",
+  "@parkingExpiredBody": {
+    "placeholders": {
+      "device": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "liveLinks": "Link temporanei alla posizione",
+  "liveLinksHint": "Chi riceve il link vede solo il nome e la posizione attuale, senza account e senza storico, fino alla scadenza. Puoi revocarlo quando vuoi.",
+  "liveLinkNew": "Crea un link",
+  "liveLinkLabel": "Per chi è (facoltativo)",
+  "liveLinkHours": "Durata",
+  "liveLinkDuration": "{n, plural, =1{1 ora} other{{n} ore}}",
+  "@liveLinkDuration": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "liveLinkCreated": "Link creato: copialo ora, non verrà più mostrato",
+  "liveLinkCopied": "Link copiato",
+  "liveLinkUntil": "Fino alle {time}",
+  "@liveLinkUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "liveLinkViewed": "aperto {time}",
+  "@liveLinkViewed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "liveLinkNotViewed": "mai aperto",
+  "liveLinkRevoke": "Revoca",
+  "liveLinkRevoked": "Link revocato",
+  "liveLinksNone": "Nessun link attivo",
+  "errTooManyLinks": "Al massimo 5 link attivi per dispositivo",
+  "publicLinkTitle": "Posizione condivisa",
+  "publicLinkUntil": "Link valido fino alle {time}",
+  "@publicLinkUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "publicLinkGone": "Link scaduto o revocato",
+  "publicLinkGoneHint": "Chiedi un nuovo link a chi te l'ha mandato",
+  "publicLinkNoPosition": "Nessuna posizione recente",
+  "publicLinkUpdated": "Posizione delle {time}",
+  "@publicLinkUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "publicLinkMoving": "In movimento a {speed} km/h",
+  "@publicLinkMoving": {
+    "placeholders": {
+      "speed": {
+        "type": "String"
+      }
+    }
+  },
+  "adminAlerts": "Avvisi di errori nuovi",
+  "adminAlertsHint": "Una notifica quando il log della piattaforma registra un errore mai visto negli ultimi 30 giorni (al massimo 6 all'ora)",
+  "kindPlatformError": "Errore nuovo nel log",
+  "platformErrorTitle": "{n, plural, =1{Errore nuovo nel log} other{{n} errori nuovi nel log}}",
+  "@platformErrorTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "mfaCode": "Codice"
 }

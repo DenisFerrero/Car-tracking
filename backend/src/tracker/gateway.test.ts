@@ -274,6 +274,20 @@ describe("trackers, analysis, push, web app", { skip: SKIP }, () => {
 		assert.equal(links.body[0].target.package_name, "com.cartracking.app");
 		const health = await h.api("GET", "/healthz");
 		assert.equal(health.status, 200);
+		assert.deepEqual(health.body, { ok: true, database: true });
+		// Database failing or not answering: unhealthy
+		const ctx = h.server.ctx as { sql: unknown };
+		const sql = ctx.sql;
+		try {
+			ctx.sql = () => Promise.reject(new Error("connection refused"));
+			const failing = await h.api("GET", "/healthz");
+			assert.equal(failing.status, 503);
+			assert.deepEqual(failing.body, { ok: false, database: false });
+			ctx.sql = () => new Promise(() => {});
+			assert.equal((await h.api("GET", "/healthz")).status, 503);
+		} finally {
+			ctx.sql = sql;
+		}
 		assert.ok(health.headers.get("content-security-policy"));
 		assert.equal(health.headers.get("referrer-policy"), "strict-origin-when-cross-origin");
 		assert.equal(health.headers.get("x-content-type-options"), "nosniff");

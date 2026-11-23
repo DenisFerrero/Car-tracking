@@ -349,7 +349,7 @@ void main() {
       // Wear: not a number, cancelled; ACI search
       await clearSnackbars(tester);
       await show(find.byKey(const Key('add_wear')));
-      expect(find.text(it.rateUnset), findsOneWidget);
+      expect(find.text(it.rateUnset), findsWidgets);
       await tapAndSettle(tester, find.byKey(const Key('add_wear')));
       await tester.enterText(find.byKey(const Key('rateValue')), 'caro');
       await tapAndSettle(tester, find.byKey(const Key('rateSave')));

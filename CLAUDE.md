@@ -26,6 +26,12 @@ bilingual documentation site. Full documentation: `docs/` (published on GitHub P
 - Node.js 24, Fastify 5, TypeScript, postgres.js, TimescaleDB.
 - **zod validation on every call** (body, query, params, WebSocket messages), strict schemas.
 - Migrations in `backend/migrations/NNN_name.sql`, applied at startup.
+- **Migrations are additive**: they must upgrade a populated production database without
+  losing data or breaking its integrity. Add tables, indexes, policies and columns that are
+  nullable or have a default; never drop or rename tables or columns holding data, never
+  narrow a type, never add a constraint (NOT NULL, CHECK, UNIQUE, FK) that existing rows could
+  violate without fixing those rows in the same migration. Never edit an applied migration.
+  Structural changes go expand → copy the data → drop the old part only once nothing uses it.
 - Tests end-to-end on a real TimescaleDB (`TEST_DATABASE_URL`), coverage **≥ 98%** of lines.
 - **Platform log** (`src/services/platform-log.ts`, `docs/server/logs.md`): every `warn` /
   `error` of `ctx.log` and of its children (`component` = source) is also saved for 30 days,

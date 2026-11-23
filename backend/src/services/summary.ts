@@ -1,16 +1,16 @@
 import type { Context } from "../context.ts";
 import type { Sql } from "../db.ts";
 import type { DeviceKind } from "./access.ts";
-import { hasCosts, sumCosts, tripCost, vehicleProfile } from "./costs.ts";
+import { energyUnit, hasCosts, reimbursement, sumCosts, tripCost, vehicleProfile } from "./costs.ts";
 import type { TripCost } from "./costs.ts";
 import { daysOf, today } from "./daily.ts";
 import { deviceName } from "./notifier.ts";
 import { loadRefuels, measure, summary as refuelSummary } from "./refuels.ts";
-import { deadlineState, odometer } from "./vehicle.ts";
+import { deadlineState, kmPerDay, odometer } from "./vehicle.ts";
 
 // Summary of a month for a user: for each device owned km, driving time, trips, costs of
-// the trips, refuels and bytes on the SIM, the totals with the month before, and the
-// deadlines coming up. At the start of every month (from SUMMARY_HOUR, local time) the
+// the trips, mileage allowance of the business km, refuels and bytes on the SIM, the totals
+// with the month before, and the deadlines coming up (by km also when they are expected). At the start of every month (from SUMMARY_HOUR, local time) the
 // users who want it get a notification with the totals of the month just ended; the app
 // opens the summary. One notification per user and month (monthly_summaries).
 
@@ -29,6 +29,10 @@ export interface DeviceMonth {
 	maxSpeed: number;
 	/** Costs of the trips, null without consumption or wear */
 	cost: TripCost | null;
+	/** Mileage allowance of the business km, null without an allowance */
+	reimbursement: number | null;
+	/** Litres or kWh of the refuels and of the consumption */
+	energyUnit: "l" | "kWh";
 	refuels: { count: number; litres: number; cost: number | null; consumption: number | null };
 	/** Trackers: bytes on the SIM */
 	trafficBytes: number | null;
@@ -41,6 +45,7 @@ export interface MonthTotals {
 	trips: number;
 	cost: number | null;
 	refuelCost: number | null;
+	reimbursement: number | null;
 }
 
 const round = (value: number, digits = 1) => Math.round(value * 10 ** digits) / 10 ** digits;
@@ -83,6 +88,10 @@ async function devicesMonth (sql: Sql, timeZone: string, devices: { id: number; 
 			trips: sum("trips"),
 			maxSpeed: days.reduce((max, item) => Math.max(max, item.maxSpeed), 0),
 			cost: hasCosts(profile) ? sumCosts(days.map(item => tripCost(item.distanceKm, profile, item.day))) : null,
+			reimbursement: profile.rates.reimbursement.length
+				? sumOrNull(days.map(item => reimbursement(item.businessKm, profile, item.day)))
+				: null,
+			energyUnit: energyUnit(profile.fuelType),
 			refuels: { count: totals.count, litres: totals.litres, cost: totals.cost, consumption: totals.averageConsumption },
 			trafficBytes: device.kind === "tracker" ? sum("trafficBytes") : null,
 			alarms: sum("alarms")
@@ -96,7 +105,8 @@ function totalsOf (devices: DeviceMonth[]): MonthTotals {
 		drivingMin: devices.reduce((sum, item) => sum + item.drivingMin, 0),
 		trips: devices.reduce((sum, item) => sum + item.trips, 0),
 		cost: sumOrNull(devices.map(item => item.cost?.cost ?? null)),
-		refuelCost: sumOrNull(devices.map(item => item.refuels.cost))
+		refuelCost: sumOrNull(devices.map(item => item.refuels.cost)),
+		reimbursement: sumOrNull(devices.map(item => item.reimbursement))
 	};
 }
 
@@ -113,9 +123,10 @@ export async function monthSummary (sql: Sql, timeZone: string, userId: number, 
 		SELECT device_id, kind, title, to_char(due_date, 'YYYY-MM-DD') AS due_date, due_km, remind_days, remind_km
 		FROM maintenance WHERE device_id = ANY (${cars.map(device => device.id)})`;
 	const odometers = new Map(await Promise.all(cars.map(async device => [device.id, await odometer(sql, timeZone, device)] as const)));
+	const paces = new Map(await Promise.all(cars.map(async device => [device.id, await kmPerDay(sql, device.id, todayIso)] as const)));
 	const coming = deadlines
 		.map(row => ({ deviceId: row.device_id, kind: row.kind, title: row.title, dueDate: row.due_date, dueKm: row.due_km,
-			...deadlineState(row, odometers.get(row.device_id) ?? null, todayIso) }))
+			...deadlineState(row, odometers.get(row.device_id) ?? null, todayIso, paces.get(row.device_id) ?? null) }))
 		.filter(item => item.state !== "ok")
 		.sort((a, b) => (a.state === b.state ? 0 : a.state === "due" ? -1 : 1) || (a.remainingDays ?? Infinity) - (b.remainingDays ?? Infinity));
 	const { from, to } = monthDays(month);

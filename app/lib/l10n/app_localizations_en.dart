@@ -212,6 +212,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errNetwork => 'Server unreachable';
 
   @override
+  String get errUnavailable =>
+      'Service temporarily unavailable, try again shortly';
+
+  @override
   String get errInvalidCredentials => 'Wrong email or password';
 
   @override
@@ -3178,4 +3182,367 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get logCopied => 'Details copied';
+
+  @override
+  String get fuelElectric => 'Electric';
+
+  @override
+  String get fuelHybrid => 'Hybrid';
+
+  @override
+  String get charges => 'Charges';
+
+  @override
+  String get addCharge => 'Add charge';
+
+  @override
+  String get editCharge => 'Edit charge';
+
+  @override
+  String get noCharges => 'No charges: add the first full charge';
+
+  @override
+  String get chargesHint =>
+      'Between two full charges the kWh charged and the km driven give the real consumption; the amount gives the price per kWh.';
+
+  @override
+  String get realConsumptionUnknownElectric =>
+      'Real consumption: two full charges with the odometer are needed';
+
+  @override
+  String lastCharge(String value) {
+    return 'Last full charge: $value';
+  }
+
+  @override
+  String chargeTotals(int n, String energy, String cost) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n charges',
+      one: '1 charge',
+    );
+    return '$_temp0, $energy, $cost';
+  }
+
+  @override
+  String get chargeEnergy => 'Energy charged';
+
+  @override
+  String get chargeFull => 'Full charge';
+
+  @override
+  String get chargeFullHint =>
+      'Battery charged up to the limit you usually use (e.g. 80% or 100%)';
+
+  @override
+  String get chargePartial => 'partial';
+
+  @override
+  String get chargePlace => 'Where';
+
+  @override
+  String get chargeHome => 'At home';
+
+  @override
+  String get chargePublic => 'Charging station';
+
+  @override
+  String get chargePlaceUnset => 'Not set';
+
+  @override
+  String get chargeInvalid => 'kWh 0 to 500, amount 0 to 10,000 €';
+
+  @override
+  String get chargeRatesFrom => 'Price and consumption from the charges';
+
+  @override
+  String get energyPrices => 'Energy price';
+
+  @override
+  String get nationalAverageNone =>
+      'No national average for electric cars: enter the price or use the charges';
+
+  @override
+  String get reimbursementRate => 'Mileage allowance';
+
+  @override
+  String get reimbursementHint =>
+      'Euro per km of the business trips (e.g. ACI tables or the agreement with the company): the trip log adds the column of the allowance';
+
+  @override
+  String summaryCharges(int n, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n charges',
+      one: '1 charge',
+    );
+    return '$_temp0: $value';
+  }
+
+  @override
+  String summaryReimbursement(String cost) {
+    return 'Mileage allowance: $cost';
+  }
+
+  @override
+  String get mEnergy => 'kWh of the trips';
+
+  @override
+  String get mReimbursement => 'Mileage allowance';
+
+  @override
+  String get mChargedEnergy => 'kWh charged';
+
+  @override
+  String get mChargePrice => 'Price paid per kWh';
+
+  @override
+  String get mRealEnergyConsumption => 'Real consumption (kWh)';
+
+  @override
+  String expectedAround(String date) {
+    return 'expected around $date';
+  }
+
+  @override
+  String kmPerDayAverage(String km) {
+    return 'On average $km km a day in the last 60 days';
+  }
+
+  @override
+  String get parking => 'Parking';
+
+  @override
+  String get parkHere => 'Park';
+
+  @override
+  String parkingActive(String time) {
+    return 'Parked since $time';
+  }
+
+  @override
+  String parkingUntil(String time) {
+    return 'Ends at $time';
+  }
+
+  @override
+  String get parkingNoEnd => 'No end';
+
+  @override
+  String parkingExpired(String time) {
+    return 'Ended at $time';
+  }
+
+  @override
+  String get parkingTitle => 'Parking of the vehicle';
+
+  @override
+  String get parkingHint =>
+      'The place is the latest position of the vehicle. With the end of the ticket you get a reminder before it and a notice when it ends; without one (e.g. paid by the minute) only the place is kept. The parking ends by itself when the vehicle leaves.';
+
+  @override
+  String get parkingHasEnd => 'Ticket with an end';
+
+  @override
+  String get parkingHasEndHint =>
+      'Turn off if you pay by the minute (e.g. Telepass, an app)';
+
+  @override
+  String parkingEnd(String time) {
+    return 'Ends: $time';
+  }
+
+  @override
+  String get parkingChangeEnd => 'Change';
+
+  @override
+  String get parkingRemind => 'Reminder';
+
+  @override
+  String get parkingRemindNone => 'No reminder';
+
+  @override
+  String parkingRemindBefore(int n) {
+    return '$n minutes before';
+  }
+
+  @override
+  String get parkingNote => 'Note (level, spot, color of the lines…)';
+
+  @override
+  String get parkingNoPlace => 'No recent position: the parking has no place';
+
+  @override
+  String get parkingStart => 'Start parking';
+
+  @override
+  String get parkingStop => 'End parking';
+
+  @override
+  String get parkingSaved => 'Parking saved';
+
+  @override
+  String get parkingStopped => 'Parking ended';
+
+  @override
+  String get parkingPrompt => 'Suggest the parking at ignition off';
+
+  @override
+  String get parkingPromptHint =>
+      'When you turn off the engine a notification suggests setting the parking and its end';
+
+  @override
+  String get errParkingPast => 'The end has already passed';
+
+  @override
+  String get errParkingTooLong => 'The end can be 31 days away at most';
+
+  @override
+  String get kindParking => 'Parking';
+
+  @override
+  String parkingPromptTitle(String device) {
+    return '$device parked';
+  }
+
+  @override
+  String parkingPromptBody(String time) {
+    return 'At $time: tap to set the parking and its reminder';
+  }
+
+  @override
+  String parkingReminderTitle(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Parking ends in $n minutes',
+      one: 'Parking ends in 1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String parkingReminderBody(String device, String time) {
+    return '$device: ends at $time';
+  }
+
+  @override
+  String get parkingExpiredTitle => 'Parking ended';
+
+  @override
+  String parkingExpiredBody(String device, String time) {
+    return '$device: ended at $time';
+  }
+
+  @override
+  String get liveLinks => 'Temporary links to the position';
+
+  @override
+  String get liveLinksHint =>
+      'Whoever gets the link sees only the name and the current position, without an account and without history, until it ends. You can revoke it at any time.';
+
+  @override
+  String get liveLinkNew => 'Create a link';
+
+  @override
+  String get liveLinkLabel => 'Who is it for (optional)';
+
+  @override
+  String get liveLinkHours => 'Duration';
+
+  @override
+  String liveLinkDuration(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n hours',
+      one: '1 hour',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveLinkCreated =>
+      'Link created: copy it now, it won\'t be shown again';
+
+  @override
+  String get liveLinkCopied => 'Link copied';
+
+  @override
+  String liveLinkUntil(String time) {
+    return 'Until $time';
+  }
+
+  @override
+  String liveLinkViewed(String time) {
+    return 'opened $time';
+  }
+
+  @override
+  String get liveLinkNotViewed => 'never opened';
+
+  @override
+  String get liveLinkRevoke => 'Revoke';
+
+  @override
+  String get liveLinkRevoked => 'Link revoked';
+
+  @override
+  String get liveLinksNone => 'No active links';
+
+  @override
+  String get errTooManyLinks => 'At most 5 active links per device';
+
+  @override
+  String get publicLinkTitle => 'Shared position';
+
+  @override
+  String publicLinkUntil(String time) {
+    return 'Link valid until $time';
+  }
+
+  @override
+  String get publicLinkGone => 'Link expired or revoked';
+
+  @override
+  String get publicLinkGoneHint => 'Ask whoever sent it for a new link';
+
+  @override
+  String get publicLinkNoPosition => 'No recent position';
+
+  @override
+  String publicLinkUpdated(String time) {
+    return 'Position at $time';
+  }
+
+  @override
+  String publicLinkMoving(String speed) {
+    return 'Moving at $speed km/h';
+  }
+
+  @override
+  String get adminAlerts => 'Alerts of new errors';
+
+  @override
+  String get adminAlertsHint =>
+      'A notification when the platform log records an error not seen in the last 30 days (at most 6 an hour)';
+
+  @override
+  String get kindPlatformError => 'New error in the log';
+
+  @override
+  String platformErrorTitle(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n new errors in the log',
+      one: 'New error in the log',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mfaCode => 'Code';
 }

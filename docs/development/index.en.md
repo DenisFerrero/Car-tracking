@@ -19,6 +19,25 @@ cd app && flutter run -d web-server --web-port 8080 --dart-define=API_URL=http:/
 With an `http://` `PUBLIC_URL` cookies aren't `Secure` and passkeys work only on `localhost`.
 To serve the app from the backend: `flutter build web` and `WEB_ROOT=../app/build/web`.
 
+## Database migrations
+
+Migrations (`backend/migrations/NNN_name.sql`) run at startup, each in a transaction, and must
+be **additive**: they upgrade an existing database without losing or changing data. Tables,
+nullable or defaulted columns, indexes and wider constraints are added; tables and columns are
+never dropped or renamed, types never changed and rows never updated or deleted. Two checks,
+in the CI too:
+
+- **lint** (`src/migrations.test.ts`, with the backend tests): refuses `DROP`, `RENAME`,
+  `ALTER ... TYPE`, `SET NOT NULL`, `TRUNCATE`, `DELETE`, `UPDATE`, new constraints and unique
+  indexes on existing tables, `NOT NULL` columns without a default. A statement that stays
+  additive (e.g. a `CHECK` widened with drop and add) is marked with a comment
+  `-- additive: <reason>` on the line before; tables created in the same file are free;
+- **upgrade check**: `npm run check-upgrade [ref]` creates the schema of the previous version
+  (latest `v*` tag, or the ref given) with its test data, applies the new migrations (twice:
+  the second must do nothing) and compares every row and column from before. It uses
+  `UPGRADE_DATABASE_URL` (a name ending in `_upgrade`) or starts a TimescaleDB container on
+  port 55434 by itself.
+
 ## Simulating a tracker
 
 Without hardware, the simulator uses the same binary protocol as the firmware:
@@ -76,7 +95,9 @@ and web app, as the release), starts a TimescaleDB, creates the first administra
 `create-admin` and runs Playwright (Chromium, official image) on the same Docker network. The
 scenarios, one after the other on the same account: invite with password, authenticator app
 and recovery codes; vehicle without a tracker; two full tanks and the real consumption;
-polygon area drawn on the map; monthly summary; logout and login with the second factor. The
+polygon area drawn on the map; monthly summary; temporary link to the position opened from
+another browser without an account and revoked; logout and login with the second factor (the
+code typed into the field as with a screen reader). The
 maps use tiles of the backend itself (no requests to the OSM servers).
 
 ```sh
@@ -94,9 +115,9 @@ texts read from `app/lib/l10n/app_it.arb`. Screenshots and traces of the failed 
 
 `npm run load` (in `backend/`) fills a database with trackers, users and history, then keeps
 the trackers connected (HELLO → ACK, positions in batches) and has the users use the app
-(devices, positions, trips, statistics, coverage, trends, deadlines, dashboards, realtime
-channel open); at the end it prints for every page count, errors by HTTP status, p50 / p95 /
-p99 / max and the heaviest queries of `pg_stat_statements`. It refuses non-local addresses
+(devices, positions, trips, statistics, coverage, trends, deadlines, refuels, costs, parking,
+monthly summary, dashboards, realtime channel open); at the end it prints for every page
+count, errors by HTTP status, p50 / p95 / p99 / max and the heaviest queries of `pg_stat_statements`. It refuses non-local addresses
 without `--allow-remote`; `--cleanup` deletes the data of the test.
 
 ```sh

@@ -7,7 +7,8 @@ export const DEFAULT_LOCALE: Locale = "en";
 
 export type NotificationKind =
 	"motion" | "tilt" | "power_lost" | "low_battery" | "offline" | "online" | "geofence_enter" | "geofence_exit" |
-	"phone_battery" | "long_stop" | "battery_health" | "maintenance" | "firmware" | "monthly_summary";
+	"phone_battery" | "long_stop" | "battery_health" | "maintenance" | "firmware" | "monthly_summary" | "platform_error" |
+	"parking_prompt" | "parking_reminder" | "parking_expired";
 
 export interface NotificationData {
 	device: string;
@@ -24,6 +25,8 @@ export interface NotificationData {
 	due?: "soon" | "due";
 	days?: number;
 	km?: number;
+	/** maintenance by km: date expected at the average km a day (YYYY-MM-DD) */
+	expected?: string;
 	/** firmware: new version, installed by the tracker itself (AUTO_UPDATE) or by the owner */
 	version?: string;
 	automatic?: boolean;
@@ -32,6 +35,12 @@ export interface NotificationData {
 	distanceKm?: number;
 	trips?: number;
 	cost?: number | null;
+	/** parking_reminder: minutes to the end of the parking (time: the end) */
+	minutes?: number;
+	/** platform_error: source and message of the first new error, how many others */
+	source?: string;
+	message?: string;
+	others?: number;
 	time: string;
 }
 
@@ -64,7 +73,11 @@ function maintenanceText (language: Locale, data: NotificationData): { title: st
 		parts.push(data.km > 0 ? (it ? `tra ${n} km` : `in ${n} km`) : (it ? `superata di ${n} km` : `${n} km over`));
 	}
 	const title = data.due === "due" ? (it ? `Scadenza: ${name}` : `Due: ${name}`) : (it ? `Scadenza vicina: ${name}` : `Coming up: ${name}`);
-	return { title, body: `${data.device}: ${parts.join(it ? " o " : " or ")}` };
+	const expected = data.expected
+		? new Date(`${data.expected}T12:00:00Z`).toLocaleDateString(it ? "it-IT" : "en-GB", { day: "numeric", month: "long", timeZone: "UTC" })
+		: null;
+	const when = expected ? (it ? ` (prevista verso il ${expected})` : ` (expected around ${expected})`) : "";
+	return { title, body: `${data.device}: ${parts.join(it ? " o " : " or ")}${when}` };
 }
 
 const MONTHS: Record<Locale, string[]> = {
@@ -109,7 +122,17 @@ const TEXTS: Record<Locale, Texts> = {
 			title: `Nuovo firmware ${version}`,
 			body: automatic ? `${device} lo installerà da solo entro un giorno` : `Installalo su ${device} dalla pagina del dispositivo`
 		}),
-		monthly_summary: data => summaryText("it", data)
+		monthly_summary: data => summaryText("it", data),
+		platform_error: ({ source, message, others }) => ({
+			title: others ? `${others + 1} errori nuovi nel log` : "Errore nuovo nel log",
+			body: `${source}: ${message}`
+		}),
+		parking_prompt: ({ device, clock }) => ({ title: `${device} parcheggiato`, body: `Ore ${clock}: tocca per impostare la sosta e il promemoria` }),
+		parking_reminder: ({ device, minutes, clock }) => ({
+			title: `Sosta in scadenza tra ${plural("it", minutes ?? 1, { one: "# minuto", other: "# minuti" })}`,
+			body: `${device}: scade alle ${clock}`
+		}),
+		parking_expired: ({ device, clock }) => ({ title: "Sosta scaduta", body: `${device}: scaduta alle ${clock}` })
 	},
 	en: {
 		motion: ({ device, clock }) => ({ title: "Motion detected", body: `${device}, at ${clock}` }),
@@ -134,7 +157,17 @@ const TEXTS: Record<Locale, Texts> = {
 			title: `New firmware ${version}`,
 			body: automatic ? `${device} will install it by itself within a day` : `Install it on ${device} from the page of the device`
 		}),
-		monthly_summary: data => summaryText("en", data)
+		monthly_summary: data => summaryText("en", data),
+		platform_error: ({ source, message, others }) => ({
+			title: others ? `${others + 1} new errors in the log` : "New error in the log",
+			body: `${source}: ${message}`
+		}),
+		parking_prompt: ({ device, clock }) => ({ title: `${device} parked`, body: `At ${clock}: tap to set the parking and its reminder` }),
+		parking_reminder: ({ device, minutes, clock }) => ({
+			title: `Parking ends in ${plural("en", minutes ?? 1, { one: "# minute", other: "# minutes" })}`,
+			body: `${device}: ends at ${clock}`
+		}),
+		parking_expired: ({ device, clock }) => ({ title: "Parking ended", body: `${device}: ended at ${clock}` })
 	}
 };
 

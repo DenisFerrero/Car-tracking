@@ -19,6 +19,8 @@ import { registerDataRoutes } from "./routes/data.ts";
 import { registerDeviceRoutes } from "./routes/devices.ts";
 import { registerExtraRoutes } from "./routes/extra.ts";
 import { registerFirmwareRoutes } from "./routes/firmware.ts";
+import { registerLinkRoutes } from "./routes/links.ts";
+import { registerParkingRoutes } from "./routes/parking.ts";
 import { registerRefuelRoutes } from "./routes/refuels.ts";
 import { registerSummaryRoutes } from "./routes/summary.ts";
 import { registerVehicleRoutes } from "./routes/vehicle.ts";
@@ -35,6 +37,8 @@ import { registerPhoneRoutes } from "./routes/phones.ts";
 // session and stage of every /api route, zod validation of every input.
 
 const MAX_WS_MESSAGE = 64 * 1024;
+/** Longest wait of the health check for the database */
+const HEALTH_TIMEOUT = 3000;
 
 export function createLogger (level: string) {
 	return {
@@ -121,7 +125,18 @@ export async function buildApp (ctx: Context, gateway: Gateway): Promise<Fastify
 	registerAuth(app, ctx.sessions, config);
 	await app.register(websocket, { options: { maxPayload: MAX_WS_MESSAGE } });
 
-	app.get("/healthz", { config: { auth: "none" } }, async () => ({ ok: true }));
+	// Healthy when the database answers: without it no request can be served (Docker marks
+	// the container unhealthy, the compose and the monitoring see it)
+	app.get("/healthz", { config: { auth: "none" } }, async (_request, reply) => {
+		let timer: NodeJS.Timeout | undefined;
+		const database = await Promise.race([
+			ctx.sql`SELECT 1`.then(() => true, () => false),
+			new Promise<boolean>(resolve => timer = setTimeout(() => resolve(false), HEALTH_TIMEOUT))
+		]);
+		clearTimeout(timer);
+		reply.code(database ? 200 : 503);
+		return { ok: database, database };
+	});
 
 	app.get("/api/config", { config: { auth: "none" } }, async () => ({
 		appName: config.APP_NAME,
@@ -163,6 +178,8 @@ export async function buildApp (ctx: Context, gateway: Gateway): Promise<Fastify
 	registerDataRoutes(app, ctx);
 	registerVehicleRoutes(app, ctx);
 	registerRefuelRoutes(app, ctx);
+	registerParkingRoutes(app, ctx);
+	registerLinkRoutes(app, ctx);
 	registerSummaryRoutes(app, ctx);
 	registerDashboardRoutes(app, ctx);
 	registerGeofenceRoutes(app, ctx);

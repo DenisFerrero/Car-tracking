@@ -51,6 +51,7 @@ class MaintenanceScreen extends ConsumerWidget {
             error: (error, _) => Center(child: Text(errorText(l, error))),
             data: (data) {
               final odometer = data['odometerKm'] as int?;
+              final pace = data['kmPerDay'] as num?;
               final items = (data['items'] as List).cast<Map<String, dynamic>>();
               final log = (data['log'] as List).cast<Map<String, dynamic>>();
               return ListView(padding: readable(context, const EdgeInsets.only(bottom: 96)), children: [
@@ -61,7 +62,10 @@ class MaintenanceScreen extends ConsumerWidget {
                     key: const Key('odometer'),
                     leading: const Icon(Icons.speed),
                     title: Text(l.odometer),
-                    subtitle: Text(odometer == null ? l.odometerUnset : l.odometerValue(formatInt(odometer))),
+                    subtitle: Text([
+                      odometer == null ? l.odometerUnset : l.odometerValue(formatInt(odometer)),
+                      if (pace != null) l.kmPerDayAverage(formatDecimal(pace.toDouble(), pace >= 10 ? 0 : 1)),
+                    ].join('\n')),
                     trailing: const Icon(Icons.edit),
                     onTap: () async {
                       final km = await askNumber(context, l.odometer, l.odometerHint, odometer);
@@ -79,7 +83,7 @@ class MaintenanceScreen extends ConsumerWidget {
                     ),
                     title: Text(deadlineName(context, item)),
                     subtitle: Text([
-                      remainingText(l, item['remainingDays'] as int?, item['remainingKm'] as int?),
+                      remainingText(l, item['remainingDays'] as int?, item['remainingKm'] as int?, item['expectedDate'] as String?),
                       if (item['dueDate'] != null) formatDay(DateTime.parse(item['dueDate'] as String)),
                       if (item['dueKm'] != null) '${formatInt(item['dueKm'] as int)} km',
                       if (item['everyMonths'] != null) l.deadlineEvery(l.monthsShort(item['everyMonths'] as int)),

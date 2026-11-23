@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -184,9 +185,16 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
           keyboardType: _recovery ? TextInputType.text : TextInputType.number,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineSmall,
-          autofillHints: const [AutofillHints.oneTimeCode],
+          // In the browser an autofill hint moves the editing to an input of an autofill form,
+          // outside the semantics: with a screen reader the keys didn't reach the field until
+          // the page was loaded again. Android keeps the code from the SMS or the app.
+          autofillHints: kIsWeb ? null : const [AutofillHints.oneTimeCode],
           inputFormatters: _recovery ? null : [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
-          decoration: InputDecoration(border: const OutlineInputBorder(), hintText: _recovery ? 'XXXX-XXXX-XXXX' : '000000'),
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            labelText: l.mfaCode,
+            hintText: _recovery ? 'XXXX-XXXX-XXXX' : '000000',
+          ),
           onChanged: (value) {
             if (!_recovery && value.length == 6) _submit();
           },

@@ -11,6 +11,8 @@ import '../../l10n/app_localizations.dart';
 import '../add_device.dart' show deviceColors;
 import 'alerts.dart';
 import 'firmware_section.dart';
+import 'live_links.dart';
+import 'parking.dart';
 
 /// Quick durations of a share, in hours (null = permanent)
 const shareDurations = <int?>[1, 3, 8, 24, 72, 168, null];
@@ -403,6 +405,11 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           if (await chooseStopAlert(context, ref, device)) setState(() {});
         },
       ),
+      if (!device.isPhone) ...[
+        _header(context, l.parking),
+        if (device.isTracker) ParkingPromptSwitch(deviceId: device.id),
+        Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Text(l.parkingHint, style: Theme.of(context).textTheme.bodySmall)),
+      ],
       _header(context, l.sharing),
       Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Text(l.sharingHint, style: Theme.of(context).textTheme.bodySmall)),
       ...shares.when(
@@ -424,6 +431,8 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
         ],
       ),
       ListTile(leading: const Icon(Icons.person_add), title: Text(l.shareWith), onTap: _share),
+      _header(context, l.liveLinks),
+      LiveLinksSection(deviceId: device.id),
       _header(context, l.dangerZone),
       ListTile(
         leading: const Icon(Icons.delete_forever, color: Colors.red),

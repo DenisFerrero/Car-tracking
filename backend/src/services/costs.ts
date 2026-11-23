@@ -5,12 +5,22 @@ import type { Sql } from "../db.ts";
 // model). The three values change over time (vehicle_rates): each trip uses the ones
 // valid on its day. The consumption is stored in l/100 km and shown in the unit the owner
 // prefers. The fuel price can follow the national average (src/services/fuel.ts).
+// An electric vehicle uses the same values in kWh: consumption in kWh/100 km, price per
+// kWh, refuels as charges; a hybrid without plug runs on petrol. The mileage allowance
+// (€/km, over time too) applies to the business km of the trip log.
 
 export const FUEL_UNITS = ["l_per_100km", "km_per_l"] as const;
 export type FuelUnit = typeof FUEL_UNITS[number];
-export const FUEL_TYPES = ["petrol", "diesel", "lpg"] as const;
+export const FUEL_TYPES = ["petrol", "diesel", "lpg", "electric", "hybrid"] as const;
 export type FuelType = typeof FUEL_TYPES[number];
-export const RATE_KINDS = ["price", "consumption", "wear"] as const;
+/** Fuel of the national average price of a type (none for the electric ones) */
+export type AverageFuel = "petrol" | "diesel" | "lpg";
+export const AVERAGE_FUEL: Record<FuelType, AverageFuel | null> = {
+	petrol: "petrol", diesel: "diesel", lpg: "lpg", hybrid: "petrol", electric: null
+};
+/** Unit of the quantities (refuels, consumption, price) */
+export const energyUnit = (fuelType: FuelType | null): "l" | "kWh" => fuelType === "electric" ? "kWh" : "l";
+export const RATE_KINDS = ["price", "consumption", "wear", "reimbursement"] as const;
 export type RateKind = typeof RATE_KINDS[number];
 
 export const RATE_SOURCES = ["manual", "auto", "refuel"] as const;
@@ -69,6 +79,12 @@ export function tripCost (km: number, profile: VehicleProfile, day: string): Tri
 		wearCost,
 		cost: fuelCost === null && wearCost === null ? null : round2((fuelCost ?? 0) + (wearCost ?? 0))
 	};
+}
+
+/** Mileage allowance of some business km on a day, null without an allowance */
+export function reimbursement (businessKm: number, profile: VehicleProfile, day: string): number | null {
+	const rate = rateOn(profile.rates.reimbursement, day);
+	return rate === null ? null : round2(businessKm * rate);
 }
 
 /** Sum of the costs of some trips (each with the values of its day) */

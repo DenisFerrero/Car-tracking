@@ -1,6 +1,6 @@
 import type { FastifyBaseLogger } from "fastify";
 import type { Sql } from "../db.ts";
-import type { FuelType } from "./costs.ts";
+import type { AverageFuel } from "./costs.ts";
 
 // National average prices of the fuels: weekly survey of the Ministry of the Environment
 // (MASE, open data, every Monday since 2005). CSV in ISO-8859-1, Italian numbers in euro
@@ -8,9 +8,10 @@ import type { FuelType } from "./costs.ts";
 //   DATA_RILEVAZIONE,BENZINA,GASOLIO_AUTO,GPL,METANO,...
 //   2026-11-16,"1.969,6","2.210,01","835,66",...
 // Stored per week; the vehicles with fuelPriceAuto get each new week in the history of
-// their fuel price (a price entered by the owner on the same day wins).
+// their fuel price (a price entered by the owner on the same day wins). A hybrid follows
+// petrol; no average for the electric ones.
 
-const COLUMNS: Record<FuelType, string> = { petrol: "BENZINA", diesel: "GASOLIO_AUTO", lpg: "GPL" };
+const COLUMNS: Record<AverageFuel, string> = { petrol: "BENZINA", diesel: "GASOLIO_AUTO", lpg: "GPL" };
 // Weeks kept: enough for the charts and the trips of the last years
 const KEEP_WEEKS = 3 * 53;
 // A new survey every Monday, published within a couple of days
@@ -19,7 +20,7 @@ const RETRY_MS = 6 * 3600e3;
 
 export interface FuelAverage {
 	week: string;
-	prices: Partial<Record<FuelType, number>>;
+	prices: Partial<Record<AverageFuel, number>>;
 }
 
 /** "1.969,6" → 1969.6; empty or invalid → null */
@@ -54,8 +55,8 @@ export function parseWeeklyPrices (csv: string): FuelAverage[] {
 		const values = fields(line);
 		const week = values[dateColumn]?.trim() ?? "";
 		if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) continue;
-		const prices: Partial<Record<FuelType, number>> = {};
-		for (const [fuel, column] of Object.entries(COLUMNS) as [FuelType, string][]) {
+		const prices: Partial<Record<AverageFuel, number>> = {};
+		for (const [fuel, column] of Object.entries(COLUMNS) as [AverageFuel, string][]) {
 			const index = header.indexOf(column);
 			const value = index < 0 ? null : italianNumber(values[index] ?? "");
 			// Per 1000 litres; outside 0.1-10 €/l it's not a price
@@ -79,7 +80,7 @@ export class FuelPrices {
 	}
 
 	/** Latest average of a fuel, null when unknown */
-	async latest (fuel: FuelType): Promise<{ week: string; price: number } | null> {
+	async latest (fuel: AverageFuel): Promise<{ week: string; price: number } | null> {
 		const [row] = await this.#sql<{ week: string; price: number }[]>`
 			SELECT to_char(week, 'YYYY-MM-DD') AS week, price FROM fuel_averages WHERE fuel = ${fuel} ORDER BY week DESC LIMIT 1`;
 		return row ?? null;
@@ -123,7 +124,8 @@ export class FuelPrices {
 		const added = await this.#sql`
 			INSERT INTO vehicle_rates (device_id, kind, valid_from, value, source)
 			SELECT d.id, 'price', a.week, a.price, 'auto' FROM devices d
-			JOIN LATERAL (SELECT week, price FROM fuel_averages WHERE fuel = d.fuel_type ORDER BY week DESC LIMIT 1) a ON true
+			JOIN LATERAL (SELECT week, price FROM fuel_averages
+				WHERE fuel = CASE d.fuel_type WHEN 'hybrid' THEN 'petrol' ELSE d.fuel_type END ORDER BY week DESC LIMIT 1) a ON true
 			WHERE d.fuel_price_auto AND (${deviceId}::int IS NULL OR d.id = ${deviceId})
 				AND NOT (d.rates_from_refuels AND EXISTS (SELECT 1 FROM refuels r WHERE r.device_id = d.id AND r.cost > 0
 					AND r.day > now()::date - 14))

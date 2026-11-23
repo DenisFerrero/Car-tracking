@@ -11,6 +11,7 @@ import '../core/models.dart';
 import '../core/providers.dart';
 import '../core/push.dart';
 import 'dashboards/sharing.dart';
+import 'notifications.dart' show notificationTarget;
 
 /// Shell of the platform: navigation bar (rail on wide screens), realtime toasts for
 /// the notifications, devices granted or revoked, push registration on Android.
@@ -88,9 +89,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               content: Text('${text.title} · ${text.body}'),
               action: SnackBarAction(
                 label: context.l10n.open,
-                onPressed: () => context.go(notification.deviceId == null
-                    ? '/account/summary?month=${notification.data.month}'
-                    : '/devices/${notification.deviceId}'),
+                onPressed: () => context.go(notificationTarget(notification, owner: false)),
               ),
             ),
           );

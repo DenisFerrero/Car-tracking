@@ -3,22 +3,25 @@ import type { Sql } from "../db.ts";
 import { visibleDevices } from "./access.ts";
 import type { DeviceKind } from "./access.ts";
 import { bucketFor } from "./analytics.ts";
-import { hasCosts, tripCost, vehicleProfile } from "./costs.ts";
+import { hasCosts, reimbursement, tripCost, vehicleProfile } from "./costs.ts";
 import type { TripCost } from "./costs.ts";
 import { daysOf, today } from "./daily.ts";
 import type { DayStats } from "./daily.ts";
 import { deviceName } from "./notifier.ts";
 import { loadRefuels, measure } from "./refuels.ts";
 import type { MeasuredRefuel } from "./refuels.ts";
-import { deadlineState, odometer } from "./vehicle.ts";
+import { deadlineState, kmPerDay, odometer } from "./vehicle.ts";
 
 // Catalog of the metrics of the dashboards: what a widget can show, from which data, for
 // which devices. No free queries: a widget picks a metric of the catalog, a view, the
 // devices and a period; the backend checks the access to every device at every request.
 //
 //  - days: the daily summaries (daily_stats), periods up to 3 years
-//  - costs: the km of each day with consumption, price and wear valid on that day
+//  - costs: the km of each day with consumption, price and wear valid on that day; the
+//    business km with the mileage allowance
 //  - refuels: the refuels of each day (amount, litres, price, consumption measured)
+//  Litres and kWh are different metrics: the ones of the fuels skip the electric vehicles,
+//  the ones in kWh show only them.
 //  - positions / extra: the points of the trackers and their extra data, aggregated in
 //    TimescaleDB (time_bucket), periods up to 93 days
 //  - odometer, deadlines, status: the current state, no period
@@ -45,6 +48,10 @@ interface Metric {
 	total?: Total;
 	day?: (day: DayStats) => number | null;
 	cost?: keyof TripCost;
+	/** Mileage allowance of the business km of the day */
+	allowance?: true;
+	/** Only the vehicles with fuel (litres) or only the electric ones (kWh) */
+	energy?: "fuel" | "electric";
 	/** Value of the refuels of a day */
 	refuel?: (items: MeasuredRefuel[]) => number | null;
 	/** Value of a point (positions): a column or an expression of the catalog, never of the request */
@@ -74,11 +81,16 @@ export const METRICS = {
 	cost: { source: "costs", kinds: ALL, total: "sum", cost: "cost" },
 	fuelCost: { source: "costs", kinds: ALL, total: "sum", cost: "fuelCost" },
 	wearCost: { source: "costs", kinds: ALL, total: "sum", cost: "wearCost" },
-	fuel: { source: "costs", kinds: ALL, total: "sum", cost: "fuelL" },
+	fuel: { source: "costs", kinds: ALL, total: "sum", cost: "fuelL", energy: "fuel" },
+	energy: { source: "costs", kinds: ALL, total: "sum", cost: "fuelL", energy: "electric" },
+	reimbursement: { source: "costs", kinds: ALL, total: "sum", allowance: true },
 	refuelCost: { source: "refuels", kinds: CARS, total: "sum", refuel: items => sumOf(items.map(item => item.cost)) },
-	refuelLitres: { source: "refuels", kinds: CARS, total: "sum", refuel: items => sumOf(items.map(item => item.litres)) },
-	refuelPrice: { source: "refuels", kinds: CARS, total: "avg", refuel: items => lastOf(items.map(item => item.pricePerLitre)) },
-	realConsumption: { source: "refuels", kinds: CARS, total: "avg", refuel: items => lastOf(items.map(item => item.consumption)) },
+	refuelLitres: { source: "refuels", kinds: CARS, total: "sum", energy: "fuel", refuel: items => sumOf(items.map(item => item.litres)) },
+	refuelPrice: { source: "refuels", kinds: CARS, total: "avg", energy: "fuel", refuel: items => lastOf(items.map(item => item.pricePerLitre)) },
+	realConsumption: { source: "refuels", kinds: CARS, total: "avg", energy: "fuel", refuel: items => lastOf(items.map(item => item.consumption)) },
+	chargedEnergy: { source: "refuels", kinds: CARS, total: "sum", energy: "electric", refuel: items => sumOf(items.map(item => item.litres)) },
+	chargePrice: { source: "refuels", kinds: CARS, total: "avg", energy: "electric", refuel: items => lastOf(items.map(item => item.pricePerLitre)) },
+	realEnergyConsumption: { source: "refuels", kinds: CARS, total: "avg", energy: "electric", refuel: items => lastOf(items.map(item => item.consumption)) },
 	speed: { source: "positions", kinds: ALL, column: "CASE WHEN status = 0 THEN speed END" },
 	altitude: { source: "positions", kinds: ALL, column: "altitude" },
 	signal: { source: "positions", kinds: TRACKERS, column: "signal" },
@@ -287,12 +299,14 @@ export async function computeWidgets (sql: Sql, timeZone: string, userId: number
 	// All the refuels: an interval can start before the period
 	const refuelsOf = (id: number) => once(`refuels:${id}`, async () => measure(await loadRefuels(sql, id)));
 	const odometerOf = (device: DeviceInfo) => once(`odometer:${device.id}`, () => odometer(sql, timeZone, device));
+	const paceOf = (id: number) => once(`pace:${id}`, () => kmPerDay(sql, id, todayIso));
 	const bounds = (from: string, to: string) => once(`bounds:${from}:${to}`, async () => (await sql<{ start: Date; end: Date }[]>`
 		SELECT (${from}::date::timestamp AT TIME ZONE ${timeZone}) AS start,
 			LEAST(now(), (${to}::date + 1)::timestamp AT TIME ZONE ${timeZone}) AS end`)[0]!);
 
 	/** Value of each day of a device: daily summary or cost of the km of that day */
 	const dayValues = async (metric: Metric, device: DeviceInfo, from: string, to: string) => {
+		if (metric.energy && ((await profileOf(device.id)).fuelType === "electric") !== (metric.energy === "electric")) return [];
 		if (metric.source === "refuels") {
 			const byDay = new Map<string, MeasuredRefuel[]>();
 			for (const item of await refuelsOf(device.id)) {
@@ -303,6 +317,7 @@ export async function computeWidgets (sql: Sql, timeZone: string, userId: number
 		const days = await daysOfDevice(device, from, to);
 		if (metric.source === "days") return days.map(item => ({ day: item.day, value: metric.day!(item) }));
 		const profile = await profileOf(device.id);
+		if (metric.allowance) return days.map(item => ({ day: item.day, value: reimbursement(item.businessKm, profile, item.day) }));
 		const costs = hasCosts(profile);
 		return days.map(item => ({ day: item.day, value: costs ? tripCost(item.distanceKm, profile, item.day)[metric.cost!] : null }));
 	};
@@ -382,7 +397,7 @@ export async function computeWidgets (sql: Sql, timeZone: string, userId: number
 		for (const row of deadlines) {
 			const km = await odometerOf(devices.get(row.device_id)!);
 			items.push({ deviceId: row.device_id, kind: row.kind, title: row.title, dueDate: row.due_date, dueKm: row.due_km,
-				...deadlineState(row, km, todayIso) });
+				...deadlineState(row, km, todayIso, await paceOf(row.device_id)) });
 		}
 		const order = ["due", "soon", "ok"];
 		items.sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state) ||

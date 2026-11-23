@@ -131,6 +131,9 @@ class _Summary extends StatelessWidget {
               _change(totals['drivingMin'] as num, previous['drivingMin'] as num)),
           tile(const Key('summaryCost'), Icons.euro, l.mCost, totals['cost'] == null ? '-' : formatEuro(totals['cost'] as num),
               totals['cost'] == null ? null : _change(totals['cost'] as num, previous['cost'] as num?)),
+          if (totals['reimbursement'] != null)
+            tile(const Key('summaryAllowance'), Icons.work, l.mReimbursement, formatEuro(totals['reimbursement'] as num),
+                _change(totals['reimbursement'] as num, previous['reimbursement'] as num?)),
             ])
               SizedBox(width: constraints.maxWidth / columns, child: child),
           ]);
@@ -144,7 +147,7 @@ class _Summary extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.build, color: item['state'] == 'due' ? theme.colorScheme.error : Colors.orange),
             title: Text('${names[item['deviceId']] ?? ''}: ${(item['title'] as String).isNotEmpty ? item['title'] : maintenanceKindLabel(l, item['kind'] as String)}'),
-            subtitle: Text(remainingText(l, item['remainingDays'] as int?, item['remainingKm'] as int?)),
+            subtitle: Text(remainingText(l, item['remainingDays'] as int?, item['remainingKm'] as int?, item['expectedDate'] as String?)),
             onTap: () => context.push('/devices/${item['deviceId']}/maintenance'),
           ),
       ],
@@ -164,13 +167,16 @@ class _DeviceMonth extends StatelessWidget {
     final cost = device['cost'] as Map<String, dynamic>?;
     final refuels = device['refuels'] as Map<String, dynamic>;
     final traffic = device['trafficBytes'] as num?;
+    final energy = device['energyUnit'] as String? ?? 'l';
     final lines = [
       l.summaryDriven(formatInt((device['distanceKm'] as num).round()), device['trips'] as int, formatDuration(l, device['drivingMin'] as int)),
       if ((device['businessKm'] as num) > 0) l.summaryBusiness(formatInt((device['businessKm'] as num).round())),
       if (cost != null && cost['cost'] != null) l.summaryCost(costText(l, cost)),
+      if (device['reimbursement'] != null) l.summaryReimbursement(formatEuro(device['reimbursement'] as num)),
       if ((refuels['count'] as int) > 0)
-        l.summaryRefuels(refuels['count'] as int, refuels['cost'] == null ? '${formatDecimal((refuels['litres'] as num).toDouble(), 1)} l' : formatEuro(refuels['cost'] as num)),
-      if (refuels['consumption'] != null) l.realConsumption('${formatDecimal((refuels['consumption'] as num).toDouble(), 1)} l/100 km'),
+        (energy == 'kWh' ? l.summaryCharges : l.summaryRefuels)(refuels['count'] as int,
+            refuels['cost'] == null ? '${formatDecimal((refuels['litres'] as num).toDouble(), 1)} $energy' : formatEuro(refuels['cost'] as num)),
+      if (refuels['consumption'] != null) l.realConsumption('${formatDecimal((refuels['consumption'] as num).toDouble(), 1)} $energy/100 km'),
       if (traffic != null) l.summarySim(formatBytes(traffic)),
       if ((device['alarms'] as int) > 0) l.summaryAlarms(device['alarms'] as int),
     ];
@@ -186,33 +192,46 @@ class _DeviceMonth extends StatelessWidget {
   }
 }
 
-/// Switch of the notification of the start of the month (account)
-class MonthlySummarySwitch extends ConsumerStatefulWidget {
-  const MonthlySummarySwitch({super.key, required this.enabled, required this.onChanged});
+/// Switch of a preference of the account: the notification of the start of the month, the
+/// alerts of new errors (administrators)
+class AccountSwitch extends ConsumerStatefulWidget {
+  const AccountSwitch({
+    super.key,
+    required this.field,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.enabled,
+    required this.onChanged,
+  });
 
+  /// Field of PATCH /api/account
+  final String field;
+  final IconData icon;
+  final String title;
+  final String subtitle;
   final bool enabled;
   final VoidCallback onChanged;
 
   @override
-  ConsumerState<MonthlySummarySwitch> createState() => _MonthlySummarySwitchState();
+  ConsumerState<AccountSwitch> createState() => _AccountSwitchState();
 }
 
-class _MonthlySummarySwitchState extends ConsumerState<MonthlySummarySwitch> {
+class _AccountSwitchState extends ConsumerState<AccountSwitch> {
   late bool _value = widget.enabled;
 
   @override
   Widget build(BuildContext context) {
-    final l = context.l10n;
     return SwitchListTile(
-      key: const Key('monthlySummary'),
-      secondary: const Icon(Icons.insights),
-      title: Text(l.monthlySummaryNotify),
-      subtitle: Text(l.monthlySummaryNotifyHint),
+      key: Key(widget.field),
+      secondary: Icon(widget.icon),
+      title: Text(widget.title),
+      subtitle: Text(widget.subtitle),
       value: _value,
       onChanged: (value) async {
         setState(() => _value = value);
         try {
-          await ref.read(apiProvider).patch('/api/account', {'monthlySummary': value});
+          await ref.read(apiProvider).patch('/api/account', {widget.field: value});
           widget.onChanged();
         } on ApiException catch (error) {
           setState(() => _value = !value);
@@ -222,4 +241,3 @@ class _MonthlySummarySwitchState extends ConsumerState<MonthlySummarySwitch> {
     );
   }
 }
-

@@ -6,7 +6,8 @@ import type { Sql } from "../db.ts";
 // the price per litre of the day. With rates_from_refuels the costs of the trips use them:
 // the price from the day of the refuel, the consumption from the start of its interval
 // (vehicle_rates with source "refuel", recomputed at every change; a value entered by the
-// owner on the same day wins).
+// owner on the same day wins). For an electric vehicle a refuel is a charge: the quantity
+// in kWh, at home or at a public station.
 
 /** Real consumption outside this range is a wrong reading (l/100 km), not a value */
 const CONSUMPTION_RANGE = { min: 1, max: 50 };
@@ -18,6 +19,8 @@ export interface Refuel {
 	cost: number | null;
 	odometerKm: number | null;
 	full: boolean;
+	/** Charges: at home or at a public station */
+	place: "home" | "public" | null;
 	note: string;
 }
 
@@ -83,7 +86,7 @@ export function summary (measured: MeasuredRefuel[]) {
 
 export async function loadRefuels (sql: Sql, deviceId: number, from: string | null = null, to: string | null = null): Promise<Refuel[]> {
 	return sql<Refuel[]>`
-		SELECT id, to_char(day, 'YYYY-MM-DD') AS day, litres, cost, odometer_km AS "odometerKm", full_tank AS full, note
+		SELECT id, to_char(day, 'YYYY-MM-DD') AS day, litres, cost, odometer_km AS "odometerKm", full_tank AS full, place, note
 		FROM refuels WHERE device_id = ${deviceId}
 			${from === null ? sql`` : sql`AND day >= ${from}::date`} ${to === null ? sql`` : sql`AND day <= ${to}::date`}
 		ORDER BY day, id`;

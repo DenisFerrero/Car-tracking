@@ -90,6 +90,7 @@ void main() {
         ..on('POST', '/api/account/passkeys/options', (r) => steps++ == 0 ? Reply.error(403, 'step_up_required') : {'challenge': 'c'})
         ..on('POST', '/api/account/passkeys', (_) => {'ok': true});
       final app = await openAccount(tester, backend);
+      await reveal(tester, find.textContaining(it.passkeySynced.trim()));
       expect(find.textContaining(it.passkeySynced.trim()), findsOneWidget);
 
       await tapAndSettle(tester, find.byTooltip(it.delete).first);
@@ -130,6 +131,9 @@ void main() {
 
       backend.on('DELETE', '/api/account/passkeys/pk2', (_) => Reply.error(404, 'not_found'));
       await tester.fling(find.byType(ListView), const Offset(0, 2000), 3000);
+      await tester.pumpAndSettle();
+      await reveal(tester, find.text('Laptop'));
+      await tester.ensureVisible(find.text('Laptop'));
       await tester.pumpAndSettle();
       await tapAndSettle(tester, find.byTooltip(it.delete).last);
       expect(find.text(it.errNotFound), findsOneWidget);

@@ -130,14 +130,30 @@ class AccountScreen extends ConsumerWidget {
               subtitle: Text(l.monthlySummarySub),
               onTap: () => context.go('/account/summary'),
             ),
-            MonthlySummarySwitch(enabled: data['monthlySummary'] != false, onChanged: () => ref.invalidate(_accountProvider)),
-            if (session.user?.isAdmin == true)
+            AccountSwitch(
+              field: 'monthlySummary',
+              icon: Icons.insights,
+              title: l.monthlySummaryNotify,
+              subtitle: l.monthlySummaryNotifyHint,
+              enabled: data['monthlySummary'] != false,
+              onChanged: () => ref.invalidate(_accountProvider),
+            ),
+            if (session.user?.isAdmin == true) ...[
+              AccountSwitch(
+                field: 'adminAlerts',
+                icon: Icons.report,
+                title: l.adminAlerts,
+                subtitle: l.adminAlertsHint,
+                enabled: data['adminAlerts'] != false,
+                onChanged: () => ref.invalidate(_accountProvider),
+              ),
               ListTile(
                 leading: const Icon(Icons.admin_panel_settings),
                 title: Text(l.administration),
                 subtitle: Text(l.administrationSub),
                 onTap: () => context.go('/account/admin'),
               ),
+            ],
             _header(context, l.passkeys),
             for (final passkey in passkeys)
               ListTile(

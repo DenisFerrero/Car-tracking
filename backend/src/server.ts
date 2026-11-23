@@ -19,7 +19,9 @@ import { Hub } from "./services/hub.ts";
 import { Notifier } from "./services/notifier.ts";
 import { capturing, PlatformLog } from "./services/platform-log.ts";
 import { Releases } from "./services/releases.ts";
+import { runParkings } from "./services/parking.ts";
 import { notifyLongStops } from "./services/stops.ts";
+import { purgeLinks } from "./routes/links.ts";
 import { sendMonthlySummaries } from "./services/summary.ts";
 import { updateDailyStats } from "./services/daily.ts";
 import { checkVehicles } from "./services/vehicle.ts";
@@ -28,6 +30,8 @@ import type { GatewayTimeouts } from "./tracker/gateway.ts";
 
 const JOB_INTERVAL = 10 * 60e3;
 const SHARE_JOB_INTERVAL = 60e3;
+/** Notifications of new errors to the administrators per hour, the others only in the log */
+const ADMIN_ALERTS_PER_HOUR = 6;
 
 export interface Server {
 	app: FastifyInstance;
@@ -86,6 +90,7 @@ export async function runJobs (ctx: Context): Promise<void> {
 		await ctx.fuel.refreshIfStale();
 		await ctx.releases.checkIfDue();
 		await ctx.platformLog.snapshotQueries(ctx.sql);
+		await purgeLinks(ctx);
 	}
 
 	// Positions of the phones: shorter retention than the trackers. The ids as constants: with
@@ -118,7 +123,6 @@ export async function startServer (config: Config, output: FastifyBaseLogger = p
 	// Statistics of the queries: used only when the database loads the library
 	await sql`CREATE EXTENSION IF NOT EXISTS pg_stat_statements`.catch(() => {});
 	await platformLog.snapshotQueries(sql, false);
-	platformLog.start(sql);
 	const of = (component: string) => log.child({ component });
 
 	const secrets = new DeviceSecrets(config.CRYPTO_MASTER_KEY);
@@ -127,6 +131,15 @@ export async function startServer (config: Config, output: FastifyBaseLogger = p
 	const firmware = new Firmware(sql, secrets, commands, hub, of("firmware"));
 	const fcm = config.FCM_SERVICE_ACCOUNT_FILE ? new Fcm(config.FCM_SERVICE_ACCOUNT_FILE, { token: config.FCM_TOKEN_URL, api: config.FCM_API_URL }) : null;
 	const notifier = new Notifier(sql, of("notifications"), hub, fcm, config.TIMEZONE);
+	// Entries recorded so far wait in memory until here
+	const alerts: number[] = [];
+	platformLog.start(sql, async errors => {
+		const now = Date.now();
+		while (alerts.length > 0 && now - alerts[0]! > 3600e3) alerts.shift();
+		if (alerts.length >= ADMIN_ALERTS_PER_HOUR) return;
+		alerts.push(now);
+		await notifier.notifyAdmins(errors);
+	});
 	const ctx: Context = {
 		config,
 		sql,
@@ -156,7 +169,9 @@ export async function startServer (config: Config, output: FastifyBaseLogger = p
 	const jobsLog = of("jobs");
 	const jobs = [
 		setInterval(() => void runJobs(ctx).catch(error => jobsLog.error({ err: error }, "Jobs failed")), JOB_INTERVAL),
-		setInterval(() => void expireShares(ctx).catch(error => jobsLog.error({ err: error }, "Share expiry failed")), SHARE_JOB_INTERVAL)
+		setInterval(() => void expireShares(ctx).catch(error => jobsLog.error({ err: error }, "Share expiry failed")), SHARE_JOB_INTERVAL),
+		// Parking reminders: the minute matters
+		setInterval(() => void runParkings(ctx).catch(error => jobsLog.error({ err: error }, "Parking job failed")), SHARE_JOB_INTERVAL)
 	];
 
 	return {

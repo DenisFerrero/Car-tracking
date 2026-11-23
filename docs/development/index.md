@@ -19,6 +19,25 @@ cd app && flutter run -d web-server --web-port 8080 --dart-define=API_URL=http:/
 Con `PUBLIC_URL` in `http://` i cookie non sono `Secure` e le passkey funzionano solo su
 `localhost`. Per servire l'app dal backend: `flutter build web` e `WEB_ROOT=../app/build/web`.
 
+## Migrazioni del database
+
+Le migrazioni (`backend/migrations/NNN_nome.sql`) si applicano all'avvio, ognuna in una
+transazione, e devono essere **additive**: aggiornano un database esistente senza perdere né
+alterare dati. Si aggiungono tabelle, colonne nullable o con default, indici e vincoli più
+larghi; non si eliminano o rinominano tabelle e colonne, non si cambiano tipi e non si
+aggiornano o cancellano righe. Due controlli, anche nella CI:
+
+- **lint** (`src/migrations.test.ts`, con i test del backend): rifiuta `DROP`, `RENAME`,
+  `ALTER ... TYPE`, `SET NOT NULL`, `TRUNCATE`, `DELETE`, `UPDATE`, nuovi vincoli e indici
+  unici su tabelle esistenti, colonne `NOT NULL` senza default. Un'istruzione che resta
+  additiva (es. un `CHECK` allargato con drop e add) si segna con un commento
+  `-- additive: <motivo>` sulla riga prima; le tabelle create nello stesso file sono libere;
+- **verifica dell'aggiornamento**: `npm run check-upgrade [ref]` crea lo schema della versione
+  precedente (ultimo tag `v*`, o il ref indicato) con i suoi dati di prova, applica le
+  migrazioni nuove (due volte: la seconda non deve fare nulla) e confronta ogni riga e
+  colonna di prima. Usa `UPGRADE_DATABASE_URL` (nome che finisce per `_upgrade`) o avvia da
+  solo un container TimescaleDB sulla porta 55434.
+
 ## Simulare un tracker
 
 Senza hardware, il simulatore usa lo stesso protocollo binario del firmware:
@@ -70,8 +89,9 @@ arduino-cli compile --fqbn esp32:esp32:esp32 firmware --library <LilyGo-Modem-Se
 `create-admin` e lancia Playwright (Chromium, immagine ufficiale) sulla stessa rete Docker.
 Gli scenari, uno dopo l'altro sullo stesso account: invito con password, app di
 autenticazione e codici di recupero; veicolo senza tracker; due pieni e il consumo reale;
-area poligonale disegnata sulla mappa; riepilogo del mese; uscita e accesso con il secondo
-fattore. Le mappe usano tasselli del backend stesso (nessuna richiesta ai server OSM).
+area poligonale disegnata sulla mappa; riepilogo del mese; link temporaneo alla posizione
+aperto da un altro browser senza account e revocato; uscita e accesso con il secondo fattore
+(il codice digitato nel campo come con un lettore di schermo). Le mappe usano tasselli del backend stesso (nessuna richiesta ai server OSM).
 
 ```sh
 sh e2e/run.sh                                         # costruisce l'immagine e prova
@@ -88,8 +108,8 @@ italiani letti da `app/lib/l10n/app_it.arb`. Screenshot e trace dei test falliti
 
 `npm run load` (in `backend/`) riempie un database di tracker, utenti e storico, poi tiene
 collegati i tracker (HELLO → ACK, posizioni a gruppi) e fa usare l'app agli utenti
-(dispositivi, posizioni, viaggi, statistiche, copertura, andamento, scadenze, dashboard, canale
-realtime aperto); alla fine stampa per ogni pagina numero, errori per codice HTTP, p50 / p95 /
+(dispositivi, posizioni, viaggi, statistiche, copertura, andamento, scadenze, rifornimenti,
+costi, sosta, riepilogo del mese, dashboard, canale realtime aperto); alla fine stampa per ogni pagina numero, errori per codice HTTP, p50 / p95 /
 p99 / max e le query più pesanti di `pg_stat_statements`. Rifiuta indirizzi non locali senza
 `--allow-remote`; `--cleanup` elimina i dati della prova.
 

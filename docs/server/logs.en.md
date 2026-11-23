@@ -33,6 +33,15 @@ the most frequent first. For each group: how many times, first and last time, me
 maximum duration; opened, the details of the latest occurrence (with the stack of the errors)
 and **Copy** to paste them into a report.
 
+## Alerts of new errors
+
+Administrators get a **notification** (push and in the app) when the log records an error not
+seen in the last 30 days (same service and message): "New error in the log · backup: Disk
+full". Several new errors in the same write batch (a few seconds) give one notification; at
+most **6 an hour**, the others stay only in the log. Warnings and errors already seen don't
+notify. Tapping the notification opens the log; each administrator turns it off in *Account ›
+Alerts of new errors*.
+
 ## Slow queries: pg_stat_statements
 
 Slow queries come from `pg_stat_statements`, which the database must load at startup. The

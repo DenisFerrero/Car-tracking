@@ -464,6 +464,12 @@ abstract class AppLocalizations {
   /// **'Server non raggiungibile'**
   String get errNetwork;
 
+  /// No description provided for @errUnavailable.
+  ///
+  /// In it, this message translates to:
+  /// **'Servizio momentaneamente non disponibile, riprova tra poco'**
+  String get errUnavailable;
+
   /// No description provided for @errInvalidCredentials.
   ///
   /// In it, this message translates to:
@@ -5335,6 +5341,558 @@ abstract class AppLocalizations {
   /// In it, this message translates to:
   /// **'Dettagli copiati'**
   String get logCopied;
+
+  /// No description provided for @fuelElectric.
+  ///
+  /// In it, this message translates to:
+  /// **'Elettrica'**
+  String get fuelElectric;
+
+  /// No description provided for @fuelHybrid.
+  ///
+  /// In it, this message translates to:
+  /// **'Ibrida'**
+  String get fuelHybrid;
+
+  /// No description provided for @charges.
+  ///
+  /// In it, this message translates to:
+  /// **'Ricariche'**
+  String get charges;
+
+  /// No description provided for @addCharge.
+  ///
+  /// In it, this message translates to:
+  /// **'Aggiungi ricarica'**
+  String get addCharge;
+
+  /// No description provided for @editCharge.
+  ///
+  /// In it, this message translates to:
+  /// **'Modifica ricarica'**
+  String get editCharge;
+
+  /// No description provided for @noCharges.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessuna ricarica: aggiungi la prima carica completa'**
+  String get noCharges;
+
+  /// No description provided for @chargesHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Tra due cariche complete i kWh caricati e i km percorsi danno il consumo reale; l\'importo dà il prezzo al kWh.'**
+  String get chargesHint;
+
+  /// No description provided for @realConsumptionUnknownElectric.
+  ///
+  /// In it, this message translates to:
+  /// **'Consumo reale: servono due cariche complete con il contachilometri'**
+  String get realConsumptionUnknownElectric;
+
+  /// No description provided for @lastCharge.
+  ///
+  /// In it, this message translates to:
+  /// **'Ultima carica completa: {value}'**
+  String lastCharge(String value);
+
+  /// No description provided for @chargeTotals.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 ricarica} other{{n} ricariche}}, {energy}, {cost}'**
+  String chargeTotals(int n, String energy, String cost);
+
+  /// No description provided for @chargeEnergy.
+  ///
+  /// In it, this message translates to:
+  /// **'Energia caricata'**
+  String get chargeEnergy;
+
+  /// No description provided for @chargeFull.
+  ///
+  /// In it, this message translates to:
+  /// **'Carica completa'**
+  String get chargeFull;
+
+  /// No description provided for @chargeFullHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Batteria caricata fino al limite che usi di solito (es. 80% o 100%)'**
+  String get chargeFullHint;
+
+  /// No description provided for @chargePartial.
+  ///
+  /// In it, this message translates to:
+  /// **'parziale'**
+  String get chargePartial;
+
+  /// No description provided for @chargePlace.
+  ///
+  /// In it, this message translates to:
+  /// **'Dove'**
+  String get chargePlace;
+
+  /// No description provided for @chargeHome.
+  ///
+  /// In it, this message translates to:
+  /// **'A casa'**
+  String get chargeHome;
+
+  /// No description provided for @chargePublic.
+  ///
+  /// In it, this message translates to:
+  /// **'Colonnina'**
+  String get chargePublic;
+
+  /// No description provided for @chargePlaceUnset.
+  ///
+  /// In it, this message translates to:
+  /// **'Non indicato'**
+  String get chargePlaceUnset;
+
+  /// No description provided for @chargeInvalid.
+  ///
+  /// In it, this message translates to:
+  /// **'kWh da 0 a 500, importo da 0 a 10.000 €'**
+  String get chargeInvalid;
+
+  /// No description provided for @chargeRatesFrom.
+  ///
+  /// In it, this message translates to:
+  /// **'Prezzo e consumo dalle ricariche'**
+  String get chargeRatesFrom;
+
+  /// No description provided for @energyPrices.
+  ///
+  /// In it, this message translates to:
+  /// **'Prezzo dell\'energia'**
+  String get energyPrices;
+
+  /// No description provided for @nationalAverageNone.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessuna media nazionale per le auto elettriche: inserisci il prezzo o usa le ricariche'**
+  String get nationalAverageNone;
+
+  /// No description provided for @reimbursementRate.
+  ///
+  /// In it, this message translates to:
+  /// **'Rimborso chilometrico'**
+  String get reimbursementRate;
+
+  /// No description provided for @reimbursementHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Euro per km dei viaggi di lavoro (es. tabelle ACI o accordo con l\'azienda): il registro viaggi aggiunge la colonna del rimborso'**
+  String get reimbursementHint;
+
+  /// No description provided for @summaryCharges.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 ricarica} other{{n} ricariche}}: {value}'**
+  String summaryCharges(int n, String value);
+
+  /// No description provided for @summaryReimbursement.
+  ///
+  /// In it, this message translates to:
+  /// **'Rimborso chilometrico: {cost}'**
+  String summaryReimbursement(String cost);
+
+  /// No description provided for @mEnergy.
+  ///
+  /// In it, this message translates to:
+  /// **'kWh dei viaggi'**
+  String get mEnergy;
+
+  /// No description provided for @mReimbursement.
+  ///
+  /// In it, this message translates to:
+  /// **'Rimborso chilometrico'**
+  String get mReimbursement;
+
+  /// No description provided for @mChargedEnergy.
+  ///
+  /// In it, this message translates to:
+  /// **'kWh caricati'**
+  String get mChargedEnergy;
+
+  /// No description provided for @mChargePrice.
+  ///
+  /// In it, this message translates to:
+  /// **'Prezzo pagato al kWh'**
+  String get mChargePrice;
+
+  /// No description provided for @mRealEnergyConsumption.
+  ///
+  /// In it, this message translates to:
+  /// **'Consumo reale (kWh)'**
+  String get mRealEnergyConsumption;
+
+  /// No description provided for @expectedAround.
+  ///
+  /// In it, this message translates to:
+  /// **'prevista verso il {date}'**
+  String expectedAround(String date);
+
+  /// No description provided for @kmPerDayAverage.
+  ///
+  /// In it, this message translates to:
+  /// **'In media {km} km al giorno negli ultimi 60 giorni'**
+  String kmPerDayAverage(String km);
+
+  /// No description provided for @parking.
+  ///
+  /// In it, this message translates to:
+  /// **'Sosta'**
+  String get parking;
+
+  /// No description provided for @parkHere.
+  ///
+  /// In it, this message translates to:
+  /// **'Parcheggia'**
+  String get parkHere;
+
+  /// No description provided for @parkingActive.
+  ///
+  /// In it, this message translates to:
+  /// **'In sosta dalle {time}'**
+  String parkingActive(String time);
+
+  /// No description provided for @parkingUntil.
+  ///
+  /// In it, this message translates to:
+  /// **'Scade alle {time}'**
+  String parkingUntil(String time);
+
+  /// No description provided for @parkingNoEnd.
+  ///
+  /// In it, this message translates to:
+  /// **'Senza scadenza'**
+  String get parkingNoEnd;
+
+  /// No description provided for @parkingExpired.
+  ///
+  /// In it, this message translates to:
+  /// **'Scaduta alle {time}'**
+  String parkingExpired(String time);
+
+  /// No description provided for @parkingTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Sosta del veicolo'**
+  String get parkingTitle;
+
+  /// No description provided for @parkingHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Il posto è l\'ultima posizione del veicolo. Con la scadenza del biglietto ricevi un promemoria prima della fine e un avviso alla scadenza; senza (es. Telepass) resta solo il posto. La sosta finisce da sola quando il veicolo riparte.'**
+  String get parkingHint;
+
+  /// No description provided for @parkingHasEnd.
+  ///
+  /// In it, this message translates to:
+  /// **'Biglietto con scadenza'**
+  String get parkingHasEnd;
+
+  /// No description provided for @parkingHasEndHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Disattiva se paghi a consumo (es. Telepass, app)'**
+  String get parkingHasEndHint;
+
+  /// No description provided for @parkingEnd.
+  ///
+  /// In it, this message translates to:
+  /// **'Scadenza: {time}'**
+  String parkingEnd(String time);
+
+  /// No description provided for @parkingChangeEnd.
+  ///
+  /// In it, this message translates to:
+  /// **'Cambia'**
+  String get parkingChangeEnd;
+
+  /// No description provided for @parkingRemind.
+  ///
+  /// In it, this message translates to:
+  /// **'Promemoria'**
+  String get parkingRemind;
+
+  /// No description provided for @parkingRemindNone.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessun promemoria'**
+  String get parkingRemindNone;
+
+  /// No description provided for @parkingRemindBefore.
+  ///
+  /// In it, this message translates to:
+  /// **'{n} minuti prima'**
+  String parkingRemindBefore(int n);
+
+  /// No description provided for @parkingNote.
+  ///
+  /// In it, this message translates to:
+  /// **'Nota (piano, posto, colore delle strisce…)'**
+  String get parkingNote;
+
+  /// No description provided for @parkingNoPlace.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessuna posizione recente: la sosta resta senza posto'**
+  String get parkingNoPlace;
+
+  /// No description provided for @parkingStart.
+  ///
+  /// In it, this message translates to:
+  /// **'Avvia la sosta'**
+  String get parkingStart;
+
+  /// No description provided for @parkingStop.
+  ///
+  /// In it, this message translates to:
+  /// **'Termina la sosta'**
+  String get parkingStop;
+
+  /// No description provided for @parkingSaved.
+  ///
+  /// In it, this message translates to:
+  /// **'Sosta salvata'**
+  String get parkingSaved;
+
+  /// No description provided for @parkingStopped.
+  ///
+  /// In it, this message translates to:
+  /// **'Sosta terminata'**
+  String get parkingStopped;
+
+  /// No description provided for @parkingPrompt.
+  ///
+  /// In it, this message translates to:
+  /// **'Proponi la sosta allo spegnimento'**
+  String get parkingPrompt;
+
+  /// No description provided for @parkingPromptHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Quando spegni il motore una notifica ti propone di impostare la sosta e la scadenza'**
+  String get parkingPromptHint;
+
+  /// No description provided for @errParkingPast.
+  ///
+  /// In it, this message translates to:
+  /// **'La scadenza è già passata'**
+  String get errParkingPast;
+
+  /// No description provided for @errParkingTooLong.
+  ///
+  /// In it, this message translates to:
+  /// **'La scadenza può essere al massimo tra 31 giorni'**
+  String get errParkingTooLong;
+
+  /// No description provided for @kindParking.
+  ///
+  /// In it, this message translates to:
+  /// **'Sosta'**
+  String get kindParking;
+
+  /// No description provided for @parkingPromptTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'{device} parcheggiato'**
+  String parkingPromptTitle(String device);
+
+  /// No description provided for @parkingPromptBody.
+  ///
+  /// In it, this message translates to:
+  /// **'Ore {time}: tocca per impostare la sosta e il promemoria'**
+  String parkingPromptBody(String time);
+
+  /// No description provided for @parkingReminderTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{Sosta in scadenza tra 1 minuto} other{Sosta in scadenza tra {n} minuti}}'**
+  String parkingReminderTitle(int n);
+
+  /// No description provided for @parkingReminderBody.
+  ///
+  /// In it, this message translates to:
+  /// **'{device}: scade alle {time}'**
+  String parkingReminderBody(String device, String time);
+
+  /// No description provided for @parkingExpiredTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Sosta scaduta'**
+  String get parkingExpiredTitle;
+
+  /// No description provided for @parkingExpiredBody.
+  ///
+  /// In it, this message translates to:
+  /// **'{device}: scaduta alle {time}'**
+  String parkingExpiredBody(String device, String time);
+
+  /// No description provided for @liveLinks.
+  ///
+  /// In it, this message translates to:
+  /// **'Link temporanei alla posizione'**
+  String get liveLinks;
+
+  /// No description provided for @liveLinksHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Chi riceve il link vede solo il nome e la posizione attuale, senza account e senza storico, fino alla scadenza. Puoi revocarlo quando vuoi.'**
+  String get liveLinksHint;
+
+  /// No description provided for @liveLinkNew.
+  ///
+  /// In it, this message translates to:
+  /// **'Crea un link'**
+  String get liveLinkNew;
+
+  /// No description provided for @liveLinkLabel.
+  ///
+  /// In it, this message translates to:
+  /// **'Per chi è (facoltativo)'**
+  String get liveLinkLabel;
+
+  /// No description provided for @liveLinkHours.
+  ///
+  /// In it, this message translates to:
+  /// **'Durata'**
+  String get liveLinkHours;
+
+  /// No description provided for @liveLinkDuration.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{1 ora} other{{n} ore}}'**
+  String liveLinkDuration(int n);
+
+  /// No description provided for @liveLinkCreated.
+  ///
+  /// In it, this message translates to:
+  /// **'Link creato: copialo ora, non verrà più mostrato'**
+  String get liveLinkCreated;
+
+  /// No description provided for @liveLinkCopied.
+  ///
+  /// In it, this message translates to:
+  /// **'Link copiato'**
+  String get liveLinkCopied;
+
+  /// No description provided for @liveLinkUntil.
+  ///
+  /// In it, this message translates to:
+  /// **'Fino alle {time}'**
+  String liveLinkUntil(String time);
+
+  /// No description provided for @liveLinkViewed.
+  ///
+  /// In it, this message translates to:
+  /// **'aperto {time}'**
+  String liveLinkViewed(String time);
+
+  /// No description provided for @liveLinkNotViewed.
+  ///
+  /// In it, this message translates to:
+  /// **'mai aperto'**
+  String get liveLinkNotViewed;
+
+  /// No description provided for @liveLinkRevoke.
+  ///
+  /// In it, this message translates to:
+  /// **'Revoca'**
+  String get liveLinkRevoke;
+
+  /// No description provided for @liveLinkRevoked.
+  ///
+  /// In it, this message translates to:
+  /// **'Link revocato'**
+  String get liveLinkRevoked;
+
+  /// No description provided for @liveLinksNone.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessun link attivo'**
+  String get liveLinksNone;
+
+  /// No description provided for @errTooManyLinks.
+  ///
+  /// In it, this message translates to:
+  /// **'Al massimo 5 link attivi per dispositivo'**
+  String get errTooManyLinks;
+
+  /// No description provided for @publicLinkTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'Posizione condivisa'**
+  String get publicLinkTitle;
+
+  /// No description provided for @publicLinkUntil.
+  ///
+  /// In it, this message translates to:
+  /// **'Link valido fino alle {time}'**
+  String publicLinkUntil(String time);
+
+  /// No description provided for @publicLinkGone.
+  ///
+  /// In it, this message translates to:
+  /// **'Link scaduto o revocato'**
+  String get publicLinkGone;
+
+  /// No description provided for @publicLinkGoneHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Chiedi un nuovo link a chi te l\'ha mandato'**
+  String get publicLinkGoneHint;
+
+  /// No description provided for @publicLinkNoPosition.
+  ///
+  /// In it, this message translates to:
+  /// **'Nessuna posizione recente'**
+  String get publicLinkNoPosition;
+
+  /// No description provided for @publicLinkUpdated.
+  ///
+  /// In it, this message translates to:
+  /// **'Posizione delle {time}'**
+  String publicLinkUpdated(String time);
+
+  /// No description provided for @publicLinkMoving.
+  ///
+  /// In it, this message translates to:
+  /// **'In movimento a {speed} km/h'**
+  String publicLinkMoving(String speed);
+
+  /// No description provided for @adminAlerts.
+  ///
+  /// In it, this message translates to:
+  /// **'Avvisi di errori nuovi'**
+  String get adminAlerts;
+
+  /// No description provided for @adminAlertsHint.
+  ///
+  /// In it, this message translates to:
+  /// **'Una notifica quando il log della piattaforma registra un errore mai visto negli ultimi 30 giorni (al massimo 6 all\'ora)'**
+  String get adminAlertsHint;
+
+  /// No description provided for @kindPlatformError.
+  ///
+  /// In it, this message translates to:
+  /// **'Errore nuovo nel log'**
+  String get kindPlatformError;
+
+  /// No description provided for @platformErrorTitle.
+  ///
+  /// In it, this message translates to:
+  /// **'{n, plural, =1{Errore nuovo nel log} other{{n} errori nuovi nel log}}'**
+  String platformErrorTitle(int n);
+
+  /// No description provided for @mfaCode.
+  ///
+  /// In it, this message translates to:
+  /// **'Codice'**
+  String get mfaCode;
 }
 
 class _AppLocalizationsDelegate

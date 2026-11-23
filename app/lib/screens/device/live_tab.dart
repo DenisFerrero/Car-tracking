@@ -12,6 +12,7 @@ import '../../core/models.dart';
 import '../../core/providers.dart';
 import '../../theme.dart';
 import '../../widgets/base_map.dart';
+import 'parking.dart';
 
 /// Realtime map. For the owner, opening it asks the tracker for live tracking (one
 /// point every few seconds) while it stays open; a parked tracker receives the request
@@ -112,6 +113,8 @@ class _LiveTabState extends ConsumerState<LiveTab> with AutomaticKeepAliveClient
     final l = context.l10n;
     final p = device.lastPosition;
     final trail = [for (final item in _trail) if (item.lat != null && !item.stale) LatLng(item.lat!, item.lon!)];
+    // Where the owner parked it
+    final parking = device.isOwner && !device.isPhone ? (ref.watch(parkingProvider(device.id)).value?['parking'] as Map<String, dynamic>?) : null;
     return Stack(children: [
       BaseMap(
         controller: _map,
@@ -129,6 +132,16 @@ class _LiveTabState extends ConsumerState<LiveTab> with AutomaticKeepAliveClient
                 color: device.color.withValues(alpha: 0.15),
                 borderColor: device.color,
                 borderStrokeWidth: 1,
+              ),
+            ]),
+          if (parking?['lat'] != null)
+            MarkerLayer(markers: [
+              Marker(
+                key: const Key('parkingMarker'),
+                point: LatLng((parking!['lat'] as num).toDouble(), (parking['lon'] as num).toDouble()),
+                width: 32,
+                height: 32,
+                child: const Icon(Icons.local_parking, color: Colors.white, shadows: [Shadow(blurRadius: 4)]),
               ),
             ]),
           if (p?.point != null)
@@ -236,14 +249,19 @@ class _LiveTabState extends ConsumerState<LiveTab> with AutomaticKeepAliveClient
               for (final event in eventLabels(l, p.events)) _chip(Icons.warning_amber, event, Colors.red),
             ]),
           ],
-          if (walk != null && !(device.isOwner && device.isTracker)) ...[
+          if (walk != null && !(device.isOwner && device.isTracker) && !(device.isOwner && device.isVehicle)) ...[
             const SizedBox(height: 8),
             walk,
+          ],
+          if (device.isOwner && device.isVehicle) ...[
+            const SizedBox(height: 8),
+            Wrap(spacing: 8, runSpacing: 8, children: [?walk, ParkingChip(deviceId: device.id)]),
           ],
           if (device.isOwner && device.isTracker) ...[
             const Divider(height: 20),
             Wrap(spacing: 8, runSpacing: 8, children: [
               ?walk,
+              ParkingChip(deviceId: device.id),
               ActionChip(
                 avatar: const Icon(Icons.play_arrow, size: 18),
                 label: Text(l.live30),

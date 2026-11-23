@@ -1,7 +1,8 @@
 # Checks of every push and pull request: backend (types, tests on TimescaleDB with
-# coverage, known vulnerabilities), app (analysis, tests with coverage), firmware
-# (compilation of the variants, unit tests and cross test of the protocol with the
-# backend), end-to-end tests of the web app on the image of the backend. Actions pinned by commit, versions at least 14 days old (Renovate keeps
+# coverage, known vulnerabilities), upgrade of a database with data by the migrations, app
+# (analysis, tests with coverage), firmware (compilation of the variants, unit tests and
+# cross test of the protocol with the backend), end-to-end tests of the web app on the image
+# of the backend. Actions pinned by commit, versions at least 14 days old (Renovate keeps
 # them up to date with the same rule).
 name: CI
 
@@ -28,14 +29,15 @@ jobs:
     env:
       TEST_DATABASE_URL: postgres://postgres:test@localhost:55432/ct_test
     steps:
+      # First: the steps run in backend/, which exists only after the checkout
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Database started by hand: a service can't load pg_stat_statements (slow queries)
       - name: Start TimescaleDB
         run: |
           docker run -d --name db -p 55432:5432 -e POSTGRES_PASSWORD=test -e POSTGRES_DB=ct_test timescale/timescaledb:2.24.0-pg17 postgres -c shared_preload_libraries=timescaledb,pg_stat_statements
           # On TCP: the temporary server of the first initialization listens only on the socket
-          for i in $(seq 60); do docker exec db psql -h 127.0.0.1 -U postgres -d ct_test -c "SELECT 1" >/dev/null 2>&1 && exit 0; sleep 2; done
+          for _ in $(seq 60); do docker exec db psql -h 127.0.0.1 -U postgres -d ct_test -c "SELECT 1" >/dev/null 2>&1 && exit 0; sleep 2; done
           exit 1
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
@@ -46,6 +48,26 @@ jobs:
       - run: npm run test:coverage
       # Production dependencies only: dev tools don't reach the server
       - run: npm audit --omit=dev --audit-level=moderate
+
+  # The migrations on a database full of data: schema and data of the previous version (latest
+  # release, else the parent commit), then the new migrations; every row must stay the same
+  migrations:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Tags and parent commit, the previous version
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run check-upgrade
 
   app:
     runs-on: ubuntu-24.04

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
-import { Harness } from "../test/harness.ts";
+import { Harness, sleep, waitFor } from "../test/harness.ts";
 import type { User } from "../test/harness.ts";
 import { PlatformLog } from "./platform-log.ts";
 
@@ -52,6 +52,50 @@ describe("platform log", { skip: !process.env.TEST_DATABASE_URL && "TEST_DATABAS
 	});
 	after(async () => {
 		await h?.close();
+	});
+
+	test("errors never seen before: notified to the administrators who want them, a few an hour", async () => {
+		await h.sql`TRUNCATE platform_log`;
+		const adminLive = await h.live(admin.token);
+		const userLive = await h.live(user.token);
+		const alerts = () => adminLive.of("notification").filter(item => item.notification.kind === "platform_error");
+		const log = h.server.ctx.log.child({ component: "backup" });
+		log.error("Disk full");
+		await rows("error");
+		await waitFor(() => alerts().length === 1);
+		assert.deepEqual(alerts()[0]!.notification.data.source, "backup");
+		assert.deepEqual([alerts()[0]!.notification.data.message, alerts()[0]!.notification.data.others, alerts()[0]!.notification.deviceId], ["Disk full", 0, null]);
+		// Seen in the last days: not new; warnings never
+		log.error("Disk full");
+		log.warn("Slow disk");
+		await rows("error");
+		// Two new ones in the same batch: one notification
+		log.error("Dump failed");
+		log.error("Upload failed");
+		await rows("error");
+		await waitFor(() => alerts().length === 2);
+		assert.equal(alerts()[1]!.notification.data.others, 1);
+		assert.equal(userLive.of("notification").length, 0);
+
+		// The preference: administrators only
+		const account = async (token: string) => (await h.api("GET", "/api/account", { token })).body.adminAlerts;
+		assert.deepEqual([await account(admin.token), await account(user.token)], [true, null]);
+		assert.equal((await h.api("PATCH", "/api/account", { token: user.token, body: { adminAlerts: true } })).status, 403);
+		await h.api("PATCH", "/api/account", { token: admin.token, body: { adminAlerts: false } });
+		assert.equal(await account(admin.token), false);
+		log.error("Quiet failure");
+		await rows("error");
+		await h.api("PATCH", "/api/account", { token: admin.token, body: { adminAlerts: true } });
+		// At most 6 batches an hour, the one nobody received included: 3 more, the others stay in the log
+		for (let n = 0; n < 6; n++) {
+			log.error(`Failure ${n}`);
+			await rows("error");
+		}
+		await sleep(200);
+		assert.equal(alerts().length, 5);
+		assert.ok((await rows("error")).some(row => row.message === "Failure 5"));
+		adminLive.close();
+		userLive.close();
 	});
 
 	test("requests failed and slow, by route pattern", async () => {

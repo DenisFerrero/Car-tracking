@@ -61,19 +61,25 @@ describe("car: battery, deadlines, trip log, summaries", () => {
 
 	test("deadlines: days and km left, state", () => {
 		const item = { due_date: "2026-12-01", due_km: 60000, remind_days: 30, remind_km: 1000 };
-		assert.deepEqual(deadlineState(item, 50000, "2026-10-01"), { remainingDays: 61, remainingKm: 10000, state: "ok" });
+		assert.deepEqual(deadlineState(item, 50000, "2026-10-01"), { remainingDays: 61, remainingKm: 10000, expectedDate: null, state: "ok" });
+		// Expected at the average km a day: near when within the reminder days, never further than 3 years
+		const byKm = { ...item, due_date: null };
+		assert.deepEqual(deadlineState(byKm, 50000, "2026-10-01", 100), { remainingDays: null, remainingKm: 10000, expectedDate: "2027-01-09", state: "ok" });
+		assert.deepEqual(deadlineState(byKm, 50000, "2026-10-01", 400), { remainingDays: null, remainingKm: 10000, expectedDate: "2026-10-26", state: "soon" });
+		assert.equal(deadlineState(byKm, 50000, "2026-10-01", 1).expectedDate, null);
+		assert.equal(deadlineState(byKm, 60010, "2026-10-01", 100).expectedDate, null);
 		assert.equal(deadlineState(item, 59500, "2026-10-01").state, "soon");
 		assert.equal(deadlineState(item, 50000, "2026-11-15").state, "soon");
 		assert.equal(deadlineState(item, 50000, "2026-12-01").state, "due");
 		assert.equal(deadlineState(item, 60010, "2026-10-01").state, "due");
-		assert.deepEqual(deadlineState({ ...item, due_date: null }, null, "2026-10-01"), { remainingDays: null, remainingKm: null, state: "ok" });
+		assert.deepEqual(deadlineState({ ...item, due_date: null }, null, "2026-10-01"), { remainingDays: null, remainingKm: null, expectedDate: null, state: "ok" });
 	});
 
 	test("costs of a trip: price, consumption and wear of the day, sums", () => {
 		const rates = (...items: [string, number][]): Rate[] => items.map(([validFrom, value]) => ({ validFrom, value }));
 		const profile: VehicleProfile = {
 			model: "Panda", fuelUnit: "l_per_100km", fuelType: null, fuelPriceAuto: false, ratesFromRefuels: false,
-			rates: { price: rates(["2026-10-01", 1.85], ["2026-11-01", 2]), consumption: rates(["2026-01-01", 6]), wear: rates(["2026-01-01", 0.12]) }
+			rates: { price: rates(["2026-10-01", 1.85], ["2026-11-01", 2]), consumption: rates(["2026-01-01", 6]), wear: rates(["2026-01-01", 0.12]), reimbursement: [] }
 		};
 		assert.deepEqual(tripCost(100, profile, "2026-10-31"), { fuelL: 6, fuelCost: 11.1, wearCost: 12, cost: 23.1 });
 		assert.deepEqual(tripCost(100, profile, "2026-11-01"), { fuelL: 6, fuelCost: 12, wearCost: 12, cost: 24 });
@@ -146,20 +152,34 @@ describe("car: battery, deadlines, trip log, summaries", () => {
 		assert.equal(english[1], "2026-11-02,07:00,07:20,45.10000 9.20000,45.20000 9.30000,12.3,20,,");
 		// Without consumption and wear: no columns of the costs
 		const price = [{ validFrom: "2026-10-01", value: 1.8 }, { validFrom: "2026-11-04", value: 2 }];
-		const empty: VehicleProfile = { model: "", fuelUnit: "l_per_100km", fuelType: null, fuelPriceAuto: false, ratesFromRefuels: false, rates: { price, consumption: [], wear: [] } };
+		const empty: VehicleProfile = { model: "", fuelUnit: "l_per_100km", fuelType: null, fuelPriceAuto: false, ratesFromRefuels: false,
+			rates: { price, consumption: [], wear: [], reimbursement: [] } };
 		assert.equal(toLogbook(trips, [], null, "UTC", empty).split("\r\n")[0], english[0]);
 		// 5 l/100 km at 1.80 €/l, 2 €/l from the 4th; wear 0.10 €/km; totals = sums of the trips
 		const costly = toLogbook(trips, tags, "it", "Europe/Rome",
-			{ ...empty, rates: { price, consumption: [{ validFrom: "2026-01-01", value: 5 }], wear: [{ validFrom: "2026-01-01", value: 0.1 }] } }).split("\r\n");
+			{ ...empty, rates: { price, consumption: [{ validFrom: "2026-01-01", value: 5 }], wear: [{ validFrom: "2026-01-01", value: 0.1 }], reimbursement: [] } }).split("\r\n");
 		assert.match(costly[0]!, /;Note;Litri;Carburante \(€\);Usura \(€\);Costo \(€\)$/);
 		assert.match(costly[1]!, /;0,62;1,11;1,23;2,34$/);
 		assert.match(costly[3]!, /;0,05;0,10;0,10;0,20$/);
 		assert.match(costly[5]!, /^Totale lavoro;;;;;12,3;;;;0,62;1,11;1,23;2,34$/);
 		assert.match(costly[7]!, /^Non indicato;;;;;1,0;;;;0,05;0,10;0,10;0,20$/);
 		assert.match(costly[8]!, /^Totale;;;;;18,3;;;;0,92;1,66;1,83;3,49$/);
-		const english2 = toLogbook(trips, [], "en", "UTC", { ...empty, rates: { price: [], consumption: [{ validFrom: "2026-01-01", value: 6 }], wear: [] } }).split("\r\n");
+		const english2 = toLogbook(trips, [], "en", "UTC", { ...empty, rates: { price: [], consumption: [{ validFrom: "2026-01-01", value: 6 }], wear: [], reimbursement: [] } }).split("\r\n");
 		assert.match(english2[0]!, /,Litres,Fuel \(€\),Wear \(€\),Cost \(€\)$/);
 		assert.match(english2[1]!, /,0\.74,,,$/);
+		// Electric: kWh; mileage allowance of the business trips only (0.40 €/km, 0.50 from the 4th)
+		const allowance = toLogbook(trips, tags, "it", "Europe/Rome", {
+			...empty, fuelType: "electric",
+			rates: { price: [], consumption: [{ validFrom: "2026-01-01", value: 15 }], wear: [], reimbursement: [{ validFrom: "2026-01-01", value: 0.4 }, { validFrom: "2026-11-04", value: 0.5 }] }
+		}).split("\r\n");
+		assert.match(allowance[0]!, /;Note;kWh;Carburante \(€\);Usura \(€\);Costo \(€\);Rimborso \(€\)$/);
+		assert.match(allowance[1]!, /;1,85;;;;4,94$/);
+		assert.match(allowance[3]!, /;0,15;;;;$/);
+		assert.match(allowance[5]!, /^Totale lavoro;;;;;12,3;;;;1,85;;;;4,94$/);
+		assert.match(allowance[6]!, /^Totale personale;.*;$/);
+		assert.match(allowance[8]!, /^Totale;;;;;18,3;;;;2,75;;;;4,94$/);
+		const english3 = toLogbook(trips, tags, "en", "UTC", { ...empty, rates: { ...empty.rates, reimbursement: [{ validFrom: "2026-01-01", value: 0.3 }] } }).split("\r\n");
+		assert.match(english3[0]!, /,Note,Allowance \(€\)$/);
 
 		const day = (iso: string, km: number, voltage: number | null) => ({
 			day: iso, distanceKm: km, businessKm: km / 2, personalKm: 0, drivingMin: 30, trips: 1, maxSpeed: 50 + km,
@@ -312,6 +332,23 @@ describe("languages", () => {
 		assert.deepEqual(deadline({ due: "due", days: -3, km: -20, maintenance: "unknown" }, "en"), { title: "Due: Deadline", body: "Panda: overdue by 3 days or 20 km over" });
 		assert.equal(deadline({ due: "due", days: 0 }, "en").body, "Panda: today");
 		assert.equal(notificationText("en", "maintenance", { ...data, due: "due" }, "UTC").title, "Due: Deadline");
+		// Km deadline with the day expected at the average km
+		assert.equal(deadline({ due: "soon", km: 900, expected: "2026-12-04" }).body, "Panda: tra 900 km (prevista verso il 4 dicembre)");
+		assert.equal(deadline({ due: "soon", km: 900, expected: "2026-12-04" }, "en").body, "Panda: in 900 km (expected around 4 December)");
+		// Errors never seen before, parking
+		const error = { device: "", time: data.time, source: "backup", message: "Disk full", others: 0 };
+		assert.deepEqual(notificationText("it", "platform_error", error, "UTC"), { title: "Errore nuovo nel log", body: "backup: Disk full" });
+		assert.equal(notificationText("it", "platform_error", { ...error, others: 2 }, "UTC").title, "3 errori nuovi nel log");
+		assert.deepEqual(notificationText("en", "platform_error", error, "UTC"), { title: "New error in the log", body: "backup: Disk full" });
+		assert.equal(notificationText("en", "platform_error", { ...error, others: 1 }, "UTC").title, "2 new errors in the log");
+		assert.deepEqual(notificationText("it", "parking_prompt", data, "Europe/Rome"), { title: "Panda parcheggiato", body: "Ore 09:05: tocca per impostare la sosta e il promemoria" });
+		assert.equal(notificationText("en", "parking_prompt", data, "Europe/Rome").title, "Panda parked");
+		assert.deepEqual(notificationText("it", "parking_reminder", { ...data, minutes: 1 }, "Europe/Rome"), { title: "Sosta in scadenza tra 1 minuto", body: "Panda: scade alle 09:05" });
+		assert.equal(notificationText("it", "parking_reminder", data, "Europe/Rome").title, "Sosta in scadenza tra 1 minuto");
+		assert.deepEqual(notificationText("en", "parking_reminder", { ...data, minutes: 10 }, "Europe/Rome"), { title: "Parking ends in 10 minutes", body: "Panda: ends at 09:05" });
+		assert.equal(notificationText("en", "parking_reminder", data, "Europe/Rome").title, "Parking ends in 1 minute");
+		assert.deepEqual(notificationText("it", "parking_expired", data, "Europe/Rome"), { title: "Sosta scaduta", body: "Panda: scaduta alle 09:05" });
+		assert.deepEqual(notificationText("en", "parking_expired", data, "Europe/Rome"), { title: "Parking ended", body: "Panda: ended at 09:05" });
 		// Unknown or missing language: English
 		assert.equal(notificationText(null, "tilt", data, "UTC").title, "Car lifted or tilted");
 		assert.equal(notificationText("fr", "tilt", data, "UTC").body, "Panda, at 08:05");
@@ -359,9 +396,10 @@ describe("configuration", () => {
 
 describe("error handler", () => {
 	const reply = () => {
-		const sent: { status?: number; body?: unknown } = {};
+		const sent: { status?: number; body?: unknown; headers?: Record<string, string> } = {};
 		const object = {
 			status (code: number) { sent.status = code; return object; },
+			header (name: string, value: string) { sent.headers = { ...sent.headers, [name]: value }; return object; },
 			send (body: unknown) { sent.body = body; return object; }
 		};
 		return { sent, reply: object as unknown as FastifyReply };
@@ -388,6 +426,25 @@ describe("error handler", () => {
 		// In the log (and the platform log) by route, without a route: unknown
 		assert.equal(logged.length, 1);
 		assert.equal(logged[0]![1], "GET (unknown)");
+	});
+
+	test("database unreachable, shutting down or starting: 503 with a retry", () => {
+		for (const code of ["ECONNREFUSED", "ENOTFOUND", "CONNECT_TIMEOUT", "CONNECTION_CLOSED", "57P03", "08006"]) {
+			const unavailable = reply();
+			errorHandler(Object.assign(new Error(`connect ${code}`), { code }) as FastifyError, request, unavailable.reply);
+			assert.deepEqual(unavailable.sent, {
+				status: 503, headers: { "retry-after": "10" }, body: { error: "unavailable", message: "Service temporarily unavailable" }
+			}, code);
+		}
+		assert.equal(logged.at(-1)![1], "GET (unknown)");
+		// Other errors of the database stay internal errors
+		const other = reply();
+		errorHandler(Object.assign(new Error("duplicate key"), { code: "23505" }) as FastifyError, request, other.reply);
+		assert.equal(other.sent.status, 500);
+		// A client error with a network-like code keeps its status
+		const client = reply();
+		errorHandler(Object.assign(new Error("Too many"), { statusCode: 429, code: "ECONNRESET" }) as FastifyError, request, client.reply);
+		assert.equal(client.sent.status, 429);
 	});
 });
 

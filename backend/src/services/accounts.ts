@@ -27,6 +27,10 @@ export async function releaseDevice (sql: Sql, id: number, kind: DeviceKind): Pr
 		await tx`DELETE FROM maintenance WHERE device_id = ${id}`;
 		await tx`DELETE FROM maintenance_log WHERE device_id = ${id}`;
 		await tx`DELETE FROM vehicle_rates WHERE device_id = ${id}`;
+		await tx`DELETE FROM refuels WHERE device_id = ${id}`;
+		await tx`DELETE FROM parkings WHERE device_id = ${id}`;
+		// Links sent by the previous owner stop showing the tracker
+		await tx`DELETE FROM live_links WHERE device_id = ${id}`;
 		await tx`DELETE FROM device_extra WHERE device_id = ${id}`;
 		await tx`DELETE FROM tracker_installations WHERE vehicle_id = ${id}`;
 		await tx`UPDATE commands SET superseded = true WHERE device_id = ${id} AND result IS NULL`;
@@ -36,7 +40,8 @@ export async function releaseDevice (sql: Sql, id: number, kind: DeviceKind): Pr
 			await tx`
 				UPDATE devices SET name = '', color = '#1E88E5', battery = NULL, paused_until = NULL, odometer_base = NULL,
 					odometer_day = NULL, battery_health_alerted_at = NULL, vehicle_model = '', fuel_unit = 'l_per_100km',
-					fuel_type = NULL, fuel_price_auto = false, auto_update = true, archived_at = NULL WHERE id = ${id}`;
+					fuel_type = NULL, fuel_price_auto = false, rates_from_refuels = true, parking_prompt = false, auto_update = true,
+					archived_at = NULL WHERE id = ${id}`;
 		}
 		return removed.map(row => row.user_id);
 	});

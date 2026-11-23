@@ -40,6 +40,14 @@ every vehicle and the layout can be sent to friends: see [Custom dashboards](das
 - The owner shares a device read-only with a friend, forever or until a date and time (quick
   choices from 1 hour to 7 days). The receiver sees name, position, state, speed, last contact
   and expiry: no IMEI, signal, battery, alarms, earlier history or commands.
+- **Temporary links to the position** (*Settings → Temporary links to the position*): for
+  someone without an account ("I'm on my way"). The owner creates a link valid 1 to 24 hours,
+  with an optional label; the address is shown only when it's created (the server keeps its
+  hash). Whoever opens it sees in the browser the name, color and latest position of the
+  device, refreshed every 15 seconds, until it ends: no history, tracker data or account. At
+  most 5 active links per device; the list shows when each was opened and each can be revoked
+  at any time. An expired, revoked or wrong link gives the same *Link expired or revoked*
+  page.
 
 ## Arrival areas and alerts
 
@@ -61,14 +69,20 @@ every vehicle and the layout can be sent to friends: see [Custom dashboards](das
   downloads a CSV (Italian format with `;` and decimal comma, for Excel) with date, times,
   start, arrival, km, duration, kind, notes and costs, and the totals.
 - **Trip costs** (trackers, vehicles and phones): model and **fuel** of the vehicle (petrol,
-  diesel, LPG), unit of the consumption (*l/100 km* or *km/l*) and three **histories**: fuel
-  price, **consumption** and **wear** in €/km. Every value holds from its date until the next
-  one; every trip uses the values of the day it started. *Look up the ACI cost per km* opens
-  the search for the model (there's no public API of the ACI tables).
+  diesel, LPG, hybrid, electric), unit of the consumption (*l/100 km* or *km/l*; for electric
+  ones *kWh/100 km* or *km/kWh*) and the **histories**: fuel price (or energy price in €/kWh),
+  **consumption**, **wear** in €/km and **mileage allowance**. Every value holds from its date
+  until the next one; every trip uses the values of the day it started. *Look up the ACI cost
+  per km* opens the search for the model (there's no public API of the ACI tables).
+- **Mileage allowance**: the euro per km paid back for the business trips (ACI tables or the
+  agreement with the company). The trip log of the month adds the *Allowance (€)* column to the
+  business trips and their totals; the monthly summary and the dashboards show the total.
 - **National average price**: the backend downloads the weekly survey of the Italian ministry
   of the environment (MASE, open data, every Monday) of petrol, diesel and LPG; with *Price
   from the national average* every new week enters the history of the vehicle on its own (a
-  price entered by hand on the same day wins).
+  price entered by hand on the same day wins). A hybrid follows the average of petrol; there's
+  no public average for electric cars: the price is entered by hand or comes from the
+  charges.
 - **Refuels** (trackers and vehicles, *Analysis → Refuels*): date, litres, amount, odometer
   (the current one proposed), full tank or partial, note. Between two full tanks the **real
   consumption** is the litres put in since the previous full tank (partial ones included)
@@ -79,6 +93,10 @@ every vehicle and the layout can be sent to friends: see [Custom dashboards](das
   refuels*, follow the changes of the refuels and can't be deleted by hand; a value entered by
   hand on the same day wins and the national average stops for 14 days after a refuel with an
   amount.
+- **Charges** (electric vehicles): like the refuels, in kWh, with the place (*at home* or
+  *charging station*); between two full charges the real consumption in kWh/100 km, from the
+  amount the price per kWh. The dashboard metrics in litres skip the electric ones and those in
+  kWh count only them.
 - **Statistics over time**: for 12 months or 26 weeks km (work and personal), driving hours
   and trips; for trackers also battery health, MB on the SIM and alarms. Daily summary kept 3
   years for trackers and vehicles, 400 days for phones.
@@ -89,8 +107,9 @@ On the 1st of every month, from 8:00 (time zone `TIMEZONE`), a notification with
 and costs of the month just ended reaches who had trips or refuels; it's turned off in
 **Account → Notification at the start of the month**. The *Monthly summary* page (from the
 account or tapping the notification) shows the totals with the change on the month before,
-every vehicle (km, trips, driving time, work km, costs, refuels and real consumption, data on
-the SIM, alarms) and the deadlines near or overdue; the arrows change month (up to 3 years
+every vehicle (km, trips, driving time, work km, costs, mileage allowance, refuels or charges
+and real consumption, data on the SIM, alarms) and the deadlines near or overdue (with the
+expected day for those by km); the arrows change month (up to 3 years
 back), the current month goes up to today.
 
 ## Deadlines and maintenance
@@ -102,6 +121,28 @@ deadlines (service and tyres by km, inspection, insurance and road tax by date) 
 overdue), *Done* (recurring ones move forward) and the history of the work. Alert when the
 chosen days or km are left and at the deadline.
 
+For the deadlines by km the app shows the **expected day**, from the average km a day of the
+last 60 days (at least 14 days of data are needed; beyond 3 years it isn't shown): "in 900 km
+(expected around 4 December)". The expected day appears in the alerts and in the monthly
+summary too, and a deadline becomes *near* also when the expected day falls within the reminder
+days.
+
+## Parking
+
+For trackers and vehicles, from the panel of the live map (*Park*):
+
+- the place is the latest position of the vehicle, marked on the map with a **P**;
+- the **end of the ticket** is optional (up to 31 days): with it a **reminder** arrives 0 to 60
+  minutes before and a notice when it ends; without it (paid by the minute, e.g. Telepass or an
+  app) only the place is kept;
+- a note (level, spot, color of the lines);
+- the parking ends by itself when the vehicle leaves (moving faster than 10 km/h 2 minutes
+  after the start) or with *End parking*; ended parkings are deleted after 30 days.
+
+With *Settings → Suggest the parking at ignition off* (trackers) a notification at ignition off
+suggests setting it, at most once every 10 minutes and not while one is active. If the backend
+was down at the end and more than 60 minutes have passed, the notice doesn't arrive late.
+
 ## Extra data (trackers)
 
 Fields read by the tracker from another board of the vehicle (`EXTRA` frame, see the
@@ -111,6 +152,6 @@ every field and readings with date and time, no charts.
 ## Your data
 
 *Export my data* downloads a JSON with profile, sign-ins, friends, devices with positions,
-areas, notifications, costs, refuels and extra data. *Delete account* deletes phones, vehicles,
+areas, notifications, costs, refuels, parkings, temporary links and extra data. *Delete account* deletes phones, vehicles,
 positions, shares, friends, areas and notifications; trackers become free again and can be
 paired again with the code on their label.

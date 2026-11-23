@@ -6,10 +6,13 @@ import { requireVehicle } from "../services/access.ts";
 import type { DeviceKind } from "../services/access.ts";
 import { today } from "../services/daily.ts";
 import { loadRefuels, measure, summary, syncRefuelRates } from "../services/refuels.ts";
+import { energyUnit } from "../services/costs.ts";
+import type { FuelType } from "../services/costs.ts";
 import { odometer } from "../services/vehicle.ts";
 import { idParams } from "./devices.ts";
 
-// Refuels of a vehicle (owner, trackers and vehicles): litres, amount, odometer, full tank.
+// Refuels of a vehicle (owner, trackers and vehicles): litres, amount, odometer, full tank;
+// for an electric vehicle charges in kWh, at home or at a public station.
 // Every change recomputes the prices and consumptions they give to the costs of the trips.
 
 export const MAX_REFUELS = 2000;
@@ -20,6 +23,7 @@ const fields = {
 	cost: z.number().finite().min(0).max(10_000).nullable(),
 	odometerKm: z.number().int().min(0).max(5_000_000).nullable(),
 	full: z.boolean(),
+	place: z.enum(["home", "public"]).nullable(),
 	note: z.string().trim().max(200)
 };
 const newRefuel = z.strictObject({
@@ -28,6 +32,7 @@ const newRefuel = z.strictObject({
 	cost: fields.cost.default(null),
 	odometerKm: fields.odometerKm.default(null),
 	full: fields.full.default(true),
+	place: fields.place.default(null),
 	note: fields.note.default("")
 });
 const changes = z.strictObject(fields).partial();
@@ -39,13 +44,15 @@ export function registerRefuelRoutes (app: FastifyInstance, ctx: Context): void 
 	/** Refuels newest first with what they measure, totals, odometer now (to fill in the next one) */
 	const present = async (device: { id: number; kind: DeviceKind }) => {
 		const measured = measure(await loadRefuels(sql, device.id));
-		const [row] = await sql<{ enabled: boolean; fuelUnit: string }[]>`
-			SELECT rates_from_refuels AS enabled, fuel_unit AS "fuelUnit" FROM devices WHERE id = ${device.id}`;
+		const [row] = await sql<{ enabled: boolean; fuelUnit: string; fuelType: FuelType | null }[]>`
+			SELECT rates_from_refuels AS enabled, fuel_unit AS "fuelUnit", fuel_type AS "fuelType" FROM devices WHERE id = ${device.id}`;
 		return {
 			refuels: measured.reverse(),
 			summary: summary(measured),
 			ratesFromRefuels: row!.enabled,
 			fuelUnit: row!.fuelUnit,
+			/** Litres, or kWh for an electric vehicle */
+			energyUnit: energyUnit(row!.fuelType),
 			odometerKm: await odometer(sql, tz, device)
 		};
 	};
@@ -79,8 +86,8 @@ export function registerRefuelRoutes (app: FastifyInstance, ctx: Context): void 
 		const [count] = await sql<{ count: number }[]>`SELECT count(*)::int AS count FROM refuels WHERE device_id = ${id}`;
 		if (count!.count >= MAX_REFUELS) throw badRequest(`At most ${MAX_REFUELS} refuels`, "too_many_refuels");
 		await sql`
-			INSERT INTO refuels (device_id, day, litres, cost, odometer_km, full_tank, note)
-			VALUES (${id}, ${body.day ?? await today(sql, tz)}, ${body.litres}, ${body.cost}, ${body.odometerKm}, ${body.full}, ${body.note})`;
+			INSERT INTO refuels (device_id, day, litres, cost, odometer_km, full_tank, place, note)
+			VALUES (${id}, ${body.day ?? await today(sql, tz)}, ${body.litres}, ${body.cost}, ${body.odometerKm}, ${body.full}, ${body.place}, ${body.note})`;
 		await syncRefuelRates(sql, id);
 		return present({ id, kind: access.kind });
 	});
@@ -93,7 +100,8 @@ export function registerRefuelRoutes (app: FastifyInstance, ctx: Context): void 
 			UPDATE refuels SET day = COALESCE(${body.day ?? null}, day), litres = COALESCE(${body.litres ?? null}, litres),
 				cost = ${body.cost === undefined ? sql`cost` : body.cost},
 				odometer_km = ${body.odometerKm === undefined ? sql`odometer_km` : body.odometerKm},
-				full_tank = COALESCE(${body.full ?? null}, full_tank), note = COALESCE(${body.note ?? null}, note)
+				full_tank = COALESCE(${body.full ?? null}, full_tank), note = COALESCE(${body.note ?? null}, note),
+				place = ${body.place === undefined ? sql`place` : body.place}
 			WHERE id = ${id}`;
 		await syncRefuelRates(sql, device.id);
 		return present(device);

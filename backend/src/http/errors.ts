@@ -31,12 +31,29 @@ export function parse<T extends z.ZodType> (schema: T, data: unknown): z.infer<T
 	return result.data;
 }
 
+// The database can't be reached: network errors of the connection, the timeouts and closed
+// connections of postgres.js, the server shutting down or still starting (SQLSTATE 57P0x, 08xxx)
+const UNAVAILABLE_CODES = new Set(["ECONNREFUSED", "ENOTFOUND", "EAI_AGAIN", "ETIMEDOUT", "ECONNRESET", "EHOSTUNREACH", "CONNECT_TIMEOUT",
+	"CONNECTION_CLOSED", "CONNECTION_ENDED", "CONNECTION_DESTROYED", "57P01", "57P02", "57P03"]);
+
+export function databaseUnavailable (error: unknown): boolean {
+	const code = (error as { code?: unknown } | null)?.code;
+	return typeof code === "string" && (UNAVAILABLE_CODES.has(code) || /^08[0-9A-Z]{3}$/.test(code));
+}
+
 export function errorHandler (error: FastifyError | ApiError, request: FastifyRequest, reply: FastifyReply): void {
 	if (error instanceof ApiError) {
 		reply.status(error.statusCode).send({ error: error.code, message: error.message });
 		return;
 	}
 	const status = error.statusCode ?? 500;
+	if (status >= 500 && databaseUnavailable(error)) {
+		// 503 with a retry: the app says the service is down for a moment, not a bug
+		const route = `${request.method} ${request.routeOptions.url ?? "(unknown)"}`;
+		request.log.error({ err: error, component: "http", status: 503 }, route);
+		reply.status(503).header("retry-after", "10").send({ error: "unavailable", message: "Service temporarily unavailable" });
+		return;
+	}
 	if (status >= 500) {
 		// Also in the platform log, by route pattern (no URL, body or user)
 		const route = `${request.method} ${request.routeOptions.url ?? "(unknown)"}`;

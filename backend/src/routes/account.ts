@@ -3,7 +3,7 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { z } from "zod";
 import { logAuthEvent } from "../context.ts";
 import type { Context } from "../context.ts";
-import { ApiError, badRequest, notFound, parse, unauthorized } from "../http/errors.ts";
+import { ApiError, badRequest, forbidden, notFound, parse, unauthorized } from "../http/errors.ts";
 import { RECENT_AUTH } from "../http/session.ts";
 import { PASSWORD_MIN_LENGTH, hashPassword, newTotpSecret, totpUri, verifyPassword, verifyTotp } from "../auth/secrets.ts";
 import { LOCALES } from "../i18n.ts";
@@ -49,20 +49,23 @@ export function registerAccountRoutes (app: FastifyInstance, ctx: Context): void
 				FROM sessions WHERE user_id = ${userId} AND stage = 'full' AND expires_at > now() ORDER BY last_seen_at DESC`,
 			sql<{ left: number }[]>`SELECT count(*)::int AS left FROM recovery_codes WHERE user_id = ${userId} AND used_at IS NULL`
 		]);
-		const [preferences] = await sql<{ monthly_summary: boolean }[]>`SELECT monthly_summary FROM users WHERE id = ${userId}`;
+		const [preferences] = await sql<{ monthly_summary: boolean; admin_alerts: boolean }[]>`
+			SELECT monthly_summary, admin_alerts FROM users WHERE id = ${userId}`;
 		return {
 			user: request.auth!.user,
 			passkeys,
 			sessions,
 			recoveryCodesLeft: recovery[0]?.left ?? 0,
 			monthlySummary: preferences!.monthly_summary,
+			// Administrators: errors never seen before as notifications
+			adminAlerts: request.auth!.user.isAdmin ? preferences!.admin_alerts : null,
 			pushEnabled: ctx.notifier.pushEnabled
 		};
 	});
 
 	/**
 	 * Copy of the personal data (GDPR, art. 15 and 20): profile, access history, friends,
-	 * devices owned with their positions, areas, notifications, costs, refuels, dashboards. No secrets (password hash,
+	 * devices owned with their positions, areas, notifications, costs, refuels, parkings, links, dashboards. No secrets (password hash,
 	 * passkeys, TOTP, tokens), no data of other users besides the names of the friends.
 	 */
 	app.get("/api/account/export", { config: STRICT }, async (request, reply) => {
@@ -74,7 +77,7 @@ export function registerAccountRoutes (app: FastifyInstance, ctx: Context): void
 				d.last_seen_at AS "lastSeenAt", du.role, du.expires_at AS "shareExpiresAt"
 			FROM device_users du JOIN devices d ON d.id = du.device_id WHERE du.user_id = ${userId} ORDER BY d.id`;
 		const owned = (devices as unknown as { id: number; role: string }[]).filter(device => device.role === "owner").map(device => device.id);
-		const [events, friends, areas, notifications, settings, positions, dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, refuels, extraData, dashboards] = await Promise.all([
+		const [events, friends, areas, notifications, settings, positions, dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, refuels, extraData, dashboards, parkings, liveLinks] = await Promise.all([
 			sql`SELECT event, host(ip) AS ip, user_agent AS "userAgent", created_at AS "createdAt" FROM auth_events WHERE user_id = ${userId} ORDER BY created_at`,
 			sql`SELECT u.name, f.created_at AS since FROM friendships f JOIN users u ON u.id = f.friend_id WHERE f.user_id = ${userId} ORDER BY u.name`,
 			sql`SELECT device_id AS "deviceId", name, lat, lon, radius, polygon, schedule, created_at AS "createdAt" FROM geofences WHERE user_id = ${userId} ORDER BY id`,
@@ -99,16 +102,23 @@ export function registerAccountRoutes (app: FastifyInstance, ctx: Context): void
 				FROM vehicle_rates WHERE device_id = ANY (${owned}) ORDER BY device_id, kind, valid_from`,
 			sql`
 				SELECT device_id AS "deviceId", to_char(day, 'YYYY-MM-DD') AS day, litres, cost, odometer_km AS "odometerKm",
-					full_tank AS full, note
+					full_tank AS full, place, note
 				FROM refuels WHERE device_id = ANY (${owned}) ORDER BY device_id, day, id`,
 			sql`SELECT device_id AS "deviceId", time, data FROM device_extra WHERE device_id = ANY (${owned}) ORDER BY device_id, time`,
-			sql`SELECT name, layout, is_current AS "current", created_at AS "createdAt", updated_at AS "updatedAt" FROM dashboards WHERE user_id = ${userId} ORDER BY id`
+			sql`SELECT name, layout, is_current AS "current", created_at AS "createdAt", updated_at AS "updatedAt" FROM dashboards WHERE user_id = ${userId} ORDER BY id`,
+			sql`
+				SELECT device_id AS "deviceId", lat, lon, started_at AS "startedAt", expires_at AS "expiresAt", note, ended_at AS "endedAt"
+				FROM parkings WHERE user_id = ${userId} ORDER BY started_at`,
+			sql`
+				SELECT device_id AS "deviceId", label, created_at AS "createdAt", expires_at AS "expiresAt", revoked_at AS "revokedAt",
+					last_viewed_at AS "lastViewedAt"
+				FROM live_links WHERE user_id = ${userId} ORDER BY created_at`
 		]);
 		const day = new Date().toISOString().slice(0, 10);
 		reply.header("content-disposition", `attachment; filename="car-tracking-${day}.json"`);
 		return {
 			exportedAt: new Date(), profile, authEvents: events, friends, devices, areas, notifications, notificationSettings: settings, positions,
-			dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, refuels, extraData, dashboards
+			dailyStats, tripLog, maintenance, maintenanceLog, vehicles, vehicleRates, refuels, extraData, dashboards, parkings, liveLinks
 		};
 	});
 
@@ -130,17 +140,22 @@ export function registerAccountRoutes (app: FastifyInstance, ctx: Context): void
 		return { ok: true };
 	});
 
-	/** Name, language (detected by the app at the first login, then chosen by the user), summary of the month */
+	/** Name, language (detected by the app at the first login, then chosen by the user), summary of the month, alerts of the administrators */
 	app.patch("/api/account", async (request) => {
 		const body = parse(z.strictObject({
 			name: z.string().trim().min(1).max(80).optional(),
 			locale: z.enum(LOCALES).optional(),
-			monthlySummary: z.boolean().optional()
+			monthlySummary: z.boolean().optional(),
+			adminAlerts: z.boolean().optional()
 		}), request.body);
 		const userId = request.auth!.user.id;
 		if (body.name !== undefined) await sql`UPDATE users SET name = ${body.name} WHERE id = ${userId}`;
 		if (body.locale !== undefined) await sql`UPDATE users SET locale = ${body.locale} WHERE id = ${userId}`;
 		if (body.monthlySummary !== undefined) await sql`UPDATE users SET monthly_summary = ${body.monthlySummary} WHERE id = ${userId}`;
+		if (body.adminAlerts !== undefined) {
+			if (!request.auth!.user.isAdmin) throw forbidden("Only for the administrators");
+			await sql`UPDATE users SET admin_alerts = ${body.adminAlerts} WHERE id = ${userId}`;
+		}
 		return { ok: true };
 	});
 

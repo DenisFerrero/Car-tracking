@@ -78,7 +78,10 @@ L'**anteprima** in fondo mostra subito i valori veri.
 | Viaggi | km percorsi, km di lavoro e personali, tempo di guida, numero di viaggi, velocità massima | tutti | 3 anni |
 | Viaggi | allarmi, dati sulla SIM, batteria a riposo | tracker | 3 anni |
 | Costi | costo stimato, spesa carburante, usura, litri (dai consumi, prezzi e usura inseriti) | tutti | 3 anni |
+| Costi | kWh dei viaggi (elettriche, dai consumi inseriti) | tutti | 3 anni |
+| Costi | rimborso chilometrico (km di lavoro per il rimborso al km) | tutti | 3 anni |
 | Costi | spesa dei rifornimenti, litri riforniti, prezzo pagato al litro, consumo reale (dai [rifornimenti](features.md#viaggi-registro-e-costi)) | tracker e veicoli | 3 anni |
+| Costi | kWh caricati, prezzo pagato al kWh, consumo reale in kWh (dalle ricariche delle elettriche) | tracker e veicoli | 3 anni |
 | Dati del tracker | velocità in movimento, altitudine | tutti | 93 giorni |
 | Dati del tracker | segnale LTE, satelliti, tensione, temperatura, pressione | tracker | 93 giorni |
 | Dati del tracker | un campo numerico dei **dati aggiuntivi** (es. `rpm`) | tracker | 93 giorni |

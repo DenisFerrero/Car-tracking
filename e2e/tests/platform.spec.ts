@@ -3,8 +3,9 @@ import { clickCanvas, fill, nextStep, open, press, semantics, t, tap, totp, type
 
 // The platform from the browser, as a user goes through it: the invite of the first
 // administrator (password, authenticator app, recovery codes), a vehicle, its refuels and
-// the real consumption, a polygon area, the summary of the month, logout and login with the
-// second factor. The steps follow each other on the same account.
+// the real consumption, a polygon area, the summary of the month, a temporary link to the
+// position opened without an account, logout and login with the second factor. The steps
+// follow each other on the same account.
 
 const PASSWORD = "e2e-Password-2026!";
 const EMAIL = "admin@e2e.invalid";
@@ -100,6 +101,32 @@ test("summary of the month from the account", async () => {
 	await expect(page.getByRole("button", { name: /Panda e2e/ })).toContainText(t("summaryRefuels", { n: 2, value: "133,00 €" }));
 });
 
+test("temporary link: created in the settings, opened without an account, revoked", async ({ browser }) => {
+	await open(page, `/devices/${vehicle}?tab=4`);
+	const create = page.getByRole("button", { name: t("liveLinkNew") });
+	await create.scrollIntoViewIfNeeded();
+	await create.click();
+	const created = page.waitForResponse(response => response.url().endsWith(`/api/devices/${vehicle}/links`) && response.request().method() === "POST");
+	await tap(page, t("liveLinkNew"));
+	const { url } = (await (await created).json()) as { url: string };
+	await expect(page.getByText(t("liveLinkCreated"))).toBeVisible();
+	await tap(page, t("close"));
+
+	// Another browser, no session: name of the vehicle, no position yet
+	const visitor = await browser.newPage();
+	await visitor.goto(url);
+	await semantics(visitor);
+	await expect(visitor.getByText("Panda e2e")).toBeVisible();
+	await expect(visitor.getByText(t("publicLinkNoPosition"))).toBeVisible();
+
+	await page.getByRole("button", { name: t("liveLinkRevoke") }).click();
+	await expect(page.getByText(t("liveLinkRevoked")).first()).toBeVisible();
+	await visitor.reload();
+	await semantics(visitor);
+	await expect(visitor.getByText(t("publicLinkGone"))).toBeVisible();
+	await visitor.close();
+});
+
 test("logout, then login with password and the second factor", async () => {
 	await open(page, "/account");
 	await page.getByRole("button", { name: new RegExp(t("logout")) }).last().click();
@@ -110,14 +137,10 @@ test("logout, then login with password and the second factor", async () => {
 	await expect(page.getByText(t("mfaTitle"))).toBeVisible();
 	// The code of the enrollment can't be used again
 	await nextStep(page);
-	// The field sends the code at the sixth digit. With its autofill hint (one-time code) Flutter
-	// edits it in an input of its own, not in the one of the semantics. The autofocus starts it
-	// when the page loads with this screen (not after the login): loaded again
-	await page.reload();
-	await semantics(page);
+	// The field sends the code at the sixth digit; typed like a screen reader user, right
+	// after the login (no autofill form in the browser: the keys reach the field)
 	const verified = page.waitForResponse(response => response.url().endsWith("/api/auth/totp"));
-	await page.locator("input.flt-text-editing").focus();
-	await page.keyboard.type(totp(secret));
+	await type(page, page.getByRole("textbox", { name: new RegExp(`^${t("mfaCode")}`) }), totp(secret));
 	expect((await verified).status()).toBe(200);
 	await expect(page.getByRole("button", { name: new RegExp(`^${t("navMap")}`) })).toBeVisible();
 });

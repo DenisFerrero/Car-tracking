@@ -21,6 +21,10 @@
   check in the browser, bearer token in the app. Strict CSP, HSTS. Every API checks access to
   the single device (404 for other people's) and realtime reaches only the users of the
   device.
+- **Temporary links to the position**: tokens of 32 random bytes, only their hash in the
+  database; 1-24 hours long, at most 5 active per device, revocable. The public page reads
+  only name, color, kind and latest position (no history, IMEI or account) with a rate limit
+  of its own; expired, revoked or unknown links all answer 404.
 - **Phones**: positions are uploaded with an upload token valid only for that phone, renewed
   at every start of the sharing; a fix can name only a vehicle owned by the owner of the
   phone, others are skipped.

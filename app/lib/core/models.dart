@@ -281,6 +281,11 @@ class NotificationData {
     this.distanceKm,
     this.trips,
     this.cost,
+    this.expected,
+    this.minutes,
+    this.source,
+    this.message,
+    this.others,
   });
 
   factory NotificationData.fromJson(Map<String, dynamic>? json, DateTime fallback) => NotificationData(
@@ -300,6 +305,11 @@ class NotificationData {
         distanceKm: (json?['distanceKm'] as num?)?.toDouble(),
         trips: _int(json?['trips']),
         cost: (json?['cost'] as num?)?.toDouble(),
+        expected: json?['expected'] as String?,
+        minutes: _int(json?['minutes']),
+        source: json?['source'] as String?,
+        message: json?['message'] as String?,
+        others: _int(json?['others']),
         time: _date(json?['time']) ?? fallback,
       );
 
@@ -319,6 +329,17 @@ class NotificationData {
   final String? due;
   final int? days;
   final int? km;
+
+  /// maintenance by km: day expected at the average km a day (YYYY-MM-DD)
+  final String? expected;
+
+  /// parking_reminder: minutes left
+  final int? minutes;
+
+  /// platform_error: source and message of the first error, how many others in the batch
+  final String? source;
+  final String? message;
+  final int? others;
 
   /// monthly_summary: month YYYY-MM and its totals
   final String? month;
@@ -360,7 +381,7 @@ class AppNotification {
 
   final int id;
 
-  /// null for the summary of the month
+  /// null for the summary of the month and the errors of the platform
   final int? deviceId;
   final String kind;
   final NotificationData data;
@@ -383,6 +404,8 @@ class AppNotification {
         'maintenance' => Icons.build,
         'firmware' => Icons.system_update,
         'monthly_summary' => Icons.insights,
+        'platform_error' => Icons.report,
+        'parking_prompt' || 'parking_reminder' || 'parking_expired' => Icons.local_parking,
         _ => Icons.directions_car,
       };
 }

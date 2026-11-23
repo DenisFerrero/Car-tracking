@@ -33,6 +33,15 @@ messaggio, i più frequenti per primi. Per ogni gruppo: quante volte, prima e ul
 durata media e massima; aprendolo, i dettagli dell'ultima occorrenza (con lo stack degli
 errori) e **Copia** per incollarli in una segnalazione.
 
+## Avvisi di errori nuovi
+
+Gli amministratori ricevono una **notifica** (push e nell'app) quando il log registra un
+errore mai visto negli ultimi 30 giorni (stesso servizio e messaggio): «Errore nuovo nel log ·
+backup: Disk full». Più errori nuovi nello stesso blocco di scrittura (pochi secondi) danno
+una sola notifica; al massimo **6 all'ora**, gli altri restano solo nel log. Gli avvisi e gli
+errori già visti non notificano. Toccando la notifica si apre il log; si spegne per ogni
+amministratore in *Account › Avvisi di errori nuovi*.
+
 ## Query lente: pg_stat_statements
 
 Le query lente vengono da `pg_stat_statements`, che il database deve caricare all'avvio. Il

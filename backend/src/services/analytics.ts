@@ -1,6 +1,6 @@
 // Analysis of a track, plain functions (tested in analytics.test.ts)
 
-import { hasCosts, sumCosts, tripCost } from "./costs.ts";
+import { hasCosts, reimbursement, sumCosts, tripCost } from "./costs.ts";
 import type { DeviceKind } from "./access.ts";
 import type { TripCost, VehicleProfile } from "./costs.ts";
 
@@ -190,37 +190,46 @@ export function toLogbook (trips: Trip[], tags: { start: Date; purpose: "busines
 	const time = (value: Date) => value.toLocaleTimeString("it-IT", { timeZone, hour: "2-digit", minute: "2-digit" });
 	const label = { business: it ? "Lavoro" : "Business", personal: it ? "Personale" : "Personal", none: "" };
 	const byStart = new Map(tags.map(tag => [tag.start.getTime(), tag]));
-	// Costs (litres, fuel, wear, total) when the owner entered consumption or wear
+	// Costs (litres or kWh, fuel, wear, total) when the owner entered consumption or wear;
+	// the mileage allowance of the business trips when there is one
 	const costs = profile !== null && hasCosts(profile) ? profile : null;
+	const allowance = profile !== null && profile.rates.reimbursement.length > 0 ? profile : null;
+	const quantity = profile?.fuelType === "electric" ? "kWh" : it ? "Litri" : "Litres";
 	const header = [
 		...it
 			? ["Data", "Partenza", "Arrivo", "Da (lat, lon)", "A (lat, lon)", "Km", "Durata (min)", "Tipo", "Note"]
 			: ["Date", "Start", "End", "From (lat, lon)", "To (lat, lon)", "Km", "Duration (min)", "Purpose", "Note"],
-		...costs ? it ? ["Litri", "Carburante (€)", "Usura (€)", "Costo (€)"] : ["Litres", "Fuel (€)", "Wear (€)", "Cost (€)"] : []
+		...costs ? it ? [quantity, "Carburante (€)", "Usura (€)", "Costo (€)"] : [quantity, "Fuel (€)", "Wear (€)", "Cost (€)"] : [],
+		...allowance ? [it ? "Rimborso (€)" : "Allowance (€)"] : []
 	];
+	const money = (value: number | null) => value === null ? "" : number(value, 2);
 	const costCells = (cost: TripCost | null) => cost === null ? []
 		: [cost.fuelL, cost.fuelCost, cost.wearCost, cost.cost].map(value => value === null ? "" : number(value, 2));
 	// Each trip with consumption, fuel price and wear of its day; the totals are sums of the trips
 	const totals = { business: 0, personal: 0, none: 0 };
 	const tripCosts: Record<keyof typeof totals, TripCost[]> = { business: [], personal: [], none: [] };
+	const allowances: number[] = [];
 	const rows = trips.map(trip => {
 		const tag = byStart.get(trip.start.getTime());
 		const purpose = tag?.purpose ?? "none";
 		const cost = costs && tripCost(trip.distanceKm, costs, date(trip.start));
 		totals[purpose] += trip.distanceKm;
 		if (cost) tripCosts[purpose].push(cost);
+		const refund = allowance && purpose === "business" ? reimbursement(trip.distanceKm, allowance, date(trip.start)) : null;
+		if (refund !== null) allowances.push(refund);
 		return [date(trip.start), time(trip.start), time(trip.end), text(`${trip.startLat.toFixed(5)} ${trip.startLon.toFixed(5)}`),
 			text(`${trip.endLat.toFixed(5)} ${trip.endLon.toFixed(5)}`), number(trip.distanceKm, 1), trip.durationMin, label[purpose],
-			text(tag?.note ?? ""), ...costCells(cost)].join(separator);
+			text(tag?.note ?? ""), ...costCells(cost), ...allowance ? [money(refund)] : []].join(separator);
 	});
-	const total = (name: string, km: number, items: TripCost[]) =>
-		[name, "", "", "", "", number(km, 1), "", "", "", ...costCells(costs && sumCosts(items))].join(separator);
+	const refunds = allowances.length ? Math.round(allowances.reduce((a, b) => a + b, 0) * 100) / 100 : null;
+	const total = (name: string, km: number, items: TripCost[], refund: number | null) =>
+		[name, "", "", "", "", number(km, 1), "", "", "", ...costCells(costs && sumCosts(items)), ...allowance ? [money(refund)] : []].join(separator);
 	return [header.join(separator), ...rows, "",
-		total(it ? "Totale lavoro" : "Total business", totals.business, tripCosts.business),
-		total(it ? "Totale personale" : "Total personal", totals.personal, tripCosts.personal),
-		total(it ? "Non indicato" : "Not marked", totals.none, tripCosts.none),
+		total(it ? "Totale lavoro" : "Total business", totals.business, tripCosts.business, refunds),
+		total(it ? "Totale personale" : "Total personal", totals.personal, tripCosts.personal, null),
+		total(it ? "Non indicato" : "Not marked", totals.none, tripCosts.none, null),
 		total(it ? "Totale" : "Total", totals.business + totals.personal + totals.none,
-			[...tripCosts.business, ...tripCosts.personal, ...tripCosts.none])].join("\r\n") + "\r\n";
+			[...tripCosts.business, ...tripCosts.personal, ...tripCosts.none], refunds)].join("\r\n") + "\r\n";
 }
 
 /** Bucket of the time series for a period: about 100-300 values per chart */

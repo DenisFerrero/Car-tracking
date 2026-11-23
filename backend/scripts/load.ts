@@ -198,7 +198,10 @@ const percentile = (sorted: number[], p: number) => sorted[Math.min(sorted.lengt
 const CONNECTIONS_PER_MINUTE = 25;
 
 async function runTracker (tracker: Tracker, index: number, until: number): Promise<void> {
-	await new Promise(resolve => setTimeout(resolve, index * 60e3 / CONNECTIONS_PER_MINUTE));
+	// The ones whose turn comes after the end of the run don't connect
+	const delay = index * 60e3 / CONNECTIONS_PER_MINUTE;
+	if (Date.now() + delay >= until) return;
+	await new Promise(resolve => setTimeout(resolve, delay));
 	const key = secrets.deviceKey(tracker.imei);
 	let counter = Math.floor(Date.now() / 1000);
 	const socket = new WebSocket(new URL("/tracker", url.href.replace(/^http/, "ws")));
@@ -244,7 +247,7 @@ async function runTracker (tracker: Tracker, index: number, until: number): Prom
 		socket.send(encodeTelemetry(key, deviceId, counter++, points));
 		trackerFrames++;
 		trackerPoints += points.length;
-		await new Promise(resolve => setTimeout(resolve, batchSeconds * 1000));
+		await new Promise(resolve => setTimeout(resolve, Math.max(0, Math.min(batchSeconds * 1000, until - Date.now()))));
 	}
 	socket.close(1000);
 }
@@ -268,6 +271,17 @@ const SCREENS: Screen[] = [
 	{ name: "GET /api/devices/:id/coverage (30 days)", weight: 1, run: (user, id) => api(user, "GET", `/api/devices/${id}/coverage?${last(30)}`) },
 	{ name: "GET /api/devices/:id/trends", weight: 1, run: (user, id) => api(user, "GET", `/api/devices/${id}/trends`) },
 	{ name: "GET /api/devices/:id/maintenance", weight: 1, run: (user, id) => api(user, "GET", `/api/devices/${id}/maintenance`) },
+	{ name: "GET /api/devices/:id/refuels", weight: 1, run: (user, id) => api(user, "GET", `/api/devices/${id}/refuels`) },
+	{ name: "GET /api/devices/:id/parking", weight: 1, run: (user, id) => api(user, "GET", `/api/devices/${id}/parking`) },
+	{ name: "GET /api/devices/:id/vehicle", weight: 1, run: (user, id) => api(user, "GET", `/api/devices/${id}/vehicle`) },
+	{
+		name: "GET /api/summary/:month (last month)", weight: 1, run: user => {
+			const month = new Date();
+			month.setUTCDate(1);
+			month.setUTCMonth(month.getUTCMonth() - 1);
+			return api(user, "GET", `/api/summary/${month.toISOString().slice(0, 7)}`);
+		}
+	},
 	{
 		name: "POST /api/dashboards/data (30 days)", weight: 2, run: user => api(user, "POST", "/api/dashboards/data", {
 			period: "30d",
@@ -336,7 +350,8 @@ await Promise.all([
 	...people.map(user => runUser(user, until))
 ]);
 clearInterval(ticker);
-const seconds = (Date.now() - started) / 1000;
+// Rates over the duration of the run (the last trackers close a moment later)
+const seconds = Math.max(1, (until - started) / 1000);
 
 console.log(`\n\nRequests of the app (${seconds.toFixed(0)} s)`);
 console.log("route".padEnd(44) + "count".padStart(7) + "err".padStart(5) + "p50".padStart(8) + "p95".padStart(8) + "p99".padStart(8) + "max".padStart(8));
